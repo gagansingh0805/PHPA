@@ -872,20 +872,9 @@ export default function PipelineViewer({
             </p>
           </div>
 
-          {/* Mode Switch + Quick Angles Controls */}
+          {/* Unified Perspective & Mode Controls */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* View Mode Toggle: 3D Spatial vs 2D Crisp Schematic */}
-            <div className="flex items-center bg-zinc-950 border border-zinc-700 rounded-lg p-1 text-xs font-mono">
-              <button
-                onClick={() => setViewMode('3d')}
-                className={`px-3 py-1 rounded transition-all font-semibold ${
-                  viewMode === '3d'
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                🌐 3D Spatial
-              </button>
+            <div className="flex items-center bg-zinc-950 border border-zinc-700/90 rounded-lg p-1 text-xs font-mono shadow-sm">
               <button
                 onClick={() => setViewMode('2d')}
                 className={`px-3 py-1 rounded transition-all font-semibold ${
@@ -893,57 +882,58 @@ export default function PipelineViewer({
                     ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md'
                     : 'text-zinc-400 hover:text-white'
                 }`}
+                title="2D Crisp High-Contrast Schematic"
               >
                 📐 2D Crisp Flow
               </button>
+
+              <div className="w-[1px] h-4 bg-zinc-700/80 mx-1.5"></div>
+
+              <button
+                onClick={() => {
+                  setViewMode('3d');
+                  handlePresetChange('isometric');
+                }}
+                className={`px-2.5 py-1 rounded transition-colors ${
+                  viewMode === '3d' && viewPreset === 'isometric'
+                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+                title="3D Isometric (44°)"
+              >
+                Isometric (44°)
+              </button>
+              <button
+                onClick={() => {
+                  setViewMode('3d');
+                  handlePresetChange('front');
+                }}
+                className={`px-2.5 py-1 rounded transition-colors ${
+                  viewMode === '3d' && viewPreset === 'front'
+                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+                title="3D Front Flow (12°)"
+              >
+                Front Flow (12°)
+              </button>
+              <button
+                onClick={() => {
+                  setViewMode('3d');
+                  handlePresetChange('top');
+                }}
+                className={`px-2.5 py-1 rounded transition-colors ${
+                  viewMode === '3d' && viewPreset === 'top'
+                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+                title="3D Top-Down (68°)"
+              >
+                Top-Down (68°)
+              </button>
             </div>
 
-            {/* Camera Perspective & Reset Toolbar (Always visible, never collapses) */}
             <div className="flex items-center gap-2">
-              <div className="flex items-center bg-zinc-900/90 border border-zinc-800 rounded-lg p-1 text-xs font-mono shadow-sm">
-                <button
-                  onClick={() => {
-                    setViewMode('3d');
-                    handlePresetChange('isometric');
-                  }}
-                  className={`px-2.5 py-1 rounded transition-colors ${
-                    viewMode === '3d' && viewPreset === 'isometric'
-                      ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                  title="3D Isometric (44°)"
-                >
-                  Isometric (44°)
-                </button>
-                <button
-                  onClick={() => {
-                    setViewMode('3d');
-                    handlePresetChange('front');
-                  }}
-                  className={`px-2.5 py-1 rounded transition-colors ${
-                    viewMode === '3d' && viewPreset === 'front'
-                      ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                  title="3D Front Flow (12°)"
-                >
-                  Front Flow (12°)
-                </button>
-                <button
-                  onClick={() => {
-                    setViewMode('3d');
-                    handlePresetChange('top');
-                  }}
-                  className={`px-2.5 py-1 rounded transition-colors ${
-                    viewMode === '3d' && viewPreset === 'top'
-                      ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                  title="3D Top-Down (68°)"
-                >
-                  Top-Down (68°)
-                </button>
-              </div>
 
               <button
                 onClick={() => {
