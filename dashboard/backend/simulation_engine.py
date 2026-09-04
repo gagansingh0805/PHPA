@@ -27,6 +27,14 @@ class SimulationEngine:
         self.history_rps = []
         self.history_demand = []
 
+        # Per-model cumulative statistics
+        self.model_stats = {
+            "hpa": {"pod_seconds": 0.0, "deficits": 0, "waste_seconds": 0.0, "abs_error_sum": 0.0, "eval_count": 0},
+            "linear": {"pod_seconds": 0.0, "deficits": 0, "waste_seconds": 0.0, "abs_error_sum": 0.0, "eval_count": 0},
+            "holt_winters": {"pod_seconds": 0.0, "deficits": 0, "waste_seconds": 0.0, "abs_error_sum": 0.0, "eval_count": 0},
+            "lstm": {"pod_seconds": 0.0, "deficits": 0, "waste_seconds": 0.0, "abs_error_sum": 0.0, "eval_count": 0},
+        }
+
     def play(self):
         self.is_playing = True
 
@@ -50,6 +58,14 @@ class SimulationEngine:
         self.total_sla_breaches = 0
         self.history_rps.clear()
         self.history_demand.clear()
+        for key in self.model_stats:
+            self.model_stats[key] = {
+                "pod_seconds": 0.0,
+                "deficits": 0,
+                "waste_seconds": 0.0,
+                "abs_error_sum": 0.0,
+                "eval_count": 0
+            }
 
     def step(self) -> Dict[str, Any]:
         if not self.is_playing:
@@ -127,6 +143,50 @@ class SimulationEngine:
         self.total_pod_seconds += self.actual_pods * virtual_seconds
         total_pod_hours = round(self.total_pod_seconds / 3600.0, 3)
 
+        # Update per-model stats
+        preds = {
+            "hpa": reactive_hpa,
+            "linear": linear_pred,
+            "holt_winters": hw_pred,
+            "lstm": lstm_pred
+        }
+        for k, p in preds.items():
+            st = self.model_stats[k]
+            st["pod_seconds"] += p * virtual_seconds
+            st["eval_count"] += 1
+            if p < ideal_demand_pods:
+                st["deficits"] += (ideal_demand_pods - p)
+            elif p > ideal_demand_pods:
+                st["waste_seconds"] += (p - ideal_demand_pods) * virtual_seconds
+            st["abs_error_sum"] += abs(p - ideal_demand_pods) / max(1.0, float(ideal_demand_pods))
+
+        # Calculate model metrics summary
+        hpa_pod_hours = self.model_stats["hpa"]["pod_seconds"] / 3600.0
+        hpa_cost = hpa_pod_hours * 0.040
+
+        models_metrics = {}
+        for key, display_name in [("hpa", "Reactive HPA"), ("linear", "Linear Regression"), ("holt_winters", "Holt-Winters"), ("lstm", "2-Layer LSTM")]:
+            st = self.model_stats[key]
+            ph = round(st["pod_seconds"] / 3600.0, 3)
+            cost = round(ph * 0.040, 4)
+            waste_ph = round(st["waste_seconds"] / 3600.0, 3)
+            saved_dollars = round(hpa_cost - cost, 4) if key != "hpa" else 0.0
+            saved_pct = round(((hpa_cost - cost) / max(0.0001, hpa_cost)) * 100.0, 1) if key != "hpa" else 0.0
+            avg_mape = (st["abs_error_sum"] / max(1, st["eval_count"])) * 100.0
+            accuracy = max(50.0, min(99.5, round(100.0 - avg_mape, 1)))
+
+            models_metrics[key] = {
+                "name": display_name,
+                "current_pods": preds[key],
+                "pod_hours": ph,
+                "cost_dollars": cost,
+                "saved_dollars": saved_dollars,
+                "saved_pct": saved_pct,
+                "deficits": st["deficits"],
+                "waste_pod_hours": waste_ph,
+                "accuracy_pct": accuracy,
+            }
+
         return self._format_state(
             current_rps=round(current_rps, 1),
             cpu_utilization=round(cpu_utilization, 1),
@@ -136,10 +196,11 @@ class SimulationEngine:
             hw_pred=hw_pred,
             lstm_pred=lstm_pred,
             p95_latency=round(p95_latency, 1),
-            total_pod_hours=total_pod_hours
+            total_pod_hours=total_pod_hours,
+            models_metrics=models_metrics
         )
 
-    def _format_state(self, current_rps, cpu_utilization, ideal_demand, reactive_hpa, linear_pred, hw_pred, lstm_pred, p95_latency, total_pod_hours=0.0):
+    def _format_state(self, current_rps, cpu_utilization, ideal_demand, reactive_hpa, linear_pred, hw_pred, lstm_pred, p95_latency, total_pod_hours=0.0, models_metrics=None):
         total_virtual_secs = int(self.tick * 15.0 * self.speed_factor)
         day = (total_virtual_secs // 86400) + 1
         hours = (total_virtual_secs % 86400) // 3600
@@ -164,5 +225,6 @@ class SimulationEngine:
             "p95_latency_ms": p95_latency,
             "sla_breaches": self.total_sla_breaches,
             "total_pod_hours": total_pod_hours,
+            "models_metrics": models_metrics or {},
         }
 
