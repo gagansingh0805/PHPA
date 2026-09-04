@@ -1346,22 +1346,41 @@ export default function PipelineViewer({
               </defs>
 
               {/* Highway Paths */}
+              {/* Wire 1: Edge to Ingress (210 to 240) */}
               <path d="M 210 115 L 240 115" fill="none" stroke="rgba(6, 182, 212, 0.5)" strokeWidth="2.5" strokeDasharray="4 3" />
+              
+              {/* Wire 2: Ingress to Pod Cluster (415 to 450) */}
               <path d="M 415 115 L 450 115" fill="none" stroke="rgba(6, 182, 212, 0.6)" strokeWidth="2.5" />
-              <path d="M 565 315 L 565 390" fill="none" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="2.5" strokeDasharray="5 3" />
+              
+              {/* Wire 3: Pod Cluster bottom port (295) directly to Telemetry top port (390) - Zero Gap! */}
+              <path d="M 565 295 L 565 390" fill="none" stroke="rgba(16, 185, 129, 0.6)" strokeWidth="2.5" strokeDasharray="5 3" />
+              
+              {/* Wire 4: Telemetry to Models Brain (680 to 710) */}
               <path d="M 680 450 L 710 450" fill="none" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2.5" />
+              
+              {/* Wire 5: Models Brain recommendation up to Scale Actuator */}
               <path d="M 1020 370 L 1020 180" fill="none" stroke="rgba(245, 158, 11, 0.6)" strokeWidth="2.5" strokeDasharray="5 3" />
+              
+              {/* Wire 6: Scale Actuator scale patch closing loop into Pod Cluster (920 to 880) */}
               <path d="M 920 115 L 880 115" fill="none" stroke="rgba(245, 158, 11, 0.7)" strokeWidth="2.5" strokeDasharray="4 3" />
 
-              {/* Animated Continuous Photons */}
-              <circle r="4" fill="#06b6d4" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="210; 240; 415; 450" dur={rps > 300 ? '0.6s' : rps > 180 ? '1.1s' : '1.8s'} repeatCount="indefinite" />
-                <animate attributeName="cy" values="115; 115; 115; 115" dur={rps > 300 ? '0.6s' : rps > 180 ? '1.1s' : '1.8s'} repeatCount="indefinite" />
+              {/* Animated Continuous Photons (Confined Strictly to Wire Segments, Never Crossing Over Cards) */}
+              {/* Photon 1: Traveling on Wire 1 (Edge to Ingress, stops at card entrance) */}
+              <circle r="3.5" fill="#06b6d4" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="210; 240" dur={rps > 300 ? '0.5s' : rps > 180 ? '0.9s' : '1.4s'} repeatCount="indefinite" />
+                <animate attributeName="cy" values="115; 115" dur={rps > 300 ? '0.5s' : rps > 180 ? '0.9s' : '1.4s'} repeatCount="indefinite" />
               </circle>
 
+              {/* Photon 2: Traveling on Wire 2 (Ingress exit to Pods entrance) */}
+              <circle r="3.5" fill="#06b6d4" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="415; 450" dur={rps > 300 ? '0.5s' : rps > 180 ? '0.9s' : '1.4s'} repeatCount="indefinite" />
+                <animate attributeName="cy" values="115; 115" dur={rps > 300 ? '0.5s' : rps > 180 ? '0.9s' : '1.4s'} repeatCount="indefinite" />
+              </circle>
+
+              {/* Photon 3: Telemetry Scrape (From bottom edge of Pod Cluster 295 down to Telemetry 390) */}
               <circle r="3.5" fill="#10b981" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="565; 565" dur="2.0s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="315; 390" dur="2.0s" repeatCount="indefinite" />
+                <animate attributeName="cx" values="565; 565" dur="1.5s" repeatCount="indefinite" />
+                <animate attributeName="cy" values="295; 390" dur="1.5s" repeatCount="indefinite" />
               </circle>
 
               <circle r="3.5" fill="#a855f7" filter="url(#glow-strong)">
@@ -1485,11 +1504,11 @@ export default function PipelineViewer({
                 setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[450px] top-[25px] w-[430px] cursor-pointer group"
+              className="absolute left-[450px] top-[25px] w-[430px] h-[270px] cursor-pointer group z-20"
               style={{ transform: viewMode === '3d' ? 'translateZ(45px)' : 'none' }}
             >
               <div
-                className={`rounded-2xl p-3.5 border transition-all shadow-2xl ${
+                className={`rounded-2xl p-3.5 border transition-all shadow-2xl h-full flex flex-col justify-between ${
                   probeHop === 3
                     ? 'bg-[#14121a] border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.35)]'
                     : 'bg-[#0e0e16] border-purple-500/40 hover:border-purple-400'
@@ -1517,7 +1536,7 @@ export default function PipelineViewer({
                 </div>
 
                 {/* Compact Pod Rack Grid */}
-                <div className="bg-[#08080c] rounded-xl p-2.5 border border-zinc-800/90 max-h-[195px] overflow-hidden flex items-center justify-center">
+                <div className="bg-[#08080c] rounded-xl p-2 border border-zinc-800/90 flex-1 my-1 overflow-y-auto flex items-center justify-center">
                   <div className="grid grid-cols-6 gap-1.5 w-full">
                     <AnimatePresence>
                       {Array.from({ length: actualPods }).map((_, idx) => {
