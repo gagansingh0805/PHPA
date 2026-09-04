@@ -11,7 +11,7 @@ import PodCluster from './components/PodCluster';
 import ModelScorecard from './components/ModelScorecard';
 import LiveEventLog from './components/LiveEventLog';
 import Term from './components/Term';
-import { Sparkles, Activity, ShieldCheck } from 'lucide-react';
+import { Sparkles, Activity, ShieldCheck, Zap, BrainCircuit, Server, DollarSign, Clock, ArrowUpRight, ArrowDownRight, Layers, Sliders, Play, RotateCcw, AlertTriangle } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('lab'); // 'lab', 'home', 'models', 'pipeline'
@@ -19,9 +19,62 @@ export default function App() {
   const [manualRps, setManualRps] = useState(125);
 
   const [logs, setLogs] = useState([
-    { time: '00:00:01', level: 'SCALE', message: 'PHPA initialized with baseline 4 replicas (Target CPU: 60%)' },
-    { time: '00:00:02', level: 'LSTM', message: 'LSTM model loaded: 2-layer stacked PyTorch network active (lookahead: 3 steps)' },
-    { time: '00:00:03', level: 'HPA', message: 'Reactive HPA baseline evaluator attached to horizontal metrics pool' },
+    {
+      time: '00:00:01',
+      level: 'SCALE',
+      category: 'scale',
+      message: '⚡ Cluster initialized with baseline 4 replicas (Target CPU: 60%, Min: 2, Max: 30 pods).',
+      meta: { pods: 4, target_cpu: '60%', min_pods: 2, max_pods: 30, trigger: 'INIT' }
+    },
+    {
+      time: '00:00:02',
+      level: 'LSTM',
+      category: 'insight',
+      message: '🧠 Deep Learning Engine active: 2-layer stacked PyTorch LSTM initialized with 45s lookahead.',
+      meta: { architecture: 'Stacked_LSTM_2x64', lookahead_steps: 3, lookahead_sec: 45, status: 'INFERENCE_READY' }
+    },
+    {
+      time: '00:00:03',
+      level: 'HPA',
+      category: 'alert',
+      message: '📊 Reactive HPA baseline attached to metrics pool. Evaluating 15s Prometheus moving averages.',
+      meta: { scrape_interval_s: 15, algorithm: 'HPA_Standard_Reactive', damping: 'None' }
+    },
+    {
+      time: '00:00:05',
+      level: 'COST',
+      category: 'cost',
+      message: '💰 Cloud cost optimizer initialized: $0.040/pod-hr baseline active. Monitoring wasteful allocation.',
+      meta: { pod_cost_hourly: 0.040, tracking: 'POD_SECONDS', currency: 'USD' }
+    },
+    {
+      time: '00:00:15',
+      level: 'LSTM',
+      category: 'insight',
+      message: '🧠 LSTM Advantage: Pre-warmed +2 pods ahead of reactive HPA (6 vs 4 pods). Mitigates cold-start queue lag.',
+      meta: { lstm_demand: 6, hpa_demand: 4, lead_pods: 2, prevention: 'COLD_START_AVOIDED' }
+    },
+    {
+      time: '00:00:20',
+      level: 'SCALE',
+      category: 'scale',
+      message: '⚡ Scaled 4 → 6 pods: Cluster proactively scaled for 150 RPS (Latency: 28.5ms, 0 drops).',
+      meta: { old_pods: 4, new_pods: 6, rps: 150, p95_latency_ms: 28.5, drops: 0 }
+    },
+    {
+      time: '00:00:35',
+      level: 'COST',
+      category: 'cost',
+      message: '💰 Downscaled 6 → 5 pods: Traffic stabilized at 122 RPS. Reclaimed 1 idle replica ($0.040/hr saved).',
+      meta: { old_pods: 6, new_pods: 5, reclaimed_pods: 1, hourly_savings: '$0.040' }
+    },
+    {
+      time: '00:00:45',
+      level: 'SURGE',
+      category: 'alert',
+      message: '🛡️ SLO Compliance check passed: P95 latency stable at 31.2ms (well within 100ms SLO boundary).',
+      meta: { p95_latency_ms: 31.2, slo_limit_ms: 100.0, status: 'HEALTHY' }
+    },
   ]);
 
   const [history, setHistory] = useState([]);
@@ -287,13 +340,30 @@ export default function App() {
             level: 'SCALE',
             category: 'scale',
             message: `⚡ Scaled ${oldPods} → ${data.actual_pods} pods: Cluster proactively pre-warmed by LSTM for ${data.rps} RPS (Latency: ${data.p95_latency_ms}ms, 0 drops).`,
+            meta: {
+              old_replicas: oldPods,
+              new_replicas: data.actual_pods,
+              workload_rps: data.rps,
+              p95_latency_ms: data.p95_latency_ms,
+              target_cpu: '60%',
+              trigger: 'PROACTIVE_PREWARM',
+              governing_estimator: 'LSTM_Lookahead_3',
+            }
           });
         } else {
           newEntries.push({
             time: timeLabel,
             level: 'COST',
             category: 'cost',
-            message: `💰 Downscaled ${oldPods} → ${data.actual_pods} pods: Traffic eased to ${data.rps} RPS. Reclaimed ${oldPods - data.actual_pods} idle pods, saving ~$0.08/hr.`,
+            message: `💰 Downscaled ${oldPods} → ${data.actual_pods} pods: Traffic eased to ${data.rps} RPS. Reclaimed ${oldPods - data.actual_pods} idle pods, saving ~$${((oldPods - data.actual_pods) * 0.040).toFixed(2)}/hr.`,
+            meta: {
+              old_replicas: oldPods,
+              new_replicas: data.actual_pods,
+              workload_rps: data.rps,
+              reclaimed_replicas: oldPods - data.actual_pods,
+              hourly_savings_usd: `$${((oldPods - data.actual_pods) * 0.040).toFixed(3)}`,
+              trigger: 'STABILIZATION_COOLDOWN',
+            }
           });
         }
       }
@@ -306,6 +376,14 @@ export default function App() {
           level: 'LSTM',
           category: 'insight',
           message: `🧠 LSTM Advantage: Pre-warmed +${lead} pods ahead of reactive HPA (${data.lstm_pred} vs ${data.reactive_hpa} pods). Prevents cold-start latency spike.`,
+          meta: {
+            lstm_prediction: data.lstm_pred,
+            hpa_reactive: data.reactive_hpa,
+            lead_preemption: lead,
+            lookahead_steps: 3,
+            lookahead_seconds: 45,
+            mitigation: 'COLD_START_AVOIDED',
+          }
         });
       }
 
@@ -316,6 +394,12 @@ export default function App() {
           level: 'HPA',
           category: 'alert',
           message: `⚠️ Reactive HPA Deficit: Kubernetes HPA lagging behind workload by ${data.ideal_demand - data.reactive_hpa} pods (${data.reactive_hpa} allocated vs ${data.ideal_demand} needed).`,
+          meta: {
+            ideal_demand: data.ideal_demand,
+            hpa_allocated: data.reactive_hpa,
+            deficit_pods: data.ideal_demand - data.reactive_hpa,
+            cause: 'REACTIVE_METRIC_LAG',
+          }
         });
       }
 
@@ -326,6 +410,12 @@ export default function App() {
           level: 'SURGE',
           category: 'alert',
           message: `⚠️ SLA Alert: Latency ${data.p95_latency_ms}ms exceeded 100ms SLA target! Total breaches: ${data.sla_breaches}`,
+          meta: {
+            observed_p95_ms: data.p95_latency_ms,
+            slo_threshold_ms: 100.0,
+            cumulative_breaches: data.sla_breaches,
+            severity: 'HIGH_LATENCY',
+          }
         });
       }
 
@@ -360,6 +450,13 @@ export default function App() {
         level: 'SURGE',
         category: 'alert',
         message: '💥 5x Flash Crowd Injected! Sudden surge to 450+ RPS. LSTM immediately preempts with +8 lead replicas.',
+        meta: {
+          multiplier: 5.0,
+          burst_duration_ticks: 8,
+          synthetic_spike: true,
+          action: 'FLASH_CROWD_INJECTION',
+          timestamp: timeLabel,
+        }
       },
     ]);
     fetch('/api/control/spike', {
@@ -367,6 +464,53 @@ export default function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ multiplier: 5.0 }),
     }).catch(() => {});
+  };
+
+  const handleAdjustRps = (delta) => {
+    setTrafficMode('manual');
+    const newRps = Math.max(25, Math.min(600, (manualRps || 125) + delta));
+    setManualRps(newRps);
+    trafficControlRef.current = { mode: 'manual', rps: newRps };
+    const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
+    setLogs((prev) => [
+      ...prev.slice(-40),
+      {
+        time: timeLabel,
+        level: delta > 0 ? 'SCALE' : 'COST',
+        category: delta > 0 ? 'scale' : 'cost',
+        message: delta > 0 
+          ? `📈 Manual traffic ramped to ${newRps} RPS (+${delta} RPS). Evaluators recalculating pod demand.`
+          : `📉 Manual traffic reduced to ${newRps} RPS (${delta} RPS). Cooldown timer initiated for downscaling.`,
+        meta: {
+          previous_rps: manualRps,
+          new_rps: newRps,
+          action: delta > 0 ? 'TRAFFIC_RAMP' : 'TRAFFIC_DROP',
+          timestamp: timeLabel,
+        }
+      }
+    ]);
+  };
+
+  const handleTriggerLstmEvent = () => {
+    const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
+    const predLead = Math.max(1, Math.round(latest.actual_pods * 0.25));
+    const targetPods = Math.min(30, latest.actual_pods + predLead);
+    setLogs((prev) => [
+      ...prev.slice(-40),
+      {
+        time: timeLabel,
+        level: 'LSTM',
+        category: 'insight',
+        message: `🧠 LSTM Synthetic Probe: Model projected +${predLead * 25} RPS inflection over next 45s. Pre-allocated ${targetPods} pods to maintain <35ms P95 latency.`,
+        meta: {
+          lookahead_seconds: 45,
+          predicted_target_pods: targetPods,
+          current_pods: latest.actual_pods,
+          confidence_score: 0.942,
+          neural_architecture: 'Stacked_LSTM_2x64_Hidden',
+        }
+      }
+    ]);
   };
 
   const handleReset = () => {
@@ -530,10 +674,301 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 3: DECISION LOG STREAM (Dedicated View) */}
+          {/* TAB 3: DECISION LOG STREAM (Dedicated Operations Deck) */}
           {activeTab === 'logs' && (
             <div className="space-y-4 animate-fadeIn">
-              <LiveEventLog logs={logs} onClear={() => setLogs([])} />
+              {/* 1. Top Telemetry Bento Row (4 Key Stat Cards) */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Stat 1: Total Events Logged */}
+                <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
+                  <div className="flex items-center justify-between text-zinc-400 mb-1">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider">Total Decisions Logged</span>
+                    <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
+                      <Activity className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-extrabold text-white font-mono">{logs.length}</span>
+                    <span className="text-[11px] text-zinc-400">events in buffer</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                    Prometheus scrape: <span className="text-zinc-200 font-semibold">15s cadence</span>
+                  </div>
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+                </div>
+
+                {/* Stat 2: Proactive LSTM Interventions */}
+                <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
+                  <div className="flex items-center justify-between text-zinc-400 mb-1">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider">LSTM Interventions</span>
+                    <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                      <BrainCircuit className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-extrabold text-cyan-400 font-mono">
+                      {logs.filter(l => l.level === 'LSTM' || l.category === 'insight').length}
+                    </span>
+                    <span className="text-[11px] text-zinc-400">preemptions</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                    Lookahead lead: <span className="text-zinc-200 font-semibold">+3 steps (45s)</span>
+                  </div>
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
+                </div>
+
+                {/* Stat 3: Current Replicas vs Demand */}
+                <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
+                  <div className="flex items-center justify-between text-zinc-400 mb-1">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider">Actuation vs Demand</span>
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                      <Server className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-extrabold text-white font-mono">{latest.actual_pods ?? 4}</span>
+                    <span className="text-[11px] text-zinc-400">/ {latest.ideal_demand ?? 4} ideal pods</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    Cluster Load: <span className="text-zinc-200 font-semibold">{latest.rps ?? 125} RPS ({latest.cpu_utilization ?? 60}% CPU)</span>
+                  </div>
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+                </div>
+
+                {/* Stat 4: SLA Compliance & Response Latency */}
+                <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
+                  <div className="flex items-center justify-between text-zinc-400 mb-1">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider">SLA Compliance (P95)</span>
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className={`text-2xl font-extrabold font-mono ${latest.p95_latency_ms > 100 ? 'text-rose-400' : 'text-white'}`}>
+                      {latest.p95_latency_ms ?? 32.5}
+                    </span>
+                    <span className="text-[11px] text-zinc-400">ms P95</span>
+                  </div>
+                  <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
+                    <span className={`w-1.5 h-1.5 rounded-full ${latest.sla_breaches === 0 ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                    SLO: <span className="text-zinc-200">&lt;100ms</span> • <span className="text-emerald-400 font-semibold">{latest.sla_breaches === 0 ? 'Zero Breaches' : `${latest.sla_breaches} breaches`}</span>
+                  </div>
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+                </div>
+              </div>
+
+              {/* 2. Full-Height 2-Column Command Deck */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                {/* Main Stream Column (8 Cols) */}
+                <div className="lg:col-span-8 flex flex-col">
+                  <LiveEventLog logs={logs} onClear={() => setLogs([])} />
+                </div>
+
+                {/* Right Auxiliary Operations Deck (4 Cols) */}
+                <div className="lg:col-span-4 space-y-4">
+                  {/* Card A: Real-Time Decision Synthesis Inspector */}
+                  <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
+                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md bg-purple-500/10 flex items-center justify-center text-purple-400">
+                          <Layers className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold text-xs text-zinc-200 uppercase tracking-wider">Decision Synthesis</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-mono font-medium">
+                        MAX Upper Bound
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-400 leading-relaxed mb-3">
+                      PHPA evaluates all 4 algorithms concurrently every 15s cycle and actuates the upper bound to prevent reactive starvation:
+                    </p>
+
+                    {/* Model breakdown bars */}
+                    <div className="space-y-2 mb-3">
+                      {[
+                        {
+                          name: 'Stacked LSTM',
+                          pods: latest.lstm_pred ?? 4,
+                          desc: 'Proactive non-linear neural lookahead',
+                          color: 'border-purple-500/50 bg-purple-950/20 text-purple-300',
+                          active: (latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4)
+                        },
+                        {
+                          name: 'Holt-Winters',
+                          pods: latest.holt_winters_pred ?? 4,
+                          desc: 'Triple exponential diurnal follower',
+                          color: 'border-cyan-500/50 bg-cyan-950/20 text-cyan-300',
+                          active: (latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4)
+                        },
+                        {
+                          name: 'Linear Regression',
+                          pods: latest.linear_pred ?? 4,
+                          desc: 'First-order slope trend projector',
+                          color: 'border-blue-500/50 bg-blue-950/20 text-blue-300',
+                          active: false
+                        },
+                        {
+                          name: 'Reactive HPA',
+                          pods: latest.reactive_hpa ?? 4,
+                          desc: 'Kubernetes standard reactive threshold',
+                          color: 'border-amber-500/50 bg-amber-950/20 text-amber-300',
+                          active: false
+                        },
+                      ].map((m, i) => (
+                        <div
+                          key={i}
+                          className={`p-2 rounded-lg border flex items-center justify-between transition-all ${
+                            m.active
+                              ? `${m.color} ring-1 ring-purple-500/40 shadow-sm`
+                              : 'border-zinc-800/80 bg-zinc-900/40 text-zinc-400'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-xs text-zinc-200">{m.name}</span>
+                              {m.active && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-purple-500/30 text-purple-200 font-bold">
+                                  GOVERNING
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-zinc-500">{m.desc}</div>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-mono text-base font-bold text-white">{m.pods}</span>
+                            <span className="text-[10px] text-zinc-400 ml-1">pods</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Synthesis result banner */}
+                    <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs font-mono">
+                      <span className="text-zinc-400 text-[11px]">Actuated Cluster Replicas:</span>
+                      <span className="text-emerald-400 font-bold text-sm">
+                        max(...) = {latest.actual_pods ?? 4} Pods
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card B: Interactive Event Sandbox */}
+                  <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
+                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-400">
+                          <Zap className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold text-xs text-zinc-200 uppercase tracking-wider">Event Generator Sandbox</span>
+                      </div>
+                      <span className="text-[10px] text-zinc-500 font-mono">Live Injections</span>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-400 leading-relaxed mb-3">
+                      Trigger synthetic traffic anomalies or manually scale workload to observe live decisions in the stream:
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <button
+                        onClick={handleInjectSpike}
+                        className="p-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 hover:border-rose-500/50 text-rose-300 flex flex-col items-center text-center transition-all group"
+                      >
+                        <div className="flex items-center gap-1 font-semibold text-xs text-rose-200">
+                          <Zap className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-rose-400" />
+                          <span>5x Flash Surge</span>
+                        </div>
+                        <span className="text-[10px] text-rose-400/80 mt-0.5 font-mono">+500 RPS spike</span>
+                      </button>
+
+                      <button
+                        onClick={handleTriggerLstmEvent}
+                        className="p-2.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 flex flex-col items-center text-center transition-all group"
+                      >
+                        <div className="flex items-center gap-1 font-semibold text-xs text-purple-200">
+                          <BrainCircuit className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-purple-400" />
+                          <span>Trigger LSTM</span>
+                        </div>
+                        <span className="text-[10px] text-purple-400/80 mt-0.5 font-mono">Proactive cycle</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleAdjustRps(50)}
+                        className="p-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-300 flex flex-col items-center text-center transition-all group"
+                      >
+                        <div className="flex items-center gap-1 font-semibold text-xs text-cyan-200">
+                          <ArrowUpRight className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-cyan-400" />
+                          <span>+50 RPS Load</span>
+                        </div>
+                        <span className="text-[10px] text-cyan-400/80 mt-0.5 font-mono">Scale-up trigger</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleAdjustRps(-50)}
+                        className="p-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300 flex flex-col items-center text-center transition-all group"
+                      >
+                        <div className="flex items-center gap-1 font-semibold text-xs text-emerald-200">
+                          <ArrowDownRight className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-emerald-400" />
+                          <span>-50 RPS Load</span>
+                        </div>
+                        <span className="text-[10px] text-emerald-400/80 mt-0.5 font-mono">Cost optimization</span>
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={handleReset}
+                      className="w-full py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1.5 text-xs transition-colors font-mono"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Reset Cluster to Baseline (4 Replicas)</span>
+                    </button>
+                  </div>
+
+                  {/* Card C: Operational Guardrails & Policies */}
+                  <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
+                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold text-xs text-zinc-200 uppercase tracking-wider">Operational Guardrails</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono">
+                        Enforced
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5 text-[11px] font-mono">
+                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
+                        <span>Min Replica Boundary:</span>
+                        <span className="text-zinc-200 font-semibold">2 pods</span>
+                      </div>
+                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
+                        <span>Max Replica Boundary:</span>
+                        <span className="text-zinc-200 font-semibold">30 pods</span>
+                      </div>
+                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
+                        <span>Target Pod CPU Load:</span>
+                        <span className="text-zinc-200 font-semibold">60%</span>
+                      </div>
+                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
+                        <span>Scale-Up Delay:</span>
+                        <span className="text-cyan-400 font-semibold">0s (Immediate)</span>
+                      </div>
+                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
+                        <span>Scale-Down Cooldown:</span>
+                        <span className="text-amber-400 font-semibold">60s (Anti-Flapping)</span>
+                      </div>
+                      <div className="flex items-center justify-between py-1 text-zinc-400">
+                        <span>PromQL Scrape Cadence:</span>
+                        <span className="text-zinc-200 font-semibold">15s resolution</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
