@@ -6,6 +6,7 @@ import {
   Terminal, 
   BookOpen, 
   GitBranch, 
+  ShieldCheck, 
   Zap, 
   Play, 
   Pause, 
@@ -33,6 +34,7 @@ export default function Sidebar({
     { id: 'lab', label: 'Telemetry Lab', desc: 'Real-time charts & pod cluster', icon: LayoutDashboard },
     { id: 'benchmark', label: 'Model Benchmarking', desc: 'Side-by-side cost & accuracy', icon: BarChart2 },
     { id: 'logs', label: 'Decision Log Feed', desc: 'Live autoscaler event stream', icon: Terminal },
+    { id: 'guardrails', label: 'Operational Guardrails', desc: 'Safety limits & chaos sandbox', icon: ShieldCheck },
     { id: 'models', label: 'Mathematical Theory', desc: 'Formulations & equations', icon: BookOpen },
     { id: 'pipeline', label: 'Pipeline Architecture', desc: 'Kubernetes CRD & controller', icon: GitBranch },
   ];

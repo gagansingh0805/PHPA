@@ -10,6 +10,7 @@ import WorkloadChart from './components/WorkloadChart';
 import PodCluster from './components/PodCluster';
 import ModelScorecard from './components/ModelScorecard';
 import LiveEventLog from './components/LiveEventLog';
+import OperationalGuardrails from './components/OperationalGuardrails';
 import Term from './components/Term';
 import { Sparkles, Activity, ShieldCheck, Zap, BrainCircuit, Server, DollarSign, Clock, ArrowUpRight, ArrowDownRight, Layers, Sliders, Play, RotateCcw, AlertTriangle, ShieldAlert, CheckCircle2, BarChart2 } from 'lucide-react';
 
@@ -698,6 +699,7 @@ export default function App() {
               {activeTab === 'lab' && 'Autoscaling Telemetry Lab'}
               {activeTab === 'benchmark' && 'Multi-Model Performance & Efficiency Benchmark'}
               {activeTab === 'logs' && 'Autoscaling Decision & Activity Stream'}
+              {activeTab === 'guardrails' && 'Operational Guardrails & Safety Policies'}
               {activeTab === 'models' && 'Mathematical Formulations & Model Specifications'}
               {activeTab === 'pipeline' && 'Kubernetes Operator Pipeline & Architecture'}
             </h2>
@@ -1243,129 +1245,30 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Card C: Interactive Operational Guardrails & Policies */}
-                  <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-md bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="font-semibold text-xs text-zinc-200 uppercase tracking-wider">Operational Guardrails</span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono">
-                        Active & Enforced
-                      </span>
-                    </div>
 
-                    <div className="space-y-2 text-[11px] font-mono">
-                      {/* 1. Min Replicas */}
-                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
-                        <span>Min Replica Boundary:</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleUpdateGuardrail('minPods', -1)}
-                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-                            title="Decrease minimum pods"
-                          >
-                            -
-                          </button>
-                          <span className="text-zinc-200 font-semibold min-w-[48px] text-center">{guardrails.minPods} pods</span>
-                          <button
-                            onClick={() => handleUpdateGuardrail('minPods', 1)}
-                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-                            title="Increase minimum pods"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* 2. Max Replicas */}
-                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
-                        <span>Max Replica Boundary:</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleUpdateGuardrail('maxPods', -5)}
-                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-                            title="Decrease maximum pods"
-                          >
-                            -
-                          </button>
-                          <span className="text-zinc-200 font-semibold min-w-[48px] text-center">{guardrails.maxPods} pods</span>
-                          <button
-                            onClick={() => handleUpdateGuardrail('maxPods', 5)}
-                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-                            title="Increase maximum pods"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* 3. Target Pod CPU */}
-                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
-                        <span>Target Pod CPU Load:</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleUpdateGuardrail('targetCpu', -5)}
-                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-                            title="Decrease target CPU"
-                          >
-                            -
-                          </button>
-                          <span className="text-zinc-200 font-semibold min-w-[48px] text-center">{guardrails.targetCpu}%</span>
-                          <button
-                            onClick={() => handleUpdateGuardrail('targetCpu', 5)}
-                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-                            title="Increase target CPU"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* 4. Scale-Down Cooldown */}
-                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
-                        <span>Scale-Down Cooldown:</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleUpdateGuardrail('cooldownSec', -15)}
-                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-                            title="Decrease cooldown window"
-                          >
-                            -
-                          </button>
-                          <span className="text-amber-400 font-semibold min-w-[48px] text-center">{guardrails.cooldownSec}s</span>
-                          <button
-                            onClick={() => handleUpdateGuardrail('cooldownSec', 15)}
-                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
-                            title="Increase cooldown window"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between py-1 text-zinc-400">
-                        <span>Scale-Up Delay:</span>
-                        <span className="text-cyan-400 font-semibold">0s (Immediate Proactive)</span>
-                      </div>
-
-                      <div className="flex items-center justify-between py-1 text-zinc-400">
-                        <span>PromQL Scrape Cadence:</span>
-                        <span className="text-zinc-200 font-semibold">15s resolution</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 4: MATHEMATICAL MODELS */}
+          {/* TAB 4: OPERATIONAL GUARDRAILS & SAFETY POLICIES */}
+          {activeTab === 'guardrails' && (
+            <OperationalGuardrails
+              guardrails={guardrails}
+              onUpdateGuardrail={handleUpdateGuardrail}
+              latest={latest}
+              onInjectSpike={handleInjectSpike}
+              onTriggerLstmEvent={handleTriggerLstmEvent}
+              onAdjustRps={handleAdjustRps}
+              onReset={handleReset}
+              buttonFeedback={buttonFeedback}
+            />
+          )}
+
+          {/* TAB 5: MATHEMATICAL MODELS */}
           {activeTab === 'models' && <ModelDeepDive />}
 
-          {/* TAB 5: PIPELINE ARCHITECTURE */}
+          {/* TAB 6: PIPELINE ARCHITECTURE */}
           {activeTab === 'pipeline' && (
             <PipelineViewer
               latest={latest}
