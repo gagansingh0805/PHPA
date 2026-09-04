@@ -88,14 +88,15 @@ export default function Term({ id, children, className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0, placement: 'top', arrowLeft: 0 });
   const triggerRef = useRef(null);
-  const timeoutRef = useRef(null);
+  const hoverTimerRef = useRef(null);
+  const closeTimerRef = useRef(null);
   const info = GLOSSARY[id?.toLowerCase()] || null;
 
   const updatePosition = () => {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    const tooltipWidth = 290;
-    const tooltipHeightEst = 145;
+    const tooltipWidth = Math.min(330, window.innerWidth - 24);
+    const tooltipHeightEst = 160;
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -104,7 +105,7 @@ export default function Term({ id, children, className = '' }) {
     const triggerCenterX = rect.left + rect.width / 2;
     let left = triggerCenterX - tooltipWidth / 2;
 
-    // Clamp horizontal position so tooltip never bleeds offscreen
+    // Strict boundary clamp so tooltip never bleeds offscreen or goes outside
     const margin = 12;
     if (left < margin) {
       left = margin;
@@ -112,34 +113,58 @@ export default function Term({ id, children, className = '' }) {
       left = viewportWidth - tooltipWidth - margin;
     }
 
-    // Calculate relative arrow position pointing directly to trigger center
-    const arrowLeft = Math.max(16, Math.min(tooltipWidth - 16, triggerCenterX - left));
+    // Relative arrow position pointing directly to trigger center
+    const arrowLeft = Math.max(18, Math.min(tooltipWidth - 18, triggerCenterX - left));
 
-    // Vertical placement: default 'top' unless space above is tight (< 160px)
+    // Vertical placement: default 'top' unless space above is tight
     const spaceAbove = rect.top;
-    const placement = spaceAbove >= tooltipHeightEst + 16 ? 'top' : 'bottom';
-
+    const spaceBelow = viewportHeight - rect.bottom;
+    let placement = 'top';
     let top = 0;
-    if (placement === 'top') {
+
+    if (spaceAbove >= tooltipHeightEst + 16) {
+      placement = 'top';
       top = rect.top - 8;
-    } else {
+    } else if (spaceBelow >= tooltipHeightEst + 16) {
+      placement = 'bottom';
       top = rect.bottom + 8;
+    } else {
+      if (spaceAbove >= spaceBelow) {
+        placement = 'top';
+        top = Math.max(margin + tooltipHeightEst, rect.top - 8);
+      } else {
+        placement = 'bottom';
+        top = Math.min(viewportHeight - margin - tooltipHeightEst, rect.bottom + 8);
+      }
     }
 
     setCoords({ top, left, placement, arrowLeft });
   };
 
+  // Hover delay (300ms) before opening to prevent annoying flashes on quick mouse passes
   const handleMouseEnter = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    updatePosition();
-    setIsOpen(true);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => {
+      updatePosition();
+      setIsOpen(true);
+    }, 300);
   };
 
   const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
       setIsOpen(false);
     }, 150);
   };
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -185,7 +210,7 @@ export default function Term({ id, children, className = '' }) {
                   pointerEvents: 'auto',
                 }}
                 onMouseEnter={() => {
-                  if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                  if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
                 }}
                 onMouseLeave={handleMouseLeave}
               >
@@ -202,26 +227,26 @@ export default function Term({ id, children, className = '' }) {
                     scale: 0.95,
                   }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="w-72 p-3 rounded-xl bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/90 shadow-[0_16px_40px_rgba(0,0,0,0.85)] text-left text-xs relative"
+                  className="w-[330px] max-w-[calc(100vw-24px)] p-3 rounded-xl bg-zinc-900/98 backdrop-blur-xl border border-zinc-700/90 shadow-[0_16px_40px_rgba(0,0,0,0.85)] text-left text-xs relative overflow-hidden"
                 >
-                  {/* Header */}
-                  <div className="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-zinc-800">
-                    <div className="flex items-center gap-1.5 font-bold text-white text-[11px]">
-                      <Info className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
-                      <span className="truncate">{info.term}</span>
+                  {/* Header: Title + Category Badge with robust flex clamping */}
+                  <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-800/80">
+                    <div className="flex items-center gap-1.5 font-bold text-white text-[11.5px] min-w-0 flex-1">
+                      <Info className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                      <span className="truncate" title={info.term}>{info.term}</span>
                     </div>
-                    <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase flex-shrink-0 font-semibold">
+                    <span className="text-[8.5px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase shrink-0 font-semibold tracking-wide whitespace-nowrap">
                       {info.category}
                     </span>
                   </div>
 
                   {/* Definition */}
-                  <p className="text-zinc-300 text-[10.5px] leading-relaxed mb-2">
+                  <p className="text-zinc-300 text-[11px] leading-relaxed mb-2.5">
                     {info.definition}
                   </p>
 
                   {/* Significance in Autoscaling */}
-                  <div className="p-2 rounded-lg bg-zinc-950/80 border border-zinc-800 text-[9.5px] text-zinc-400 leading-snug">
+                  <div className="p-2.5 rounded-lg bg-zinc-950/90 border border-zinc-800 text-[10px] text-zinc-400 leading-snug">
                     <strong className="text-zinc-200 font-semibold">Autoscaling Impact:</strong>{' '}
                     {info.significance}
                   </div>
@@ -247,4 +272,3 @@ export default function Term({ id, children, className = '' }) {
     </>
   );
 }
-
