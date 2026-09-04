@@ -32,11 +32,7 @@ import {
   ShieldAlert, 
   CheckCircle2, 
   BarChart2,
-  Menu,
-  LayoutDashboard,
-  Terminal,
-  BookOpen,
-  GitBranch
+  Menu
 } from 'lucide-react';
 
 export default function App() {
@@ -1020,35 +1016,6 @@ export default function App() {
             </div>
           </div>
         </header>
-
-        {/* Mobile-Only Horizontal Scroll Tab Strip */}
-        <div className="lg:hidden flex items-center gap-1.5 px-3 py-2 bg-zinc-950/95 border-b border-zinc-800/80 overflow-x-auto whitespace-nowrap scrollbar-none z-10 flex-shrink-0">
-          {[
-            { id: 'lab', label: 'Lab', icon: LayoutDashboard },
-            { id: 'benchmark', label: 'Benchmarks', icon: BarChart2 },
-            { id: 'logs', label: 'Logs', icon: Terminal },
-            { id: 'guardrails', label: 'Guardrails', icon: ShieldCheck },
-            { id: 'models', label: 'Theory', icon: BookOpen },
-            { id: 'pipeline', label: 'Pipeline', icon: GitBranch },
-          ].map((t) => {
-            const Icon = t.icon;
-            const isActive = activeTab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-purple-600 text-white shadow-sm shadow-purple-600/30'
-                    : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
-                }`}
-              >
-                <Icon className="w-3 h-3" />
-                <span>{t.label}</span>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Content Body */}
         <main className="flex-1 p-3 sm:p-4 lg:p-6 space-y-4 max-w-[1650px] w-full mx-auto">
