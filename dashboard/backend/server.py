@@ -119,6 +119,18 @@ class TelemetryHandler(BaseHTTPRequestHandler):
             multiplier = payload.get("multiplier", 5.0)
             engine.inject_spike(multiplier=multiplier)
             res = {"status": "spike_injected", "multiplier": multiplier}
+        elif path == "/api/control/traffic":
+            mode = payload.get("mode", "auto")
+            rps = payload.get("rps", 125.0)
+            engine.set_traffic(mode=mode, rps=rps)
+            res = {"status": "traffic_updated", "mode": engine.traffic_mode, "rps": engine.manual_rps}
+        elif path == "/api/control/guardrails":
+            min_pods = payload.get("minPods", 2)
+            max_pods = payload.get("maxPods", 30)
+            target_cpu = payload.get("targetCpu", 60.0)
+            cooldown_sec = payload.get("cooldownSec", 60.0)
+            engine.set_guardrails(min_pods, max_pods, target_cpu, cooldown_sec)
+            res = {"status": "guardrails_updated"}
         elif path == "/api/control/reset":
             engine.reset()
             res = {"status": "reset"}

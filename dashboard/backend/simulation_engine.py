@@ -19,6 +19,12 @@ class SimulationEngine:
         self.tick: int = 0
         self.spike_factor: float = 1.0
         self.spike_remaining_ticks: int = 0
+        self.traffic_mode: str = "auto"
+        self.manual_rps: float = 125.0
+        self.min_pods: int = 2
+        self.max_pods: int = 30
+        self.target_cpu: float = 60.0
+        self.cooldown_sec: float = 60.0
         
         # State tracking for algorithms
         self.actual_pods: int = 4
@@ -43,6 +49,16 @@ class SimulationEngine:
 
     def set_speed(self, speed: float):
         self.speed_factor = max(1.0, min(120.0, float(speed)))
+
+    def set_traffic(self, mode: str = "auto", rps: float = 125.0):
+        self.traffic_mode = mode
+        self.manual_rps = max(10.0, float(rps))
+
+    def set_guardrails(self, min_pods: int = 2, max_pods: int = 30, target_cpu: float = 60.0, cooldown_sec: float = 60.0):
+        self.min_pods = max(1, int(min_pods))
+        self.max_pods = max(self.min_pods + 1, int(max_pods))
+        self.target_cpu = max(30.0, min(90.0, float(target_cpu)))
+        self.cooldown_sec = max(0.0, float(cooldown_sec))
 
     def inject_spike(self, multiplier: float = 5.0, duration_ticks: int = 8):
         """Triggers an immediate traffic burst (e.g. 5x flash crowd)"""
@@ -82,14 +98,18 @@ class SimulationEngine:
         else:
             self.spike_factor = 1.0
 
-        # Base diurnal sine wave (represents 24-hour cycle)
-        cycle = math.sin((self.tick % 60) / 60.0 * 2 * math.pi)
-        base_rps = 120 + 70 * cycle
-        noise = random.uniform(-10, 10)
-        current_rps = max(10, (base_rps + noise) * current_multiplier)
+        # Traffic volume based on mode (manual or auto diurnal replay)
+        if self.traffic_mode == "manual":
+            current_rps = max(10.0, self.manual_rps * current_multiplier)
+        else:
+            cycle = math.sin((self.tick % 60) / 60.0 * 2 * math.pi)
+            base_rps = 120 + 70 * cycle
+            noise = random.uniform(-10, 10)
+            current_rps = max(10.0, (base_rps + noise) * current_multiplier)
         
-        # 1 pod handles ~25 RPS at 60% CPU target
-        ideal_demand_pods = max(2, math.ceil(current_rps / 25.0))
+        # 1 pod handles ~25 RPS at target_cpu (60% baseline)
+        rps_per_pod = (self.target_cpu / 60.0) * 25.0
+        ideal_demand_pods = max(self.min_pods, min(self.max_pods, math.ceil(current_rps / max(1.0, rps_per_pod))))
         
         self.history_rps.append(current_rps)
         self.history_demand.append(ideal_demand_pods)
@@ -120,8 +140,9 @@ class SimulationEngine:
         else:
             lstm_pred = ideal_demand_pods
 
-        # Actual Pods (Using DecisionType: Maximum across active models)
-        target_replicas = max(reactive_hpa, linear_pred, hw_pred, lstm_pred)
+        # Actual Pods bounded by configured guardrails
+        raw_target = max(reactive_hpa, linear_pred, hw_pred, lstm_pred)
+        target_replicas = max(self.min_pods, min(self.max_pods, raw_target))
         if target_replicas > self.actual_pods:
             self.actual_pods = target_replicas
         elif target_replicas < self.actual_pods:

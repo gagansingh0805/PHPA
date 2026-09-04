@@ -8,6 +8,8 @@ export default function TrafficThrottle({
   setTrafficMode,
   manualRps,
   setManualRps,
+  onRpsChange,
+  onModeChange,
   currentRps,
 }) {
   const presets = [
@@ -16,6 +18,16 @@ export default function TrafficThrottle({
     { label: 'Rush', rps: 280, icon: Flame, desc: '~12 pods' },
     { label: 'Crisis', rps: 550, icon: Zap, desc: '~22 pods' },
   ];
+
+  const handleModeToggle = (mode) => {
+    if (onModeChange) onModeChange(mode);
+    else if (setTrafficMode) setTrafficMode(mode);
+  };
+
+  const handleRpsUpdate = (rps) => {
+    if (onRpsChange) onRpsChange(rps);
+    else if (setManualRps) setManualRps(rps);
+  };
 
   const stressPercent = Math.min(100, Math.round((currentRps / 600.0) * 100));
 
@@ -41,7 +53,7 @@ export default function TrafficThrottle({
         {/* Mode Toggle */}
         <div className="flex items-center p-0.5 rounded-lg bg-zinc-900 border border-zinc-800">
           <button
-            onClick={() => setTrafficMode('auto')}
+            onClick={() => handleModeToggle('auto')}
             className={`px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-all ${
               trafficMode === 'auto'
                 ? 'bg-purple-600 text-white shadow-sm'
@@ -52,7 +64,7 @@ export default function TrafficThrottle({
             Auto Trace
           </button>
           <button
-            onClick={() => setTrafficMode('manual')}
+            onClick={() => handleModeToggle('manual')}
             className={`px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition-all ${
               trafficMode === 'manual'
                 ? 'bg-amber-600 text-white shadow-sm'
@@ -97,7 +109,7 @@ export default function TrafficThrottle({
               max="600"
               step="5"
               value={manualRps}
-              onChange={(e) => setManualRps(parseInt(e.target.value))}
+              onChange={(e) => handleRpsUpdate(parseInt(e.target.value))}
               className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
             />
             <div className="min-w-[65px] text-right font-mono font-bold text-amber-400 text-xs">
@@ -113,7 +125,7 @@ export default function TrafficThrottle({
               return (
                 <button
                   key={p.label}
-                  onClick={() => setManualRps(p.rps)}
+                  onClick={() => handleRpsUpdate(p.rps)}
                   className={`p-1.5 rounded-md border text-center transition-all ${
                     isSelected
                       ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
@@ -133,10 +145,14 @@ export default function TrafficThrottle({
       ) : (
         <div className="text-[11px] text-zinc-400 flex items-center justify-between pt-1 border-t border-zinc-800/60">
           <span>Replaying autonomous 5-day diurnal trace.</span>
-          <span className="text-purple-400">Switch to 'Manual' to drag RPS yourself.</span>
+          <button
+            onClick={() => handleModeToggle('manual')}
+            className="text-purple-400 hover:text-purple-300 underline text-[11px] font-semibold"
+          >
+            Switch to 'Manual' to drag RPS yourself
+          </button>
         </div>
       )}
     </div>
   );
 }
-

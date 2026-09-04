@@ -15,26 +15,98 @@ import {
   Check, 
   CheckCircle2, 
   AlertTriangle,
-  Server
+  Server,
+  DollarSign,
+  Flame,
+  Shield,
+  Sparkles,
+  RefreshCw,
+  Gauge
 } from 'lucide-react';
 import Term from './Term';
 
 export default function OperationalGuardrails({
   guardrails,
   onUpdateGuardrail,
+  onApplyProfile,
   latest,
   onInjectSpike,
   onTriggerLstmEvent,
   onAdjustRps,
+  onSetTraffic,
   onReset,
   buttonFeedback,
 }) {
   const [copied, setCopied] = useState(false);
+  const [activeProfile, setActiveProfile] = useState('custom');
 
-  const { minPods, maxPods, targetCpu, cooldownSec } = guardrails;
+  const { minPods = 2, maxPods = 30, targetCpu = 60, cooldownSec = 60 } = guardrails || {};
   const actualPods = latest.actual_pods || 4;
   const cpu = latest.cpu_utilization || 60;
   const rps = latest.rps || 125;
+
+  // FinOps Cost Projections ($0.040 per pod-hour baseline)
+  const hourlyRate = 0.040;
+  const hoursPerMonth = 730;
+  const monthlyFloor = (minPods * hourlyRate * hoursPerMonth).toFixed(2);
+  const currentHourly = (actualPods * hourlyRate).toFixed(3);
+  const currentMonthly = (actualPods * hourlyRate * hoursPerMonth).toFixed(2);
+  const monthlyCeiling = (maxPods * hourlyRate * hoursPerMonth).toFixed(2);
+  const monthlySavings = Math.max(0, (maxPods - actualPods) * hourlyRate * hoursPerMonth).toFixed(2);
+
+  // Range visualizer calculations
+  const maxSpectrum = Math.max(50, maxPods + 10);
+  const minPercent = Math.min(100, (minPods / maxSpectrum) * 100);
+  const maxPercent = Math.min(100, (maxPods / maxSpectrum) * 100);
+  const activePercent = Math.min(100, (actualPods / maxSpectrum) * 100);
+
+  // Profiles
+  const profiles = [
+    {
+      id: 'ha',
+      name: 'High Availability (HA)',
+      icon: Shield,
+      badge: 'Mission-Critical',
+      desc: 'High pod floor & low target CPU to absorb sudden bursts with zero latency spikes.',
+      values: { minPods: 6, maxPods: 40, targetCpu: 50, cooldownSec: 120 }
+    },
+    {
+      id: 'finops',
+      name: 'FinOps Cost-Optimized',
+      icon: DollarSign,
+      badge: 'Minimal Spend',
+      desc: 'Tight pod floor & aggressive scale-down cooldown to reclaim idle cloud resources.',
+      values: { minPods: 2, maxPods: 16, targetCpu: 75, cooldownSec: 30 }
+    },
+    {
+      id: 'surge',
+      name: 'Flash-Crowd Ready',
+      icon: Zap,
+      badge: 'Balanced Proactive',
+      desc: 'Optimal balance for diurnal cycles and sudden non-linear traffic inflection.',
+      values: { minPods: 4, maxPods: 35, targetCpu: 60, cooldownSec: 45 }
+    },
+    {
+      id: 'chaos',
+      name: 'Constrained Stress Test',
+      icon: AlertTriangle,
+      badge: 'Ceiling Stress',
+      desc: 'Constrains max pods to 8 to test and verify boundary clamping under high RPS.',
+      values: { minPods: 2, maxPods: 8, targetCpu: 80, cooldownSec: 15 }
+    }
+  ];
+
+  const handleSelectProfile = (profile) => {
+    setActiveProfile(profile.id);
+    if (onApplyProfile) {
+      onApplyProfile(profile.values);
+    } else {
+      Object.keys(profile.values).forEach((k) => {
+        const delta = profile.values[k] - guardrails[k];
+        if (delta !== 0) onUpdateGuardrail(k, delta);
+      });
+    }
+  };
 
   const yamlManifest = `apiVersion: autoscaling.research/v1alpha1
 kind: PredictiveHorizontalPodAutoscaler
@@ -91,14 +163,14 @@ spec:
         {/* Card 1: Replica Range Boundary */}
         <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Replica Boundaries</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Replica Range</span>
             <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
               <Server className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-white font-mono">{minPods} → {maxPods}</span>
-            <span className="text-[11px] text-zinc-400">pods range</span>
+            <span className="text-[11px] text-zinc-400">pods boundary</span>
           </div>
           <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
@@ -129,60 +201,210 @@ spec:
         {/* Card 3: Downscale Stabilization Cooldown */}
         <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Downscale Cooldown</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Cooldown Window</span>
             <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
               <Clock className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-amber-400 font-mono">{cooldownSec}s</span>
-            <span className="text-[11px] text-zinc-400">stabilization</span>
+            <span className="text-[11px] text-zinc-400">anti-flapping</span>
           </div>
           <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-            Policy: <span className="text-zinc-200 font-semibold">Anti-flapping dampener</span>
+            Delay: <span className="text-emerald-400 font-semibold">0s scale-up preemption</span>
           </div>
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
         </div>
 
-        {/* Card 4: Enforced Boundary Status */}
+        {/* Card 4: FinOps Cost Ceiling */}
         <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Policy Enforcement</span>
+            <span className="text-[11px] font-semibold uppercase tracking-wider">FinOps Budget Cap</span>
             <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <DollarSign className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-emerald-400 font-mono">ACTIVE</span>
-            <span className="text-[11px] text-zinc-400">invariants safe</span>
+            <span className="text-2xl font-extrabold text-emerald-400 font-mono">${monthlyCeiling}</span>
+            <span className="text-[11px] text-zinc-400">/ mo max</span>
           </div>
           <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
-            Status: <span className="text-emerald-300 font-semibold">Zero budget overrun risk</span>
+            Run-Rate: <span className="text-emerald-300 font-semibold">${currentHourly}/hr</span>
           </div>
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
         </div>
       </div>
 
-      {/* 2. Main Deck: Left Column (Policy Controls & YAML) + Right Column (Chaos Sandbox & Invariants) */}
+      {/* 2. Interactive Visual Cluster Safety Spectrum (The Range Gauge) */}
+      <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 relative overflow-hidden">
+        <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+          <div className="flex items-center gap-2">
+            <Gauge className="w-4 h-4 text-purple-400" />
+            <h3 className="text-xs font-bold text-white uppercase tracking-wide">
+              Live Replica Allocation Spectrum & Boundary Gauge
+            </h3>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-[10px]">
+            <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
+              Safe Band: <strong className="text-emerald-400">{minPods} – {maxPods} pods</strong>
+            </span>
+            <span className={`px-2 py-0.5 rounded font-bold ${
+              actualPods >= maxPods 
+                ? 'bg-rose-950/80 border border-rose-500/50 text-rose-300' 
+                : actualPods > maxPods * 0.8 
+                ? 'bg-amber-950/80 border border-amber-500/50 text-amber-300'
+                : 'bg-emerald-950/80 border border-emerald-500/50 text-emerald-300'
+            }`}>
+              {actualPods >= maxPods ? 'CEILING CLAMPED' : 'WITHIN BOUNDS'}
+            </span>
+          </div>
+        </div>
+
+        {/* Visual Multi-Segment Bar */}
+        <div className="relative pt-6 pb-4 px-2">
+          {/* Track background */}
+          <div className="h-4 bg-zinc-900 rounded-full border border-zinc-800 overflow-hidden relative">
+            {/* Safe zone filling from min to max */}
+            <div 
+              className="absolute top-0 bottom-0 bg-gradient-to-r from-purple-600/30 via-emerald-600/30 to-rose-600/40 border-x border-purple-500/40"
+              style={{
+                left: `${minPercent}%`,
+                width: `${maxPercent - minPercent}%`
+              }}
+            />
+
+            {/* Active utilization progress bar */}
+            <div 
+              className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 transition-all duration-300 rounded-full"
+              style={{ width: `${activePercent}%` }}
+            />
+          </div>
+
+          {/* Min Pods Marker */}
+          <div 
+            className="absolute top-0 flex flex-col items-center -translate-x-1/2"
+            style={{ left: `${minPercent}%` }}
+          >
+            <span className="text-[9px] font-mono text-purple-300 font-bold bg-zinc-900 px-1 rounded border border-purple-500/30">
+              MIN ({minPods})
+            </span>
+            <div className="w-0.5 h-2 bg-purple-400 mt-0.5"></div>
+          </div>
+
+          {/* Current Active Pods Floating Indicator */}
+          <div 
+            className="absolute -top-1 flex flex-col items-center -translate-x-1/2 z-10 transition-all duration-300"
+            style={{ left: `${activePercent}%` }}
+          >
+            <div className="px-1.5 py-0.5 rounded-full bg-white text-zinc-950 font-bold font-mono text-[10px] shadow-lg flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping"></span>
+              {actualPods} pods
+            </div>
+            <div className="w-1 h-3 bg-white mt-0.5 rounded-full shadow"></div>
+          </div>
+
+          {/* Max Pods Marker */}
+          <div 
+            className="absolute top-0 flex flex-col items-center -translate-x-1/2"
+            style={{ left: `${maxPercent}%` }}
+          >
+            <span className="text-[9px] font-mono text-rose-300 font-bold bg-zinc-900 px-1 rounded border border-rose-500/30">
+              MAX ({maxPods})
+            </span>
+            <div className="w-0.5 h-2 bg-rose-400 mt-0.5"></div>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center justify-between text-[10px] font-mono text-zinc-400 pt-2 border-t border-zinc-900">
+          <span>0 pods (scale-to-zero)</span>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-purple-500"></span> Minimum Floor</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-cyan-400"></span> Active Cluster</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-rose-500"></span> Hard Ceiling</span>
+          </div>
+          <span>{maxSpectrum} pods limit</span>
+        </div>
+      </div>
+
+      {/* 3. Operational Profile Presets */}
+      <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90">
+        <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <h3 className="text-xs font-bold text-white uppercase tracking-wide">
+              Pre-Configured Operational Profiles
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono text-zinc-500">Instant Policy Switch</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {profiles.map((p) => {
+            const Icon = p.icon;
+            const isSelected = activeProfile === p.id || (
+              minPods === p.values.minPods && 
+              maxPods === p.values.maxPods && 
+              targetCpu === p.values.targetCpu && 
+              cooldownSec === p.values.cooldownSec
+            );
+            return (
+              <button
+                key={p.id}
+                onClick={() => handleSelectProfile(p)}
+                className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between group ${
+                  isSelected
+                    ? 'bg-purple-950/30 border-purple-500/60 shadow-md shadow-purple-500/10'
+                    : 'bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/90'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <div className="flex items-center gap-1.5 font-bold text-xs text-white">
+                      <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-purple-400' : 'text-zinc-400'}`} />
+                      <span className="truncate">{p.name}</span>
+                    </div>
+                    <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-300">
+                      {p.badge}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 leading-relaxed mb-2.5">
+                    {p.desc}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-zinc-800/60 grid grid-cols-2 gap-1 text-[9px] font-mono text-zinc-400">
+                  <div>Min: <strong className="text-white">{p.values.minPods}</strong></div>
+                  <div>Max: <strong className="text-white">{p.values.maxPods}</strong></div>
+                  <div>CPU: <strong className="text-white">{p.values.targetCpu}%</strong></div>
+                  <div>Cool: <strong className="text-white">{p.values.cooldownSec}s</strong></div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. Main Deck: Left Column (Guardrail Steppers & FinOps) + Right Column (Chaos Sandbox & YAML) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* LEFT COLUMN: 7 Columns (Guardrail Steppers & Kubernetes CRD Manifest) */}
+        {/* LEFT COLUMN: 7 Columns */}
         <div className="lg:col-span-7 space-y-4">
-          {/* Card A: Interactive Operational Guardrails */}
+          {/* Interactive Operational Boundary Controls */}
           <div className="bento-card rounded-xl p-5 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
             <div className="flex items-center justify-between pb-2.5 mb-4 border-b border-zinc-800/80">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                  <ShieldCheck className="w-4 h-4" />
+                  <Sliders className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">Cluster Operational Boundaries</h3>
-                  <p className="text-[10px] text-zinc-400">Real-time parameters governing the autoscaler's actuation limits</p>
+                  <p className="text-[10px] text-zinc-400">Fine-tune individual parameters controlling autoscaler clamping</p>
                 </div>
               </div>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-medium">
-                Live Clamping Enforced
+                Live Clamping Active
               </span>
             </div>
 
@@ -317,45 +539,43 @@ spec:
             </div>
           </div>
 
-          {/* Card B: Live Generated Kubernetes CRD Manifest */}
-          <div className="bento-card rounded-xl p-5 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-800/80">
+          {/* FinOps Cloud Cost Breakdown Card */}
+          <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90">
+            <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
-                  <Layers className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Generated Kubernetes Manifest (CRD)</h3>
-                  <p className="text-[10px] text-zinc-400">Declarative resource definition dynamically synchronized with guardrail values</p>
-                </div>
+                <DollarSign className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wide">
+                  FinOps Budget Governance & Projection
+                </h3>
               </div>
-              <button
-                onClick={handleCopyYaml}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white text-xs transition-colors font-mono"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400 font-bold">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Copy YAML</span>
-                  </>
-                )}
-              </button>
+              <span className="text-[10px] font-mono text-zinc-400">AWS / GCP EKS Rate: $0.040/hr</span>
             </div>
 
-            <div className="p-3.5 rounded-lg bg-zinc-900/70 border border-zinc-800 font-mono text-[11px] text-zinc-300 overflow-x-auto max-h-[260px] leading-relaxed shadow-inner">
-              <pre className="text-purple-300">{yamlManifest}</pre>
+            <div className="grid grid-cols-3 gap-2.5 text-center text-xs font-mono">
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800">
+                <div className="text-[10px] text-zinc-400 font-sans">Monthly Floor</div>
+                <div className="text-base font-bold text-white mt-0.5">${monthlyFloor}</div>
+                <div className="text-[9px] text-zinc-500">at {minPods} min pods</div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-500/30">
+                <div className="text-[10px] text-emerald-300 font-sans">Active Run-Rate</div>
+                <div className="text-base font-bold text-emerald-400 mt-0.5">${currentMonthly}</div>
+                <div className="text-[9px] text-emerald-300/80">${currentHourly}/hr active</div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800">
+                <div className="text-[10px] text-zinc-400 font-sans">Hard Cap Ceiling</div>
+                <div className="text-base font-bold text-rose-300 mt-0.5">${monthlyCeiling}</div>
+                <div className="text-[9px] text-zinc-500">at {maxPods} max pods</div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: 5 Columns (Chaos Sandbox & Invariant Safety Verification) */}
+        {/* RIGHT COLUMN: 5 Columns */}
         <div className="lg:col-span-5 space-y-4">
-          {/* Card C: Chaos & Boundary Stress Testing Sandbox */}
+          {/* Chaos & Boundary Stress Testing Sandbox */}
           <div className="bento-card rounded-xl p-5 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
             <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-800/80">
               <div className="flex items-center gap-2">
@@ -364,14 +584,14 @@ spec:
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">Boundary Stress Testing</h3>
-                  <p className="text-[10px] text-zinc-400">Inject synthetic anomalies to verify that boundaries hold</p>
+                  <p className="text-[10px] text-zinc-400">Test if boundaries hold under synthetic anomalies</p>
                 </div>
               </div>
               <span className="text-[10px] text-zinc-500 font-mono">Chaos Suite</span>
             </div>
 
             <p className="text-xs text-zinc-400 leading-relaxed mb-3">
-              Trigger traffic surges or manual load deltas to observe the autoscaler clamping safely against your configured boundaries:
+              Trigger traffic surges or drop traffic to observe the cluster clamping strictly against your guardrails:
             </p>
 
             <div className="grid grid-cols-2 gap-2.5 mb-3">
@@ -387,7 +607,7 @@ spec:
                   <Zap className="w-4 h-4 group-hover:scale-110 transition-transform text-rose-400" />
                   <span>{buttonFeedback === 'spike' ? 'Surge Injected!' : '5x Flash Surge'}</span>
                 </div>
-                <span className="text-[10px] text-rose-400/80 mt-1 font-mono">Test max ceiling ({maxPods} pods)</span>
+                <span className="text-[10px] text-rose-400/80 mt-1 font-mono">Verify max ceiling ({maxPods} pods)</span>
               </button>
 
               <button
@@ -402,7 +622,7 @@ spec:
                   <BrainCircuit className="w-4 h-4 group-hover:scale-110 transition-transform text-purple-400" />
                   <span>{buttonFeedback === 'lstm' ? 'Preemption Active!' : 'Trigger LSTM'}</span>
                 </div>
-                <span className="text-[10px] text-purple-400/80 mt-1 font-mono">Test proactive pre-warm</span>
+                <span className="text-[10px] text-purple-400/80 mt-1 font-mono">Verify proactive lead</span>
               </button>
 
               <button
@@ -417,7 +637,7 @@ spec:
                   <ArrowUpRight className="w-4 h-4 group-hover:scale-110 transition-transform text-cyan-400" />
                   <span>{buttonFeedback === 'plus' ? '+50 Applied!' : '+50 RPS Load'}</span>
                 </div>
-                <span className="text-[10px] text-cyan-400/80 mt-1 font-mono">Ramp load upward</span>
+                <span className="text-[10px] text-cyan-400/80 mt-1 font-mono">Step load upward</span>
               </button>
 
               <button
@@ -432,7 +652,25 @@ spec:
                   <ArrowDownRight className="w-4 h-4 group-hover:scale-110 transition-transform text-emerald-400" />
                   <span>{buttonFeedback === 'minus' ? '-50 Applied!' : '-50 RPS Load'}</span>
                 </div>
-                <span className="text-[10px] text-emerald-400/80 mt-1 font-mono">Test cooldown downscale</span>
+                <span className="text-[10px] text-emerald-400/80 mt-1 font-mono">Step load downward</span>
+              </button>
+            </div>
+
+            {/* Drop Traffic to Zero to test floor */}
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <button
+                onClick={() => onSetTraffic && onSetTraffic(10, 'manual')}
+                className="py-1.5 px-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs flex items-center justify-center gap-1 font-mono transition-colors"
+                title="Drop traffic to 10 RPS to test minimum pod floor"
+              >
+                <span>📉 Drop to 10 RPS</span>
+              </button>
+              <button
+                onClick={() => onSetTraffic && onSetTraffic(500, 'manual')}
+                className="py-1.5 px-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs flex items-center justify-center gap-1 font-mono transition-colors"
+                title="Ramp traffic to 500 RPS to test maximum pod ceiling"
+              >
+                <span>📈 Jump to 500 RPS</span>
               </button>
             </div>
 
@@ -449,56 +687,24 @@ spec:
             </button>
           </div>
 
-          {/* Card D: Active Invariant Verification Deck */}
-          <div className="bento-card rounded-xl p-5 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-800/80">
+          {/* Declarative Kubernetes CRD Manifest */}
+          <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-zinc-800/80">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Live Invariant Verification</h3>
-                  <p className="text-[10px] text-zinc-400">Runtime mathematical assertions continuously validated</p>
-                </div>
+                <Layers className="w-4 h-4 text-purple-400" />
+                <span className="font-bold text-xs text-white uppercase tracking-wider">PredictiveHPA.yaml</span>
               </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse"></span>
+              <button
+                onClick={handleCopyYaml}
+                className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white text-[11px] font-mono transition-colors"
+              >
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                <span>{copied ? 'Copied!' : 'Copy YAML'}</span>
+              </button>
             </div>
 
-            <div className="space-y-2.5 text-xs font-mono">
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 flex items-center justify-between">
-                <span className="text-zinc-400 text-[11px]">Floor Invariant (Min Boundary):</span>
-                <span className="text-emerald-400 font-bold">
-                  {actualPods} ≥ {minPods} pods (PASS)
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 flex items-center justify-between">
-                <span className="text-zinc-400 text-[11px]">Ceiling Invariant (Max Boundary):</span>
-                <span className="text-emerald-400 font-bold">
-                  {actualPods} ≤ {maxPods} pods (PASS)
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 flex items-center justify-between">
-                <span className="text-zinc-400 text-[11px]">Preemptive Scale-Up Delay:</span>
-                <span className="text-cyan-400 font-bold">
-                  0s (Immediate)
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800 flex items-center justify-between">
-                <span className="text-zinc-400 text-[11px]">Downscale Cooldown Dampener:</span>
-                <span className="text-amber-400 font-bold">
-                  {cooldownSec}s Active
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-3 p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/30 flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-emerald-200 leading-relaxed">
-                All 4 operational invariants are currently satisfied. Cluster pods and resource allocations remain strictly clamped within your declared safety boundaries.
-              </p>
+            <div className="p-3 rounded-lg bg-zinc-900/80 border border-zinc-800 font-mono text-[10px] text-purple-300 overflow-x-auto max-h-[190px] leading-relaxed">
+              <pre>{yamlManifest}</pre>
             </div>
           </div>
         </div>

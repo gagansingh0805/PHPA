@@ -326,6 +326,12 @@ export default function App() {
   }, [isConnected, isPlaying, speedFactor]);
 
   const handleTick = (data) => {
+    if (trafficControlRef.current.mode === 'manual') {
+      data.rps = trafficControlRef.current.rps;
+      const { minPods, maxPods, targetCpu } = guardrailsRef.current;
+      const rpsPerPod = (targetCpu / 60.0) * 25.0;
+      data.ideal_demand = Math.max(minPods, Math.min(maxPods, Math.ceil(data.rps / rpsPerPod)));
+    }
     setLatest(data);
     const timeLabel = data.sim_time ? data.sim_time.split(', ')[1] : `t=${data.tick}`;
 
@@ -505,48 +511,131 @@ export default function App() {
     }).catch(() => {});
   };
 
-  const handleAdjustRps = (delta) => {
-    flashButton(delta > 0 ? 'plus' : 'minus');
-    setTrafficMode('manual');
-    const currentRps = manualRps || latest.rps || 125;
-    const newRps = Math.max(25, Math.min(600, currentRps + delta));
+  const handleSetTraffic = (newRps, newMode = 'manual') => {
+    setTrafficMode(newMode);
     setManualRps(newRps);
-    trafficControlRef.current = { mode: 'manual', rps: newRps };
+    trafficControlRef.current = { mode: newMode, rps: newRps };
 
-    const { minPods, maxPods } = guardrailsRef.current;
-    const newDemand = Math.max(minPods, Math.min(maxPods, Math.ceil(newRps / 25.0)));
+    const { minPods, maxPods, targetCpu } = guardrailsRef.current;
+    const rpsPerPod = (targetCpu / 60.0) * 25.0;
+    const newDemand = Math.max(minPods, Math.min(maxPods, Math.ceil(newRps / rpsPerPod)));
+
+    // Model forward projections
     const newLstm = Math.min(maxPods, Math.round(newDemand * 1.15));
-    const newPods = Math.max(newDemand, newLstm);
+    const newLinear = Math.min(maxPods, Math.round(newDemand * 1.10));
+    const newHw = newDemand;
+    const newHpa = Math.max(minPods, prevPodsRef.current);
+    const newPods = Math.max(minPods, Math.min(maxPods, Math.max(newHpa, newLinear, newHw, newLstm)));
+
+    const cpu = Math.min(100, Math.round((newRps / (newPods * 25.0)) * 60));
+    let latency = 28.0 + (cpu / 100.0) * 15.0;
+    if (newDemand > newPods) {
+      latency += (newDemand - newPods) * 110.0;
+    }
 
     simState.current.actualPods = newPods;
+    simState.current.demandHistory.push(newDemand);
+    if (simState.current.demandHistory.length > 50) simState.current.demandHistory.shift();
+
+    const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
+
     setLatest((prev) => ({
       ...prev,
       rps: newRps,
       ideal_demand: newDemand,
       actual_pods: newPods,
+      reactive_hpa: newHpa,
+      linear_pred: newLinear,
+      holt_winters_pred: newHw,
       lstm_pred: newLstm,
-      cpu_utilization: Math.min(100, Math.round((newRps / (newPods * 25.0)) * 60)),
+      cpu_utilization: cpu,
+      p95_latency_ms: parseFloat(latency.toFixed(1)),
     }));
+
+    setHistory((prev) => [
+      ...prev.slice(-34),
+      {
+        time: timeLabel,
+        actual_pods: newPods,
+        reactive_hpa: newHpa,
+        linear_pred: newLinear,
+        holt_winters_pred: newHw,
+        lstm_pred: newLstm,
+        rps: newRps,
+        cpu_utilization: cpu,
+      }
+    ]);
+
+    const oldRps = latest.rps || 125;
+    if (Math.abs(oldRps - newRps) >= 20) {
+      setLogs((prev) => [
+        ...prev.slice(-39),
+        {
+          time: timeLabel,
+          level: newRps > oldRps ? 'SCALE' : 'COST',
+          category: newRps > oldRps ? 'scale' : 'cost',
+          message: newRps > oldRps
+            ? `📈 Traffic increased: ${oldRps} → ${newRps} RPS (+${newRps - oldRps} RPS). Cluster scaled to ${newPods} pods.`
+            : `📉 Traffic reduced: ${oldRps} → ${newRps} RPS (${newRps - oldRps} RPS). Cluster adjusted to ${newPods} pods.`,
+          meta: {
+            previous_rps: oldRps,
+            new_rps: newRps,
+            actuated_pods: newPods,
+            trigger: 'TRAFFIC_CONTROL',
+            timestamp: timeLabel,
+          }
+        }
+      ]);
+    }
+
+    fetch('/api/control/traffic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: newMode, rps: newRps }),
+    }).catch(() => {});
+  };
+
+  const handleAdjustRps = (delta) => {
+    flashButton(delta > 0 ? 'plus' : 'minus');
+    const currentRps = manualRps || latest.rps || 125;
+    const newRps = Math.max(15, Math.min(600, currentRps + delta));
+    handleSetTraffic(newRps, 'manual');
+  };
+
+  const handleApplyProfile = (profileValues) => {
+    setGuardrails(profileValues);
+    guardrailsRef.current = profileValues;
+
+    const { minPods, maxPods } = profileValues;
+    if (latest.actual_pods < minPods) {
+      simState.current.actualPods = minPods;
+      setLatest((l) => ({ ...l, actual_pods: minPods }));
+    } else if (latest.actual_pods > maxPods) {
+      simState.current.actualPods = maxPods;
+      setLatest((l) => ({ ...l, actual_pods: maxPods }));
+    }
 
     const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
     setLogs((prev) => [
-      ...prev.slice(-40),
+      ...prev.slice(-39),
       {
         time: timeLabel,
-        level: delta > 0 ? 'SCALE' : 'COST',
-        category: delta > 0 ? 'scale' : 'cost',
-        message: delta > 0 
-          ? `📈 Manual traffic ramped: ${currentRps} → ${newRps} RPS (+${delta} RPS). Cluster scaled to ${newPods} pods.`
-          : `📉 Manual traffic reduced: ${currentRps} → ${newRps} RPS (${delta} RPS). Cluster optimized to ${newPods} pods.`,
+        level: 'SCALE',
+        category: 'scale',
+        message: `🛡️ Operational Profile Applied: Min ${minPods} pods, Max ${maxPods} pods, Target CPU ${profileValues.targetCpu}%, Cooldown ${profileValues.cooldownSec}s.`,
         meta: {
-          previous_rps: currentRps,
-          new_rps: newRps,
-          actuated_pods: newPods,
-          action: delta > 0 ? 'TRAFFIC_RAMP' : 'TRAFFIC_DROP',
+          profile: profileValues,
           timestamp: timeLabel,
+          enforced: true,
         }
       }
     ]);
+
+    fetch('/api/control/guardrails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profileValues),
+    }).catch(() => {});
   };
 
   const handleTriggerLstmEvent = () => {
@@ -670,6 +759,12 @@ export default function App() {
         },
       ]);
 
+      fetch('/api/control/guardrails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      }).catch(() => {});
+
       return updated;
     });
   };
@@ -783,6 +878,8 @@ export default function App() {
                     setTrafficMode={setTrafficMode}
                     manualRps={manualRps}
                     setManualRps={setManualRps}
+                    onRpsChange={(rps) => handleSetTraffic(rps, 'manual')}
+                    onModeChange={(mode) => handleSetTraffic(manualRps, mode)}
                     currentRps={latest.rps}
                   />
 
@@ -1256,10 +1353,12 @@ export default function App() {
             <OperationalGuardrails
               guardrails={guardrails}
               onUpdateGuardrail={handleUpdateGuardrail}
+              onApplyProfile={handleApplyProfile}
               latest={latest}
               onInjectSpike={handleInjectSpike}
               onTriggerLstmEvent={handleTriggerLstmEvent}
               onAdjustRps={handleAdjustRps}
+              onSetTraffic={handleSetTraffic}
               onReset={handleReset}
               buttonFeedback={buttonFeedback}
             />
