@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
-import HomeOverview from './components/HomeOverview';
+import LSTMAttribution from './components/LSTMAttribution';
 import ModelDeepDive from './components/ModelDeepDive';
 import PipelineViewer from './components/PipelineViewer';
 import MetricCards from './components/MetricCards';
@@ -11,7 +11,7 @@ import PodCluster from './components/PodCluster';
 import ModelScorecard from './components/ModelScorecard';
 import LiveEventLog from './components/LiveEventLog';
 import Term from './components/Term';
-import { Sparkles, Activity, ShieldCheck, Zap, BrainCircuit, Server, DollarSign, Clock, ArrowUpRight, ArrowDownRight, Layers, Sliders, Play, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Sparkles, Activity, ShieldCheck, Zap, BrainCircuit, Server, DollarSign, Clock, ArrowUpRight, ArrowDownRight, Layers, Sliders, Play, RotateCcw, AlertTriangle, ShieldAlert, CheckCircle2, BarChart2 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('lab'); // 'lab', 'home', 'models', 'pipeline'
@@ -766,20 +766,15 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 2-Column Split Grid */}
+              {/* 2-Column Balanced Telemetry Deck */}
               <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-                {/* LEFT COLUMN: 7 Columns (Replicas Chart + Pod Cluster + Workload) */}
+                {/* LEFT COLUMN: 7 Columns (Replicas Chart stacked with Workload Chart sharing time axis) */}
                 <div className="xl:col-span-7 space-y-4">
                   <ReplicasChart data={history} />
-                  <PodCluster
-                    actualPods={latest.actual_pods}
-                    idealDemand={latest.ideal_demand}
-                    isSpiking={latest.is_spiking}
-                  />
                   <WorkloadChart data={history} />
                 </div>
 
-                {/* RIGHT COLUMN: 5 Columns (Traffic Throttle + Model Scorecard) */}
+                {/* RIGHT COLUMN: 5 Columns (Traffic Throttle + Pod Cluster + Live Decision Arbiter) */}
                 <div className="xl:col-span-5 space-y-4">
                   <TrafficThrottle
                     trafficMode={trafficMode}
@@ -788,19 +783,190 @@ export default function App() {
                     setManualRps={setManualRps}
                     currentRps={latest.rps}
                   />
-                  <ModelScorecard latest={latest} />
+
+                  <PodCluster
+                    actualPods={latest.actual_pods}
+                    idealDemand={latest.ideal_demand}
+                    isSpiking={latest.is_spiking}
+                  />
+
+                  {/* Real-Time Decision Arbiter Widget */}
+                  <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
+                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md bg-purple-500/10 flex items-center justify-center text-purple-400">
+                          <Layers className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-bold text-xs text-white uppercase tracking-wider">Live Scaling Arbiter</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-mono font-medium">
+                        MAX Upper Bound
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-400 leading-relaxed mb-3">
+                      Current recommendations from all 4 algorithms. The cluster actuates the upper bound to ensure SLA compliance:
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2 mb-3 text-xs font-mono">
+                      {/* LSTM */}
+                      <div className={`p-2.5 rounded-lg border transition-all ${
+                        (latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4)
+                          ? 'bg-purple-950/30 border-purple-500/50 text-purple-200 shadow-sm'
+                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-sans font-semibold text-purple-300">Stacked LSTM</span>
+                          {(latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4) && (
+                            <span className="text-[8px] px-1 rounded bg-purple-500/30 text-purple-200 font-bold">GOVERNING</span>
+                          )}
+                        </div>
+                        <div className="text-lg font-bold text-white mt-1">{latest.lstm_pred ?? 4} <span className="text-[10px] font-normal text-zinc-400">pods</span></div>
+                        <div className="text-[9px] text-zinc-500 font-sans mt-0.5">45s lookahead</div>
+                      </div>
+
+                      {/* Holt-Winters */}
+                      <div className={`p-2.5 rounded-lg border transition-all ${
+                        (latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4)
+                          ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-200 shadow-sm'
+                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-sans font-semibold text-emerald-300">Holt-Winters</span>
+                          {(latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4) && (
+                            <span className="text-[8px] px-1 rounded bg-emerald-500/30 text-emerald-200 font-bold">GOVERNING</span>
+                          )}
+                        </div>
+                        <div className="text-lg font-bold text-white mt-1">{latest.holt_winters_pred ?? 4} <span className="text-[10px] font-normal text-zinc-400">pods</span></div>
+                        <div className="text-[9px] text-zinc-500 font-sans mt-0.5">Diurnal 24h</div>
+                      </div>
+
+                      {/* Linear */}
+                      <div className="p-2.5 rounded-lg border bg-zinc-900/60 border-zinc-800 text-zinc-400">
+                        <div className="text-[10px] font-sans font-semibold text-blue-300">Linear OLS</div>
+                        <div className="text-lg font-bold text-white mt-1">{latest.linear_pred ?? 4} <span className="text-[10px] font-normal text-zinc-400">pods</span></div>
+                        <div className="text-[9px] text-zinc-500 font-sans mt-0.5">Slope velocity</div>
+                      </div>
+
+                      {/* Reactive HPA */}
+                      <div className="p-2.5 rounded-lg border bg-zinc-900/60 border-zinc-800 text-zinc-400">
+                        <div className="text-[10px] font-sans font-semibold text-amber-300">Reactive HPA</div>
+                        <div className="text-lg font-bold text-white mt-1">{latest.reactive_hpa ?? 4} <span className="text-[10px] font-normal text-zinc-400">pods</span></div>
+                        <div className="text-[9px] text-zinc-500 font-sans mt-0.5">K8s baseline</div>
+                      </div>
+                    </div>
+
+                    {/* Decision Summary Pill */}
+                    <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs font-mono">
+                      <span className="text-zinc-400 text-[11px]">Enforced Replicas:</span>
+                      <span className="text-emerald-400 font-bold">
+                        max(...) = {latest.actual_pods ?? 4} Pods
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 2: MODEL BENCHMARKING (Dedicated View) */}
+          {/* TAB 2: MODEL BENCHMARKING (Dedicated Comprehensive Evaluation) */}
           {activeTab === 'benchmark' && (
             <div className="space-y-4 animate-fadeIn">
+              {/* Benchmark Scope & Context Banner */}
+              <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 flex flex-col md:flex-row md:items-center justify-between gap-3 relative overflow-hidden">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <BarChart2 className="w-4 h-4 text-purple-400" />
+                    <h3 className="text-sm font-bold text-white tracking-wide">
+                      Empirical Multi-Model Performance & Efficiency Benchmark
+                    </h3>
+                  </div>
+                  <p className="text-xs text-zinc-400 leading-relaxed max-w-3xl">
+                    Comparative scientific evaluation of Reactive HPA, Linear Regression, Holt-Winters, and Stacked LSTM across compute spend ($/pod-hr), cold-start latency, and under-provisioning deficits under continuous diurnal workload replay.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono flex-shrink-0 self-start md:self-auto">
+                  <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
+                    Rate: <strong className="text-white">$0.040/pod-hr</strong>
+                  </span>
+                  <span className="px-2 py-1 rounded bg-purple-950/40 border border-purple-500/30 text-purple-300">
+                    Cadence: <strong className="text-white">15s Scrapes</strong>
+                  </span>
+                  <span className="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
+                    SLO Boundary: <strong className="text-white">&lt;100ms P95</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* 1. Full-Width Model Scorecard (Cards, Matrix Table, Comparison Bars) */}
               <ModelScorecard latest={latest} />
+
+              {/* 2. Neural Advantage Attribution & Starvation Prevention */}
+              <LSTMAttribution latest={latest} history={history} />
+
+              {/* 3. The Core Latency Problem: Reactive Cold Start vs Proactive Scaling */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ReplicasChart data={history} />
-                <WorkloadChart data={history} />
+                {/* Card A: The Reactive Problem */}
+                <div className="bento-card rounded-xl p-5 border border-rose-500/20 bg-gradient-to-b from-rose-950/10 to-zinc-950/80 relative overflow-hidden">
+                  <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider mb-2">
+                    <ShieldAlert className="w-4 h-4" />
+                    Standard Kubernetes HPA (Reactive Lag)
+                  </div>
+                  <h4 className="text-sm font-bold text-white mb-1">45s-60s Cold-Start Latency Degradation</h4>
+                  <p className="text-xs text-zinc-400 mb-3 leading-relaxed">
+                    Vanilla HPA relies on Prometheus averages that lag behind incoming bursts, creating a window of queue starvation while pods boot:
+                  </p>
+
+                  <div className="space-y-2 text-xs font-mono bg-zinc-950/80 p-3 rounded-lg border border-rose-500/20">
+                    <div className="flex items-center justify-between text-rose-300">
+                      <span>t = 0s</span>
+                      <span>Sudden Flash Crowd (+500 RPS)</span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>t = 15s</span>
+                      <span>HPA detects CPU breach (&gt;60%)</span>
+                    </div>
+                    <div className="flex items-center justify-between text-zinc-400">
+                      <span>t = 30s</span>
+                      <span>Container runtime schedules pods</span>
+                    </div>
+                    <div className="flex items-center justify-between text-rose-400 font-bold">
+                      <span>t = 50s</span>
+                      <span>Pods ready (P95 Spike: 1400ms!)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card B: The Proactive Solution */}
+                <div className="bento-card rounded-xl p-5 border border-emerald-500/20 bg-gradient-to-b from-emerald-950/10 to-zinc-950/80 relative overflow-hidden">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    PHPA Stacked LSTM (Proactive Pre-warming)
+                  </div>
+                  <h4 className="text-sm font-bold text-white mb-1">Preemptive Scale-Up Ahead of Demand</h4>
+                  <p className="text-xs text-zinc-400 mb-3 leading-relaxed">
+                    Deep recurrent cells extrapolate traffic curvature from sliding PromQL vectors, ordering pods into existence before traffic arrives:
+                  </p>
+
+                  <div className="space-y-2 text-xs font-mono bg-zinc-950/80 p-3 rounded-lg border border-emerald-500/20">
+                    <div className="flex items-center justify-between text-purple-300">
+                      <span>t = -20s</span>
+                      <span>LSTM detects surge acceleration</span>
+                    </div>
+                    <div className="flex items-center justify-between text-cyan-300">
+                      <span>t = -15s</span>
+                      <span>PHPA pre-warms cluster to 22 pods</span>
+                    </div>
+                    <div className="flex items-center justify-between text-emerald-300 font-bold">
+                      <span>t = 0s</span>
+                      <span>Flash Crowd hits: Replicas READY!</span>
+                    </div>
+                    <div className="flex items-center justify-between text-emerald-400 font-bold">
+                      <span>Result</span>
+                      <span>Zero SLA breaches (P95 &lt; 35ms)</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

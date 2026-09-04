@@ -2,8 +2,16 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BrainCircuit, ShieldCheck, Clock, TrendingDown } from 'lucide-react';
 
-export default function LSTMAttribution({ latest, history }) {
-  const { actual_pods, ideal_demand, reactive_hpa, linear_pred, holt_winters_pred, lstm_pred, is_spiking } = latest;
+export default function LSTMAttribution({ latest = {}, history = [] }) {
+  const { 
+    actual_pods = 4, 
+    ideal_demand = 4, 
+    reactive_hpa = 4, 
+    linear_pred = 4, 
+    holt_winters_pred = 4, 
+    lstm_pred = 4, 
+    is_spiking = false 
+  } = latest || {};
 
   const hpaShortfall = Math.max(0, lstm_pred - reactive_hpa);
   const linearOvershootAvoided = Math.max(0, linear_pred - lstm_pred);
