@@ -151,3 +151,4 @@ export default function Term({ id, children, className = '' }) {
     </span>
   );
 }
+

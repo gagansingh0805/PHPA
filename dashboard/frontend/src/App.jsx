@@ -542,7 +542,15 @@ export default function App() {
           {activeTab === 'models' && <ModelDeepDive />}
 
           {/* TAB 5: PIPELINE ARCHITECTURE */}
-          {activeTab === 'pipeline' && <PipelineViewer />}
+          {activeTab === 'pipeline' && (
+            <PipelineViewer
+              latest={latest}
+              isPlaying={isPlaying}
+              speedFactor={speedFactor}
+              trafficMode={trafficMode}
+              manualRps={manualRps}
+            />
+          )}
 
           {/* Clean Footer */}
           <footer className="text-center text-xs text-zinc-500 pt-8 pb-4 border-t border-zinc-900 mt-8">
