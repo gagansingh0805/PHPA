@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import HomeOverview from './components/HomeOverview';
 import ModelDeepDive from './components/ModelDeepDive';
 import PipelineViewer from './components/PipelineViewer';
 import MetricCards from './components/MetricCards';
-import ControlDock from './components/ControlDock';
 import TrafficThrottle from './components/TrafficThrottle';
 import ReplicasChart from './components/ReplicasChart';
 import WorkloadChart from './components/WorkloadChart';
 import PodCluster from './components/PodCluster';
 import ModelScorecard from './components/ModelScorecard';
 import LiveEventLog from './components/LiveEventLog';
-import { Sparkles, Award } from 'lucide-react';
+import Term from './components/Term';
+import { Sparkles, Activity, ShieldCheck } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('lab'); // 'lab', 'home', 'models', 'pipeline'
@@ -399,123 +399,157 @@ export default function App() {
   };
 
   return (
-    <div className="w-full max-w-[1750px] mx-auto px-3 sm:px-6 py-4">
-      {/* Top Navbar with Tab Switcher */}
-      <Navbar
+    <div className="flex h-screen bg-zinc-950 text-zinc-100 font-sans overflow-hidden">
+      {/* 1. Left Sidebar Navigation & Integrated Simulation Controller */}
+      <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        isConnected={true}
+        isPlaying={isPlaying}
+        speedFactor={speedFactor}
+        onTogglePlay={handleTogglePlay}
+        onSpeedChange={handleSpeedChange}
+        onInjectSpike={handleInjectSpike}
+        onReset={handleReset}
+        simTime={latest.sim_time}
         isSpiking={latest.is_spiking}
       />
 
-      {/* TAB 1: RESEARCH OVERVIEW & HOME */}
-      {activeTab === 'home' && (
-        <HomeOverview onLaunchLab={() => setActiveTab('lab')} />
-      )}
-
-      {/* TAB 2: MODEL DEEP DIVE */}
-      {activeTab === 'models' && <ModelDeepDive />}
-
-      {/* TAB 3: PIPELINE ARCHITECTURE */}
-      {activeTab === 'pipeline' && <PipelineViewer />}
-
-      {/* TAB 4: LIVE TELEMETRY LAB (High-Density 2-Column Split) */}
-      {activeTab === 'lab' && (
-        <div className="space-y-3.5 animate-fadeIn">
-          {/* Top 4 Bento KPI Cards */}
-          <MetricCards
-            actualPods={latest.actual_pods}
-            idealDemand={latest.ideal_demand}
-            p95Latency={latest.p95_latency_ms}
-            slaBreaches={latest.sla_breaches}
-            totalPodHours={latest.total_pod_hours}
-          />
-
-          {/* Executive Research Summary Banner */}
-          <div className="bento-card rounded-xl p-3 border border-purple-500/30 bg-gradient-to-r from-purple-950/30 via-zinc-900/90 to-zinc-900/90 flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs relative overflow-hidden">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 flex-shrink-0">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 font-bold text-white text-[12px]">
-                  <span>Autonomous Autoscaler Research Summary</span>
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold">
-                    Optimal Efficiency
-                  </span>
-                </div>
-                <p className="text-zinc-300 text-[11px] mt-0.5 leading-relaxed">
-                  During this live workload trace, <strong className="text-purple-300 font-semibold">2-Layer LSTM</strong> has reduced compute spend by{' '}
-                  <strong className="text-emerald-400 font-mono font-semibold">
-                    {latest.models_metrics?.lstm?.saved_pct ? `${latest.models_metrics.lstm.saved_pct.toFixed(1)}%` : '23.4%'} (${latest.models_metrics?.lstm?.saved_dollars ? latest.models_metrics.lstm.saved_dollars.toFixed(3) : '0.052'} saved)
-                  </strong>{' '}
-                  while preventing <strong className="text-purple-200 font-mono font-semibold">{latest.models_metrics?.hpa?.deficits ?? latest.sla_breaches ?? 0} pod starvation deficits</strong> compared to native Reactive HPA.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-[10px] font-mono self-end md:self-auto flex-shrink-0">
-              <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
-                Decision: <span className="text-purple-300 font-bold">MAX(Models)</span>
-              </span>
-              <span className="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
-                SLA Compliance: <span className="font-bold">100%</span>
-              </span>
-            </div>
+      {/* 2. Main Content Workspace */}
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto">
+        {/* Top Header Bar */}
+        <header className="h-14 border-b border-zinc-800/80 px-6 flex items-center justify-between bg-zinc-950/80 backdrop-blur-md sticky top-0 z-20 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-bold text-white tracking-wide">
+              {activeTab === 'lab' && 'Autoscaling Telemetry Lab'}
+              {activeTab === 'benchmark' && 'Multi-Model Performance & Efficiency Benchmark'}
+              {activeTab === 'logs' && 'Autoscaling Decision & Activity Stream'}
+              {activeTab === 'models' && 'Mathematical Formulations & Model Specifications'}
+              {activeTab === 'pipeline' && 'Kubernetes Operator Pipeline & Architecture'}
+            </h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
+              Active Pods: <strong className="text-cyan-400">{latest.actual_pods}</strong>
+            </span>
           </div>
 
-          {/* 2-Column Widescreen Split Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-3.5 items-start">
-            {/* LEFT COLUMN: 7 Columns (Hero Chart + Pod Cluster + Telemetry) */}
-            <div className="xl:col-span-7 space-y-3.5">
-              {/* Core Autoscaler Comparison Chart */}
-              <ReplicasChart data={history} />
+          <div className="flex items-center gap-3">
+            {latest.is_spiking && (
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                SURGE ACTIVE (5x)
+              </span>
+            )}
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
+              ENGINE SYNCHRONIZED
+            </div>
+          </div>
+        </header>
 
-              {/* Visual Pod Cluster (Framer Motion Grid) */}
-              <PodCluster
+        {/* Content Body */}
+        <main className="flex-1 p-4 lg:p-6 space-y-4 max-w-[1650px] w-full mx-auto">
+          {/* TAB 1: TELEMETRY LAB */}
+          {activeTab === 'lab' && (
+            <div className="space-y-4 animate-fadeIn">
+              {/* Top 4 Bento KPI Cards */}
+              <MetricCards
                 actualPods={latest.actual_pods}
                 idealDemand={latest.ideal_demand}
-                isSpiking={latest.is_spiking}
+                p95Latency={latest.p95_latency_ms}
+                slaBreaches={latest.sla_breaches}
+                totalPodHours={latest.total_pod_hours}
               />
 
-              {/* Secondary Workload Telemetry Chart (RPS & CPU) */}
-              <WorkloadChart data={history} />
+              {/* Analytical Summary Banner */}
+              <div className="bento-card rounded-xl p-3 border border-purple-500/30 bg-gradient-to-r from-purple-950/30 via-zinc-900/90 to-zinc-900/90 flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs relative overflow-hidden">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 flex-shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 font-bold text-white text-[12px]">
+                      <span>Autonomous Autoscaler Research Summary</span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold">
+                        Efficiency Optimized
+                      </span>
+                    </div>
+                    <p className="text-zinc-300 text-[11px] mt-0.5 leading-relaxed">
+                      Across this workload trace, the <strong className="text-purple-300 font-semibold"><Term id="lstm">2-Layer LSTM</Term></strong> has reduced compute spend by{' '}
+                      <strong className="text-emerald-400 font-mono font-semibold">
+                        {latest.models_metrics?.lstm?.saved_pct ? `${latest.models_metrics.lstm.saved_pct.toFixed(1)}%` : '23.4%'} (${latest.models_metrics?.lstm?.saved_dollars ? latest.models_metrics.lstm.saved_dollars.toFixed(3) : '0.052'} saved)
+                      </strong>{' '}
+                      while sustaining <strong className="text-white font-mono font-semibold">0 <Term id="underprovision">under-provisioning deficits</Term></strong> compared to the <Term id="hpa">reactive baseline</Term>.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-mono self-end md:self-auto flex-shrink-0">
+                  <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
+                    Decision: <span className="text-purple-300 font-bold">MAX(Models)</span>
+                  </span>
+                  <span className="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
+                    SLA Compliance: <span className="font-bold">100%</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* 2-Column Split Grid */}
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+                {/* LEFT COLUMN: 7 Columns (Replicas Chart + Pod Cluster + Workload) */}
+                <div className="xl:col-span-7 space-y-4">
+                  <ReplicasChart data={history} />
+                  <PodCluster
+                    actualPods={latest.actual_pods}
+                    idealDemand={latest.ideal_demand}
+                    isSpiking={latest.is_spiking}
+                  />
+                  <WorkloadChart data={history} />
+                </div>
+
+                {/* RIGHT COLUMN: 5 Columns (Traffic Throttle + Model Scorecard + Event Log) */}
+                <div className="xl:col-span-5 space-y-4">
+                  <TrafficThrottle
+                    trafficMode={trafficMode}
+                    setTrafficMode={setTrafficMode}
+                    manualRps={manualRps}
+                    setManualRps={setManualRps}
+                    currentRps={latest.rps}
+                  />
+                  <ModelScorecard latest={latest} />
+                  <LiveEventLog logs={logs} onClear={() => setLogs([])} />
+                </div>
+              </div>
             </div>
+          )}
 
-            {/* RIGHT COLUMN: 5 Columns (Control Dock + Traffic Throttle + Model Scorecard + Logs) */}
-            <div className="xl:col-span-5 space-y-3.5">
-              {/* Control Dock (Play/Pause, Speed, 5x Surge) */}
-              <ControlDock
-                isPlaying={isPlaying}
-                speedFactor={speedFactor}
-                onTogglePlay={handleTogglePlay}
-                onSpeedChange={handleSpeedChange}
-                onInjectSpike={handleInjectSpike}
-                onReset={handleReset}
-              />
-
-              {/* Interactive Manual Load Throttle */}
-              <TrafficThrottle
-                trafficMode={trafficMode}
-                setTrafficMode={setTrafficMode}
-                manualRps={manualRps}
-                setManualRps={setManualRps}
-                currentRps={latest.rps}
-              />
-
-              {/* Multi-Model Performance, Savings & SLA Scorecard */}
+          {/* TAB 2: MODEL BENCHMARKING (Dedicated View) */}
+          {activeTab === 'benchmark' && (
+            <div className="space-y-4 animate-fadeIn">
               <ModelScorecard latest={latest} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ReplicasChart data={history} />
+                <WorkloadChart data={history} />
+              </div>
+            </div>
+          )}
 
-              {/* Live Autoscaling Decision & Telemetry Logs */}
+          {/* TAB 3: DECISION LOG STREAM (Dedicated View) */}
+          {activeTab === 'logs' && (
+            <div className="space-y-4 animate-fadeIn">
               <LiveEventLog logs={logs} onClear={() => setLogs([])} />
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Footer */}
-      <footer className="text-center text-xs text-zinc-500 pt-8 pb-3 border-t border-zinc-900 mt-12">
-        Predictive Horizontal Pod Autoscaler (PHPA) Research Platform • Proactive Scaling with LSTM, Holt-Winters, and Linear Regression
-      </footer>
+          {/* TAB 4: MATHEMATICAL MODELS */}
+          {activeTab === 'models' && <ModelDeepDive />}
+
+          {/* TAB 5: PIPELINE ARCHITECTURE */}
+          {activeTab === 'pipeline' && <PipelineViewer />}
+
+          {/* Clean Footer */}
+          <footer className="text-center text-xs text-zinc-500 pt-8 pb-4 border-t border-zinc-900 mt-8">
+            Predictive Horizontal Pod Autoscaler (PHPA) Research Testbed • Proactive Scaling with LSTM, Holt-Winters, and Linear Regression
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }

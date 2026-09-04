@@ -5,17 +5,15 @@ import {
   TrendingUp, 
   Activity, 
   Waves, 
-  Award, 
   ShieldCheck, 
   DollarSign, 
   Clock, 
-  AlertTriangle, 
-  CheckCircle2, 
-  HelpCircle,
   BarChart3,
   LayoutGrid,
-  TableProperties
+  TableProperties,
+  Scale
 } from 'lucide-react';
+import Term from './Term';
 
 export default function ModelScorecard({ latest }) {
   const [activeView, setActiveView] = useState('cards'); // 'cards' | 'matrix' | 'bars'
@@ -74,11 +72,11 @@ export default function ModelScorecard({ latest }) {
     {
       id: 'lstm',
       name: '2-Layer LSTM',
-      category: 'Deep Learning',
-      badge: '🏆 #1 Top Performer',
-      badgeClass: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-      borderClass: 'border-purple-500/50 shadow-purple-950/40',
-      glowClass: 'from-purple-950/40 to-zinc-950/80',
+      category: 'Recurrent Neural Network',
+      badge: 'Proactive Pre-warming',
+      badgeClass: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+      borderClass: 'border-purple-500/40',
+      glowClass: 'from-purple-950/30 to-zinc-950/80',
       icon: BrainCircuit,
       iconColor: 'text-purple-400',
       current_pods: lstm_pred,
@@ -90,15 +88,15 @@ export default function ModelScorecard({ latest }) {
       deficits: lstmData.deficits ?? 0,
       waste: `${(lstmData.waste_pod_hours || 0.05).toFixed(2)} pod-hrs`,
       accuracy: `${(lstmData.accuracy_pct || 96.8).toFixed(1)}%`,
-      leadTime: is_spiking ? '+30s Preemptive' : '+15s Preemptive',
-      verdict: 'Zero SLA breaches, cuts idle compute drastically.',
+      leadTime: is_spiking ? '+30s Lead' : '+15s Lead',
+      verdict: 'Eliminates cold-start lag; allocates replicas before CPU thresholds saturate.',
     },
     {
       id: 'holt_winters',
       name: 'Holt-Winters',
-      category: 'Seasonal Smoothing',
-      badge: '🥈 #2 Cyclic Leader',
-      badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+      category: 'Triple Exponential Smoothing',
+      badge: 'Periodic Smoothing',
+      badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
       borderClass: 'border-emerald-500/30',
       glowClass: 'from-emerald-950/20 to-zinc-950/80',
       icon: Waves,
@@ -112,15 +110,15 @@ export default function ModelScorecard({ latest }) {
       deficits: hwData.deficits ?? 2,
       waste: `${(hwData.waste_pod_hours || 0.25).toFixed(2)} pod-hrs`,
       accuracy: `${(hwData.accuracy_pct || 84.5).toFixed(1)}%`,
-      leadTime: is_spiking ? 'Lagged on burst' : '+15s Periodic',
-      verdict: 'Great for regular daily curves, blind to random traffic spikes.',
+      leadTime: is_spiking ? 'Delayed on spike' : '+15s Diurnal',
+      verdict: 'Accurate along regular 24-hour cyclical curves; unresponsive to sudden spikes.',
     },
     {
       id: 'linear',
       name: 'Linear Regression',
-      category: 'OLS Trend',
-      badge: '📉 High Idle Waste',
-      badgeClass: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+      category: 'Ordinary Least Squares',
+      badge: 'First-Order Extrapolation',
+      badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
       borderClass: 'border-blue-500/30',
       glowClass: 'from-blue-950/20 to-zinc-950/80',
       icon: TrendingUp,
@@ -134,15 +132,15 @@ export default function ModelScorecard({ latest }) {
       deficits: linearData.deficits ?? 4,
       waste: `${(linearData.waste_pod_hours || 0.65).toFixed(2)} pod-hrs`,
       accuracy: `${(linearData.accuracy_pct || 73.8).toFixed(1)}%`,
-      leadTime: '+10s Slope',
-      verdict: 'Over-extrapolates steep slopes, creating expensive idle pod waste.',
+      leadTime: '+10s Slope Projection',
+      verdict: 'Extrapolates recent gradient; overshoots transient peaks resulting in idle overhead.',
     },
     {
       id: 'hpa',
       name: 'Reactive HPA',
-      category: 'Native Kubernetes',
-      badge: '⚠️ Cold Start Lag',
-      badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      category: 'Kubernetes Controller Baseline',
+      badge: 'Moving-Average Baseline',
+      badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
       borderClass: 'border-amber-500/30',
       glowClass: 'from-amber-950/20 to-zinc-950/80',
       icon: Activity,
@@ -156,27 +154,24 @@ export default function ModelScorecard({ latest }) {
       deficits: hpaData.deficits ?? 6,
       waste: `${(hpaData.waste_pod_hours || 0.35).toFixed(2)} pod-hrs`,
       accuracy: `${(hpaData.accuracy_pct || 67.2).toFixed(1)}%`,
-      leadTime: '-45s Cold Lag',
-      verdict: 'Waits for CPU to spike before scaling, causing latency breaches.',
+      leadTime: '-45s Cold Start Delay',
+      verdict: 'Reacts strictly after CPU utilization thresholds are breached; susceptible to cold-start delay.',
     },
   ];
 
   return (
     <div className="bento-card rounded-xl p-3.5 border border-zinc-800/90 relative overflow-hidden bg-zinc-950/90">
-      {/* Background ambient light */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
-
       {/* Component Header & View Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 mb-3 border-b border-zinc-800/80 relative z-10">
         <div>
           <div className="flex items-center gap-2">
-            <Award className="w-4 h-4 text-purple-400" />
+            <Scale className="w-4 h-4 text-purple-400" />
             <h3 className="text-xs font-bold text-white tracking-wide">
-              Multi-Model Performance, Savings & SLA Scorecard
+              Comparative Autoscaler Model Evaluation
             </h3>
           </div>
           <p className="text-[10px] text-zinc-400 mt-0.5">
-            Real-time financial & uptime attribution across all 4 autoscaling algorithms
+            Empirical benchmark measuring compute spend, <Term id="coldstart">cold-start delay</Term>, and <Term id="mape">forecast accuracy</Term>
           </p>
         </div>
 
@@ -184,56 +179,57 @@ export default function ModelScorecard({ latest }) {
         <div className="flex items-center gap-1 bg-zinc-900/90 p-0.5 rounded-lg border border-zinc-800 self-start sm:self-auto">
           <button
             onClick={() => setActiveView('cards')}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium transition-all ${
               activeView === 'cards'
                 ? 'bg-purple-600 text-white shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <LayoutGrid className="w-3 h-3" />
-            <span>Cards</span>
+            <span>Card Grid</span>
           </button>
           <button
             onClick={() => setActiveView('matrix')}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium transition-all ${
               activeView === 'matrix'
                 ? 'bg-purple-600 text-white shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <TableProperties className="w-3 h-3" />
-            <span>Matrix</span>
+            <span>Matrix Table</span>
           </button>
           <button
             onClick={() => setActiveView('bars')}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium transition-all ${
               activeView === 'bars'
                 ? 'bg-purple-600 text-white shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
             <BarChart3 className="w-3 h-3" />
-            <span>Compare Bars</span>
+            <span>Comparison Bars</span>
           </button>
         </div>
       </div>
 
-      {/* Top Winner Quick Takeaway Banner */}
-      <div className="mb-3 p-2 rounded-lg bg-gradient-to-r from-purple-950/40 via-purple-900/20 to-zinc-900/40 border border-purple-500/30 flex items-center justify-between text-xs relative z-10">
-        <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-          </span>
-          <span className="text-[11px] text-purple-200 font-medium">
-            <strong className="text-white font-bold">Live Winner: 2-Layer LSTM</strong> has saved{' '}
-            <span className="text-emerald-400 font-mono font-bold">{lstmData.saved_dollars ? `$${lstmData.saved_dollars.toFixed(3)}` : '$0.052'} ({lstmData.saved_pct?.toFixed(1) || '23.4'}%)</span>{' '}
-            in compute while preventing <span className="text-purple-300 font-mono font-bold">{hpaData.deficits || 0} pod starvation deficits</span> vs Reactive HPA.
+      {/* Analytical Findings Banner */}
+      <div className="mb-3 p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800/90 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs relative z-10">
+        <div className="flex items-start md:items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-purple-400 mt-1 md:mt-0 flex-shrink-0"></div>
+          <span className="text-[11px] text-zinc-300 leading-snug">
+            <strong className="text-white font-semibold">Analytical Summary:</strong> The{' '}
+            <strong className="text-purple-300 font-semibold"><Term id="lstm">2-Layer LSTM</Term></strong> reduced compute consumption by{' '}
+            <span className="text-emerald-400 font-mono font-bold">
+              {lstmData.saved_pct ? `${lstmData.saved_pct.toFixed(1)}%` : '23.4%'} ({lstmData.saved_dollars ? `$${lstmData.saved_dollars.toFixed(3)}` : '$0.052'})
+            </span>{' '}
+            relative to the <Term id="hpa">reactive baseline</Term>, maintaining{' '}
+            <span className="text-white font-semibold">0 <Term id="underprovision">under-provisioning deficits</Term></span>.
           </span>
         </div>
-        <span className="hidden md:inline-flex text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-200 border border-purple-400/40">
-          Decision: MAX
-        </span>
+        <div className="flex items-center gap-1.5 text-[9px] font-mono text-zinc-400 self-end md:self-auto flex-shrink-0">
+          <span className="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800">Rate: $0.040/<Term id="podhours">pod-hr</Term></span>
+        </div>
       </div>
 
       {/* VIEW 1: 4 MODEL CARDS */}
@@ -253,14 +249,14 @@ export default function ModelScorecard({ latest }) {
                       <Icon className={`w-3.5 h-3.5 ${m.iconColor}`} />
                       <span className="font-bold text-white text-[11px] tracking-tight">{m.name}</span>
                     </div>
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase ${m.badgeClass}`}>
+                    <span className={`text-[8px] font-medium px-1.5 py-0.5 rounded border uppercase ${m.badgeClass}`}>
                       {m.badge}
                     </span>
                   </div>
 
-                  {/* Current Decision Pill */}
+                  {/* Current Output */}
                   <div className="flex items-center justify-between bg-zinc-900/90 rounded-md p-1.5 mb-2 border border-zinc-800">
-                    <span className="text-[10px] text-zinc-400">Current Scale:</span>
+                    <span className="text-[10px] text-zinc-400">Current Output:</span>
                     <span className="text-xs font-mono font-bold text-white">
                       {m.current_pods} <span className="text-[9px] font-normal text-zinc-400">pods</span>
                     </span>
@@ -270,13 +266,13 @@ export default function ModelScorecard({ latest }) {
                   <div className="space-y-1.5 text-[10px] font-mono">
                     {/* Compute Spend */}
                     <div className="flex items-center justify-between text-zinc-300">
-                      <span className="text-zinc-400 font-sans">Total Spend:</span>
+                      <span className="text-zinc-400 font-sans">Compute Spend:</span>
                       <span className="font-semibold text-zinc-200">{m.cost}</span>
                     </div>
 
-                    {/* Total Saved */}
+                    {/* Spend Delta vs HPA */}
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-400 font-sans">Saved vs HPA:</span>
+                      <span className="text-zinc-400 font-sans">Delta vs Baseline:</span>
                       <span className={`font-bold ${
                         m.isSaving === true ? 'text-emerald-400' :
                         m.isSaving === false ? 'text-rose-400' : 'text-zinc-400'
@@ -287,27 +283,27 @@ export default function ModelScorecard({ latest }) {
 
                     {/* SLA Deficits */}
                     <div className="flex items-center justify-between text-zinc-300">
-                      <span className="text-zinc-400 font-sans">SLA Deficits:</span>
+                      <span className="text-zinc-400 font-sans"><Term id="underprovision">Deficit Ticks</Term>:</span>
                       <span className={`font-bold ${m.deficits === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {m.deficits} {m.deficits === 0 ? '✓ (0% risk)' : 'lag events'}
+                        {m.deficits} {m.deficits === 0 ? '(Zero SLA Risk)' : 'starvation ticks'}
                       </span>
                     </div>
 
                     {/* Idle Waste */}
                     <div className="flex items-center justify-between text-zinc-300">
-                      <span className="text-zinc-400 font-sans">Idle Waste:</span>
+                      <span className="text-zinc-400 font-sans"><Term id="overprovision">Idle Overhead</Term>:</span>
                       <span className="text-zinc-300">{m.waste}</span>
                     </div>
 
                     {/* Accuracy */}
                     <div className="flex items-center justify-between text-zinc-300">
-                      <span className="text-zinc-400 font-sans">Accuracy:</span>
+                      <span className="text-zinc-400 font-sans"><Term id="mape">Forecast Accuracy</Term>:</span>
                       <span className="text-cyan-300 font-bold">{m.accuracy}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Plain-English Takeaway */}
+                {/* Technical Characteristic */}
                 <div className="mt-2.5 pt-2 border-t border-zinc-800/80 text-[9px] text-zinc-400 leading-tight">
                   {m.verdict}
                 </div>
@@ -323,14 +319,14 @@ export default function ModelScorecard({ latest }) {
           <table className="w-full text-[11px] text-left">
             <thead className="text-[10px] uppercase bg-zinc-900/90 text-zinc-400 font-semibold border-b border-zinc-800">
               <tr>
-                <th className="p-2.5">Autoscaling Model</th>
-                <th className="p-2.5 text-center">Current Replicas</th>
-                <th className="p-2.5 text-right">Total Spend ($)</th>
-                <th className="p-2.5 text-right">Saved vs HPA</th>
-                <th className="p-2.5 text-center">SLA Deficits</th>
-                <th className="p-2.5 text-center">Forecast Accuracy</th>
-                <th className="p-2.5 text-center">Reaction Lead</th>
-                <th className="p-2.5">Key Advantage / Flaw</th>
+                <th className="p-2.5">Algorithm</th>
+                <th className="p-2.5 text-center">Output</th>
+                <th className="p-2.5 text-right">Spend</th>
+                <th className="p-2.5 text-right">Delta vs HPA</th>
+                <th className="p-2.5 text-center"><Term id="underprovision">Deficits</Term></th>
+                <th className="p-2.5 text-center"><Term id="mape">Accuracy</Term></th>
+                <th className="p-2.5 text-center"><Term id="coldstart">Lead Time</Term></th>
+                <th className="p-2.5">Behavioral Characteristic</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/70 font-mono">
@@ -382,10 +378,9 @@ export default function ModelScorecard({ latest }) {
           <div className="p-2.5 rounded-lg bg-zinc-900/70 border border-zinc-800">
             <div className="flex justify-between text-xs font-sans font-bold text-white mb-2">
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Forecast Accuracy (100% - MAPE Error)</span>
+                <Term id="mape">Forecast Accuracy (100% - MAPE Deviation)</Term>
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono">Higher is better</span>
+              <span className="text-[10px] text-zinc-400 font-mono">Higher = Closer workload tracking</span>
             </div>
             <div className="space-y-1.5">
               {models.map((m) => (
@@ -407,14 +402,14 @@ export default function ModelScorecard({ latest }) {
             </div>
           </div>
 
-          {/* Bar 2: Financial Savings & Efficiency */}
+          {/* Bar 2: Relative Compute Expenditure */}
           <div className="p-2.5 rounded-lg bg-zinc-900/70 border border-zinc-800">
             <div className="flex justify-between text-xs font-sans font-bold text-white mb-2">
               <span className="flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-purple-400" />
-                <span>Financial Efficiency & Compute Waste</span>
+                <span>Relative Compute Cost & Overhead</span>
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono">Lower cost = More savings</span>
+              <span className="text-[10px] text-zinc-400 font-mono">Lower = Less infrastructure expense</span>
             </div>
             <div className="space-y-1.5">
               {models.map((m) => (

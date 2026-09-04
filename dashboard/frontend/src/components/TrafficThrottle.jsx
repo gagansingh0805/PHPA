@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sliders, Moon, Sun, Flame, Zap, Compass } from 'lucide-react';
+import Term from './Term';
 
 export default function TrafficThrottle({
   trafficMode,
@@ -69,7 +70,7 @@ export default function TrafficThrottle({
         <div className="flex items-center justify-between text-[11px] mb-1 font-mono">
           <span className="text-zinc-400">Cluster Workload Stress:</span>
           <span className="text-white font-bold">
-            {currentRps} RPS ({stressPercent}%)
+            {currentRps} <Term id="rps">RPS</Term> ({stressPercent}%)
           </span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">

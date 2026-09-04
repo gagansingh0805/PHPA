@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Server, Zap, AlertTriangle, DollarSign } from 'lucide-react';
+import Term from './Term';
 
 export default function MetricCards({ actualPods, idealDemand, p95Latency, slaBreaches, totalPodHours }) {
   const isSlaBreached = p95Latency > 200;
@@ -32,7 +33,7 @@ export default function MetricCards({ actualPods, idealDemand, p95Latency, slaBr
         </div>
         <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-          Demand: <span className="text-zinc-200 font-semibold">{idealDemand ?? '--'}</span> pods
+          <Term id="underprovision">Demand</Term>: <span className="text-zinc-200 font-semibold">{idealDemand ?? '--'}</span> pods
         </div>
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
       </motion.div>
@@ -47,7 +48,9 @@ export default function MetricCards({ actualPods, idealDemand, p95Latency, slaBr
         }`}
       >
         <div className="flex items-center justify-between text-zinc-400 mb-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider">P95 Latency</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider">
+            <Term id="latency">P95 Latency</Term>
+          </span>
           <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
             isSlaBreached ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'
           }`}>
@@ -69,7 +72,7 @@ export default function MetricCards({ actualPods, idealDemand, p95Latency, slaBr
         </div>
         <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5">
           <span className={`w-1.5 h-1.5 rounded-full ${isSlaBreached ? 'bg-red-400 animate-ping' : 'bg-emerald-400'}`}></span>
-          <span>SLA Target: &lt; 200 ms</span>
+          <span><Term id="sla">SLA Target</Term>: &lt; 200 ms</span>
         </div>
         <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent ${
           isSlaBreached ? 'via-red-500' : 'via-amber-500/50'
@@ -84,7 +87,9 @@ export default function MetricCards({ actualPods, idealDemand, p95Latency, slaBr
         className="bento-card rounded-xl p-3.5 relative overflow-hidden"
       >
         <div className="flex items-center justify-between text-zinc-400 mb-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider">SLA Breaches</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider">
+            <Term id="sla">SLA Breaches</Term>
+          </span>
           <div className="w-6 h-6 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400">
             <AlertTriangle className="w-3.5 h-3.5" />
           </div>
@@ -99,7 +104,7 @@ export default function MetricCards({ actualPods, idealDemand, p95Latency, slaBr
           <span className="text-[11px] text-zinc-400">violations</span>
         </div>
         <div className="mt-1 text-[11px] text-zinc-400">
-          Due to reactive cold start lag
+          Due to reactive <Term id="coldstart">cold start lag</Term>
         </div>
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-rose-500/50 to-transparent"></div>
       </motion.div>
@@ -112,7 +117,9 @@ export default function MetricCards({ actualPods, idealDemand, p95Latency, slaBr
         className="bento-card rounded-xl p-3.5 relative overflow-hidden"
       >
         <div className="flex items-center justify-between text-zinc-400 mb-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider">Compute Spend</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider">
+            <Term id="podhours">Compute Spend</Term>
+          </span>
           <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
             <DollarSign className="w-3.5 h-3.5" />
           </div>
