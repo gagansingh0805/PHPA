@@ -12,6 +12,9 @@ import {
   Terminal,
   X,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
   Play,
   Pause,
   SkipForward,
@@ -23,6 +26,7 @@ import {
   RefreshCw,
   ZoomIn,
   ZoomOut,
+  Maximize2,
 } from 'lucide-react';
 
 export default function PipelineViewer({
@@ -39,17 +43,21 @@ export default function PipelineViewer({
   onReset,
 }) {
   // 1. Natural Mouse Drag-to-Orbit & Camera State
-  const [pitch, setPitch] = useState(44); // RotateX: 10deg to 75deg
-  const [yaw, setYaw] = useState(-18); // RotateZ: -65deg to 65deg
+  const [pitch, setPitch] = useState(44); // RotateX: 12deg to 78deg
+  const [yaw, setYaw] = useState(-18); // RotateZ: -80deg to 80deg
   const [roll, setRoll] = useState(8); // RotateY
-  const [zoom, setZoom] = useState(1); // 0.75 to 1.45
+  const [zoom, setZoom] = useState(1); // 0.65 to 1.50
   const [viewPreset, setViewPreset] = useState('isometric');
   const [isOrbiting, setIsOrbiting] = useState(false);
 
   // Mouse Drag Tracking Refs
   const canvasRef = useRef(null);
   const isDraggingRef = useRef(false);
-  const dragStartRef = useRef({ x: 0, y: 0, pitch: 44, yaw: -18 });
+  const pitchRef = useRef(pitch);
+  const yawRef = useRef(yaw);
+  useEffect(() => { pitchRef.current = pitch; }, [pitch]);
+  useEffect(() => { yawRef.current = yaw; }, [yaw]);
+
   const [isCursorGrabbing, setIsCursorGrabbing] = useState(false);
 
   // 2. Stage Inspector State
@@ -66,7 +74,7 @@ export default function PipelineViewer({
 
   // Dynamic simulation values with fallbacks
   const rps = latest.rps || 125;
-  const actualPods = Math.min(20, Math.max(2, latest.actual_pods || 4));
+  const actualPods = Math.min(30, Math.max(2, latest.actual_pods || 4));
   const idealDemand = latest.ideal_demand || 4;
   const cpu = latest.cpu_utilization || 60;
   const p95 = latest.p95_latency_ms || 32.5;
@@ -121,43 +129,68 @@ export default function PipelineViewer({
     return () => clearInterval(orbitInterval);
   }, [isOrbiting]);
 
-  // Mouse Drag-to-Orbit & Wheel Handlers
-  const handleMouseDown = (e) => {
-    if (e.target.closest('button, input, a, select')) return;
+  // Window-level Pointer Drag Handlers (Smooth, reliable, never drops tracking)
+  const handlePointerDown = (e) => {
+    if (e.target.closest('button, input, a, select, [role="button"]')) return;
+    if (e.button !== 0) return; // Left mouse click only
+
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startPitch = pitchRef.current;
+    const startYaw = yawRef.current;
+
     isDraggingRef.current = true;
-    dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      pitch,
-      yaw,
-    };
     setIsCursorGrabbing(true);
     setIsOrbiting(false);
     setViewPreset('custom');
+
+    const handlePointerMove = (moveEv) => {
+      if (!isDraggingRef.current) return;
+      const dx = moveEv.clientX - startX;
+      const dy = moveEv.clientY - startY;
+
+      // Calibrated natural orbit sensitivity
+      const newYaw = Math.max(-80, Math.min(80, startYaw + dx * 0.35));
+      const newPitch = Math.max(12, Math.min(78, startPitch - dy * 0.35));
+
+      setYaw(Math.round(newYaw));
+      setPitch(Math.round(newPitch));
+    };
+
+    const handlePointerUp = () => {
+      isDraggingRef.current = false;
+      setIsCursorGrabbing(false);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
   };
 
-  const handleMouseMove = (e) => {
-    if (!isDraggingRef.current) return;
-    const dx = e.clientX - dragStartRef.current.x;
-    const dy = e.clientY - dragStartRef.current.y;
+  // Dedicated non-passive wheel listener attached to canvasRef
+  // Only zooms when Ctrl or Cmd is held (or trackpad pinch-zoom),
+  // otherwise lets the page scroll normally without any jumping or unwanted zooming!
+  useEffect(() => {
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return;
 
-    const newYaw = Math.max(-65, Math.min(65, dragStartRef.current.yaw + dx * 0.25));
-    const newPitch = Math.max(10, Math.min(75, dragStartRef.current.pitch - dy * 0.25));
+    const onWheel = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const zoomDelta = e.deltaY * -0.0015;
+        setZoom((prev) => Math.max(0.65, Math.min(1.5, parseFloat((prev + zoomDelta).toFixed(2)))));
+      }
+      // If Ctrl/Cmd is not held, do NOT preventDefault and do NOT zoom!
+      // This allows the user to freely scroll up and down the page without any conflict!
+    };
 
-    setYaw(Math.round(newYaw));
-    setPitch(Math.round(newPitch));
-  };
-
-  const handleMouseUp = () => {
-    isDraggingRef.current = false;
-    setIsCursorGrabbing(false);
-  };
-
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const zoomDelta = e.deltaY * -0.001;
-    setZoom((prev) => Math.max(0.75, Math.min(1.45, parseFloat((prev + zoomDelta).toFixed(2)))));
-  };
+    canvasEl.addEventListener('wheel', onWheel, { passive: false });
+    return () => canvasEl.removeEventListener('wheel', onWheel);
+  }, []);
 
   // Step-by-Step Controllable Probe Tracer Mechanics
   const waypoints = [
@@ -169,8 +202,8 @@ export default function PipelineViewer({
       delta: '0.0ms',
       total: '0.0ms',
       action: 'Client fires HTTP request; TLS handshake initiated at ingress perimeter.',
-      cx: 140,
-      cy: 120,
+      cx: 120,
+      cy: 115,
     },
     {
       id: 2,
@@ -180,8 +213,8 @@ export default function PipelineViewer({
       delta: '+3.8ms',
       total: '3.8ms',
       action: 'TLS decrypted; Ingress selects least-loaded pod target via active health probes.',
-      cx: 280,
-      cy: 120,
+      cx: 325,
+      cy: 115,
     },
     {
       id: 3,
@@ -191,8 +224,8 @@ export default function PipelineViewer({
       delta: '+14.4ms',
       total: '18.2ms',
       action: `Dispatched to pod-0${activePodTarget}; container CPU increments (+1.2%). HTTP 200 OK returned.`,
-      cx: 560,
-      cy: 140,
+      cx: 510,
+      cy: 95,
     },
     {
       id: 4,
@@ -202,8 +235,8 @@ export default function PipelineViewer({
       delta: '+14.2ms',
       total: '32.4ms',
       action: 'Pod CPU/Memory scraped; unready pods filtered; moving window buffer updated.',
-      cx: 560,
-      cy: 350,
+      cx: 565,
+      cy: 450,
     },
     {
       id: 5,
@@ -213,8 +246,8 @@ export default function PipelineViewer({
       delta: '+12.7ms',
       total: '45.1ms',
       action: `Executed 4 models in parallel. Decision: Maximum picked ${winningModel} (${maxVal} replicas).`,
-      cx: 860,
-      cy: 350,
+      cx: 915,
+      cy: 450,
     },
     {
       id: 6,
@@ -224,15 +257,15 @@ export default function PipelineViewer({
       delta: '+12.9ms',
       total: '58.0ms',
       action: `Deployment scale subresource patched to ${actualPods} pods. Control loop closed!`,
-      cx: 890,
-      cy: 120,
+      cx: 1020,
+      cy: 115,
     },
   ];
 
   // Auto-play probe stepping
   useEffect(() => {
     if (!isProbePlaying) return;
-    const intervalTime = (1200 / probeSpeed);
+    const intervalTime = 1200 / probeSpeed;
     probeTimerRef.current = setTimeout(() => {
       setProbeHop((prev) => {
         if (prev >= 6) {
@@ -249,7 +282,7 @@ export default function PipelineViewer({
   const handleStartProbe = () => {
     setProbeHop(1);
     setIsProbePlaying(true);
-    setActivePodTarget(Math.floor(Math.random() * actualPods) + 1);
+    setActivePodTarget(Math.floor(Math.random() * Math.min(6, actualPods)) + 1);
   };
 
   const handlePauseProbe = () => {
@@ -257,9 +290,7 @@ export default function PipelineViewer({
   };
 
   const handleResumeProbe = () => {
-    if (probeHop === 0 || probeHop === 6) {
-      setProbeHop(1);
-    }
+    if (probeHop >= 6) setProbeHop(1);
     setIsProbePlaying(true);
   };
 
@@ -278,30 +309,30 @@ export default function PipelineViewer({
     setProbeHop(0);
   };
 
-  const currentWaypoint = waypoints.find((w) => w.id === probeHop) || null;
+  const currentWaypoint = waypoints.find((w) => w.id === probeHop);
 
-  // Mock Pods List for Deep Container Inspector
-  const mockPodList = useMemo(() => {
-    return Array.from({ length: actualPods }).map((_, idx) => {
-      const isLstmPrewarmed = idx >= reactiveHpa && idx < actualPods;
-      const podCpu = Math.min(100, Math.max(25, Math.round(cpu + (idx % 3) * 5 - 5)));
-      const memoryMb = 140 + (idx * 12);
+  // Mock Pods List for deep container diagnostics tab
+  const containerPods = useMemo(() => {
+    return Array.from({ length: actualPods }).map((_, i) => {
+      const isPrewarmed = i >= reactiveHpa && i < actualPods;
+      const isSpikeLoad = isSpiking && i < 8;
+      const baseCpu = isSpikeLoad ? 88 + (i % 5) * 2 : 45 + (i % 7) * 3;
+      const memMb = Math.round(180 + (i % 4) * 18 + (rps / 10));
       return {
-        id: idx + 1,
-        name: `web-workload-7b4f8-${String.fromCharCode(97 + idx)}${idx + 1}k`,
-        ip: `10.244.1.${14 + idx}`,
-        node: `node-pool-compute-${(idx % 2) + 1}`,
+        id: `pod-web-${String(i + 1).padStart(2, '0')}`,
+        ip: `10.244.1.${10 + i}`,
         status: 'Running',
-        restarts: 0,
-        age: `${idx * 4 + 12}m`,
-        cpu: podCpu,
-        memory: `${memoryMb}Mi / 500Mi`,
-        isLstmPrewarmed,
+        restarts: i === 1 ? 1 : 0,
+        age: `${Math.max(1, 14 - Math.floor(i / 2))}m`,
+        cpu: Math.min(100, baseCpu),
+        mem: memMb,
+        isPrewarmed,
+        isTargeted: probeHop === 3 && i === activePodTarget - 1,
       };
     });
-  }, [actualPods, cpu, reactiveHpa]);
+  }, [actualPods, reactiveHpa, isSpiking, rps, probeHop, activePodTarget]);
 
-  // Technical Metadata for All 6 Stages
+  // Stages definition for cards and inspector
   const stages = [
     {
       id: 0,
@@ -311,7 +342,7 @@ export default function PipelineViewer({
       color: 'cyan',
       description:
         'External user workloads generate continuous HTTP requests following a diurnal cyclic curve combined with stochastic Poisson arrival bursts.',
-      formula: '\\\\lambda(t) = \\\\bar{\\\\lambda} + A \\\\sin\\\\left(\\\\frac{2\\\\pi t}{T}\\\\right) + \\\\xi(t)',
+      formula: '\\lambda(t) = \\bar{\\lambda} + A \\sin\\left(\\frac{2\\pi t}{T}\\right) + \\xi(t)',
       internals: {
         'Arrival Process': 'Poisson Process with Diurnal Base Rate',
         'Current Concurrency': `${Math.round(rps * 1.8)} TCP Connections`,
@@ -328,7 +359,7 @@ export default function PipelineViewer({
       color: 'blue',
       description:
         'Terminates TLS, measures endpoint response latencies, and balances HTTP requests uniformly across available active pods using weighted round-robin.',
-      formula: 'P95 \\\\, \\\\text{Latency} \\\\approx L_0 + \\\\beta \\\\left( \\\\frac{\\\\lambda(t)}{N_{actual}(t) \\\\cdot C_{pod}} \\\\right)',
+      formula: 'P95 \\, \\text{Latency} \\approx L_0 + \\beta \\left( \\frac{\\lambda(t)}{N_{actual}(t) \\cdot C_{pod}} \\right)',
       internals: {
         'Routing Algorithm': 'Weighted Least-Request / Round-Robin',
         'Active P95 Latency': `${p95} ms (SLA Target: < 100ms)`,
@@ -345,7 +376,7 @@ export default function PipelineViewer({
       color: 'purple',
       description:
         'Target deployment running the application workload. Pods process incoming requests and scale elastically based on PHPA decisions.',
-      formula: 'U_{cpu}(t) = \\\\min\\\\left(100\\\\%, \\\\; \\\\frac{\\\\lambda(t)}{N_{actual}(t) \\\\cdot 25} \\\\times 60\\\\%\\\\right)',
+      formula: 'U_{cpu}(t) = \\min\\left(100\\%, \\; \\frac{\\lambda(t)}{N_{actual}(t) \\cdot 25} \\times 60\\%\\right)',
       internals: {
         'Allocated Replicas': `${actualPods} Pods Running`,
         'Ideal Demand': `${idealDemand} Pods (Based on ~25 RPS/pod)`,
@@ -362,7 +393,7 @@ export default function PipelineViewer({
       color: 'emerald',
       description:
         'Scrapes container CPU and memory usage from cAdvisor daemonsets, filters initializing pods, and computes the raw replica requirement.',
-      formula: 'R_{raw} = \\\\left\\\\lceil N_{current} \\\\times \\\\frac{\\\\text{CurrentCPU}}{\\\\text{TargetCPU (60%)}} \\\\right\\\\rceil',
+      formula: 'R_{raw} = \\left\\lceil N_{current} \\times \\frac{\\text{CurrentCPU}}{\\text{TargetCPU (60%)}} \\right\\rceil',
       internals: {
         'Scrape Interval': '15 Seconds Cadence',
         'Metric Source': 'cAdvisor DaemonSet via Kubelet /metrics/cadvisor',
@@ -379,7 +410,7 @@ export default function PipelineViewer({
       color: 'violet',
       description:
         'Pipes historical metrics concurrently to Reactive HPA, Linear Regression, Holt-Winters, and 2-Layer LSTM models, synthesizing recommendations via DecisionType: Maximum.',
-      formula: 'N_{target} = \\\\max\\\\left( R_{hpa}, \\\\; \\\\hat{y}_{linear}, \\\\; \\\\hat{y}_{hw}, \\\\; \\\\hat{y}_{lstm} \\\\right)',
+      formula: 'N_{target} = \\max\\left( R_{hpa}, \\; \\hat{y}_{linear}, \\; \\hat{y}_{hw}, \\; \\hat{y}_{lstm} \\right)',
       internals: {
         'Reactive HPA': `${reactiveHpa} Pods (Lagging CPU ratio)`,
         'Linear Regression': `${linearPred} Pods (OLS trend slope)`,
@@ -397,7 +428,7 @@ export default function PipelineViewer({
       color: 'amber',
       description:
         'Enforces cooldown stabilization windows, clamps replicas between min/max boundaries, and patches the deployment scale subresource.',
-      formula: 'N_{actuated} = \\\\text{clamp}\\\\left(\\\\min=2, \\\\; \\\\max=30, \\\\; N_{target}\\\\right)',
+      formula: 'N_{actuated} = \\text{clamp}\\left(\\min=2, \\; \\max=30, \\; N_{target}\\right)',
       internals: {
         'Target Replicas Applied': `${actualPods} Replicas`,
         'Downscale Stabilization': '300s Stabilization Window',
@@ -426,73 +457,73 @@ export default function PipelineViewer({
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-              Drag anywhere to orbit in 3D • Scroll to zoom • Adjust live traffic below to watch the 3D pod blades scale elastically in real time.
+              Drag anywhere to orbit in 3D • Adjust live traffic below to watch the 3D pod blades scale elastically in real time.
             </p>
           </div>
 
+          {/* Quick Angles & Auto-Orbit Controls */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center bg-zinc-900 border border-zinc-700/80 p-0.5 rounded-lg text-xs">
+            <div className="flex items-center bg-zinc-900/90 border border-zinc-800 rounded-lg p-1 text-xs font-mono">
               <button
                 onClick={() => handlePresetChange('isometric')}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded transition-colors ${
                   viewPreset === 'isometric'
-                    ? 'bg-purple-600 text-white shadow-sm'
+                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                3D Isometric
+                Isometric (44°)
               </button>
               <button
                 onClick={() => handlePresetChange('front')}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded transition-colors ${
                   viewPreset === 'front'
-                    ? 'bg-purple-600 text-white shadow-sm'
+                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                2.5D Front Flow
+                Front Flow (12°)
               </button>
               <button
                 onClick={() => handlePresetChange('top')}
-                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded transition-colors ${
                   viewPreset === 'top'
-                    ? 'bg-purple-600 text-white shadow-sm'
+                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                Top-Down
+                Top-Down (68°)
               </button>
             </div>
 
             <button
               onClick={() => setIsOrbiting((prev) => !prev)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono font-medium transition-all ${
                 isOrbiting
-                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.25)]'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-white'
+                  ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
               }`}
-              title="Toggle slow 3D Auto-Orbit"
             >
               <Compass className={`w-3.5 h-3.5 ${isOrbiting ? 'animate-spin' : ''}`} />
-              <span>Orbit</span>
+              <span>{isOrbiting ? 'Orbiting...' : 'Auto-Orbit'}</span>
             </button>
 
             <button
               onClick={handleResetCamera}
-              className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white transition-colors"
-              title="Reset Camera to Default"
+              className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
+              title="Reset View"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Integrated Live Traffic Control Deck */}
-        <div className="mt-3.5 pt-3.5 border-t border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-3 flex-1 max-w-lg">
-            <span className="text-[11px] font-mono font-bold text-cyan-400 flex-shrink-0 flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5" />
-              <span>TRAFFIC:</span>
+        {/* Embedded Live Traffic Deck */}
+        <div className="mt-4 pt-3.5 border-t border-zinc-800/80 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+          <div className="md:col-span-4 flex items-center gap-3">
+            <span className="text-[11px] font-mono text-zinc-400 flex items-center gap-1.5 flex-shrink-0">
+              <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Live Traffic:</span>
             </span>
             <input
               type="range"
@@ -502,49 +533,59 @@ export default function PipelineViewer({
               value={rps}
               onChange={(e) => {
                 const val = Number(e.target.value);
-                if (setTrafficMode) setTrafficMode('manual');
                 if (setManualRps) setManualRps(val);
+                if (setTrafficMode) setTrafficMode('manual');
               }}
-              className="flex-1 accent-cyan-400 h-1.5 bg-zinc-800 rounded-lg cursor-pointer"
+              className="w-full accent-cyan-400 h-1.5 bg-zinc-800 rounded-lg cursor-pointer"
             />
-            <span className="font-mono font-bold text-white text-xs w-16 text-right">
-              {rps} <span className="text-[10px] text-zinc-400 font-normal">RPS</span>
+            <span className="font-mono text-xs font-bold text-cyan-400 w-16 text-right">
+              {rps} RPS
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="md:col-span-5 flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => {
+                if (setManualRps) setManualRps(90);
                 if (setTrafficMode) setTrafficMode('manual');
-                if (setManualRps) setManualRps(80);
               }}
-              className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-mono transition-colors"
+              className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-700 hover:border-cyan-500/50 text-[11px] font-mono text-zinc-300 hover:text-white transition-colors"
             >
-              Calm (80)
+              Calm (90)
             </button>
             <button
               onClick={() => {
+                if (setManualRps) setManualRps(280);
                 if (setTrafficMode) setTrafficMode('manual');
-                if (setManualRps) setManualRps(220);
               }}
-              className="px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-mono transition-colors"
+              className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-700 hover:border-cyan-500/50 text-[11px] font-mono text-zinc-300 hover:text-white transition-colors"
             >
-              Peak (220)
+              Peak (280)
             </button>
             <button
-              onClick={() => {
-                if (onInjectSpike) onInjectSpike();
-              }}
-              className="flex items-center gap-1 px-3 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/50 text-rose-300 text-[11px] font-mono font-bold transition-all shadow-[0_0_8px_rgba(244,63,94,0.2)]"
+              onClick={() => onInjectSpike && onInjectSpike(5.0)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-rose-950/60 border border-rose-500/60 hover:bg-rose-900/60 text-[11px] font-mono font-bold text-rose-300 hover:text-rose-100 transition-colors shadow-sm"
             >
-              <Flame className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+              <Flame className="w-3 h-3 text-rose-400 animate-pulse" />
               <span>5x Surge</span>
+            </button>
+            <button
+              onClick={() => {
+                if (setTrafficMode) setTrafficMode('auto');
+              }}
+              className={`px-2 py-1 rounded border text-[11px] font-mono transition-colors ${
+                trafficMode === 'auto'
+                  ? 'bg-cyan-950/50 border-cyan-500/60 text-cyan-300'
+                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              Auto Diurnal
             </button>
           </div>
 
-          <div className="flex items-center gap-3 font-mono text-[11px] text-zinc-400">
+          <div className="md:col-span-3 flex items-center justify-end gap-2 text-xs font-mono text-zinc-400">
             <span>
-              Pods: <strong className="text-purple-300 font-bold">{actualPods}</strong>
+              Pods: <strong className="text-purple-400">{actualPods}</strong>
             </span>
             <span className="text-zinc-600">•</span>
             <span>
@@ -661,13 +702,9 @@ export default function PipelineViewer({
       {/* 3. RAZOR-SHARP 3D SPATIAL CANVAS VIEWPORT */}
       <div
         ref={canvasRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
         onDoubleClick={handleResetCamera}
-        className={`relative w-full rounded-2xl border border-zinc-700/80 bg-[#07070b] overflow-hidden shadow-2xl min-h-[640px] flex items-center justify-center ${
+        className={`relative w-full rounded-2xl border border-zinc-700/80 bg-[#07070b] overflow-hidden shadow-2xl min-h-[660px] flex items-center justify-center ${
           isCursorGrabbing ? 'cursor-grabbing' : 'cursor-grab'
         }`}
         style={{
@@ -680,21 +717,83 @@ export default function PipelineViewer({
           <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px]" />
         </div>
 
-        <div className="absolute top-3 left-4 z-20 pointer-events-none flex items-center gap-2 bg-zinc-900/90 border border-zinc-700/80 px-2.5 py-1 rounded-md text-[10px] font-mono text-zinc-400 shadow-md">
-          <span>🖱️ Click & Drag to Orbit</span>
+        {/* Top-Left Instructions HUD */}
+        <div className="absolute top-3 left-4 z-20 pointer-events-none flex items-center gap-2 bg-zinc-900/90 border border-zinc-700/80 px-2.5 py-1 rounded-md text-[10px] font-mono text-zinc-400 shadow-md backdrop-blur-md">
+          <span>🖱️ Drag to Orbit</span>
           <span className="text-zinc-600">•</span>
-          <span>Scroll to Zoom</span>
+          <span>Hold Ctrl + Scroll to Zoom</span>
           <span className="text-zinc-600">•</span>
           <span>Double-click to Reset</span>
         </div>
 
+        {/* Dedicated Tactile Zoom & Tilt Controls (Top-Right) */}
+        <div className="absolute top-3 right-4 z-30 pointer-events-auto flex items-center gap-1.5 bg-zinc-900/90 border border-zinc-700/80 rounded-lg p-1 shadow-xl backdrop-blur-md text-xs font-mono">
+          <span className="text-[10px] text-zinc-400 px-1.5 py-0.5 font-bold">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            onClick={() => setZoom((prev) => Math.min(1.5, parseFloat((prev + 0.1).toFixed(2))))}
+            className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+            title="Zoom In"
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setZoom((prev) => Math.max(0.65, parseFloat((prev - 0.1).toFixed(2))))}
+            className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+            title="Zoom Out"
+          >
+            <ZoomOut className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setZoom(1.0)}
+            className="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] text-zinc-300 hover:text-white transition-colors"
+            title="Reset Zoom to 100%"
+          >
+            100%
+          </button>
+
+          <div className="w-[1px] h-4 bg-zinc-700 mx-0.5" />
+
+          {/* Direct Tilt & Turn D-Pad */}
+          <button
+            onClick={() => setPitch((p) => Math.max(12, p - 6))}
+            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            title="Tilt Up"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setPitch((p) => Math.min(78, p + 6))}
+            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            title="Tilt Down"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setYaw((y) => Math.max(-80, y - 10))}
+            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            title="Turn Left"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setYaw((y) => Math.min(80, y + 10))}
+            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            title="Turn Right"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Live Trace Packet Details Toast */}
         <AnimatePresence>
           {currentWaypoint && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-3 right-4 z-30 pointer-events-auto max-w-sm"
+              exit={{ opacity: 0, y: 20 }}
+              className="absolute bottom-3 left-4 z-30 pointer-events-auto max-w-sm"
             >
               <div className="bg-[#12100d] border border-amber-500/60 rounded-xl p-3 shadow-2xl text-xs space-y-1.5">
                 <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-1.5">
@@ -717,15 +816,16 @@ export default function PipelineViewer({
           )}
         </AnimatePresence>
 
+        {/* 3D Scene Viewport */}
         <div
-          className="w-full h-[620px] flex items-center justify-center transition-transform duration-100 ease-out"
+          className="w-full h-[640px] flex items-center justify-center transition-transform duration-100 ease-out"
           style={{
             perspective: '1400px',
             perspectiveOrigin: '50% 50%',
           }}
         >
           <div
-            className="relative w-[1100px] h-[520px] transition-transform duration-150 ease-out"
+            className="relative w-[1160px] h-[600px] transition-transform duration-150 ease-out"
             style={{
               transformStyle: 'preserve-3d',
               transform: `rotateX(${pitch}deg) rotateY(${roll}deg) rotateZ(${yaw}deg) scale(${zoom})`,
@@ -766,43 +866,62 @@ export default function PipelineViewer({
                 </filter>
               </defs>
 
-              <path d="M 140 120 L 230 120" fill="none" stroke="rgba(6, 182, 212, 0.4)" strokeWidth="2.5" strokeDasharray="4 3" />
-              <path d="M 330 120 L 440 120" fill="none" stroke="rgba(6, 182, 212, 0.5)" strokeWidth="2.5" />
-              <path d="M 560 220 L 560 320" fill="none" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="2.5" strokeDasharray="5 3" />
-              <path d="M 660 360 L 760 360" fill="none" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2.5" />
-              <path d="M 950 310 L 950 180" fill="none" stroke="rgba(245, 158, 11, 0.5)" strokeWidth="2.5" strokeDasharray="4 3" />
-              <path d="M 900 120 L 710 120" fill="none" stroke="rgba(6, 182, 212, 0.6)" strokeWidth="2.5" strokeDasharray="4 3" />
+              {/* Highway Paths */}
+              {/* Path 1: Edge Ingress to Envoy Mesh */}
+              <path d="M 210 115 L 240 115" fill="none" stroke="rgba(6, 182, 212, 0.5)" strokeWidth="2.5" strokeDasharray="4 3" />
+              
+              {/* Path 2: Envoy Mesh to Target Pod Cluster */}
+              <path d="M 415 115 L 450 115" fill="none" stroke="rgba(6, 182, 212, 0.6)" strokeWidth="2.5" />
+              
+              {/* Path 3: Pod Cluster downward scrape to Telemetry Harvester */}
+              <path d="M 565 315 L 565 390" fill="none" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="2.5" strokeDasharray="5 3" />
+              
+              {/* Path 4: Telemetry Harvester stream to PHPA Models Brain */}
+              <path d="M 680 450 L 710 450" fill="none" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2.5" />
+              
+              {/* Path 5: Models Brain recommendation up to Scale Actuator */}
+              <path d="M 1020 370 L 1020 180" fill="none" stroke="rgba(245, 158, 11, 0.6)" strokeWidth="2.5" strokeDasharray="5 3" />
+              
+              {/* Path 6: Scale Actuator scale patch closing loop into Pod Cluster */}
+              <path d="M 920 115 L 880 115" fill="none" stroke="rgba(245, 158, 11, 0.7)" strokeWidth="2.5" strokeDasharray="4 3" />
 
+              {/* Animated Continuous Photons */}
+              {/* Request Ingestion Stream */}
               <circle r="4" fill="#06b6d4" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="140; 230; 330; 440" dur={rps > 300 ? '0.6s' : rps > 180 ? '1.1s' : '1.8s'} repeatCount="indefinite" />
-                <animate attributeName="cy" values="120; 120; 120; 120" dur={rps > 300 ? '0.6s' : rps > 180 ? '1.1s' : '1.8s'} repeatCount="indefinite" />
+                <animate attributeName="cx" values="210; 240; 415; 450" dur={rps > 300 ? '0.6s' : rps > 180 ? '1.1s' : '1.8s'} repeatCount="indefinite" />
+                <animate attributeName="cy" values="115; 115; 115; 115" dur={rps > 300 ? '0.6s' : rps > 180 ? '1.1s' : '1.8s'} repeatCount="indefinite" />
               </circle>
 
+              {/* Telemetry Scrape Stream */}
               <circle r="3.5" fill="#10b981" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="560; 560" dur="2.0s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="220; 320" dur="2.0s" repeatCount="indefinite" />
+                <animate attributeName="cx" values="565; 565" dur="2.0s" repeatCount="indefinite" />
+                <animate attributeName="cy" values="315; 390" dur="2.0s" repeatCount="indefinite" />
               </circle>
 
+              {/* Brain Neural Stream */}
               <circle r="3.5" fill="#a855f7" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="660; 760" dur="1.5s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="360; 360" dur="1.5s" repeatCount="indefinite" />
+                <animate attributeName="cx" values="680; 710" dur="1.4s" repeatCount="indefinite" />
+                <animate attributeName="cy" values="450; 450" dur="1.4s" repeatCount="indefinite" />
               </circle>
 
+              {/* Actuation Command Stream */}
               <circle r="3.5" fill="#f59e0b" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="950; 950" dur="1.8s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="310; 180" dur="1.8s" repeatCount="indefinite" />
+                <animate attributeName="cx" values="1020; 1020" dur="1.8s" repeatCount="indefinite" />
+                <animate attributeName="cy" values="370; 180" dur="1.8s" repeatCount="indefinite" />
               </circle>
 
-              <circle r="4" fill="#06b6d4" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="900; 710" dur="1.4s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="120; 120" dur="1.4s" repeatCount="indefinite" />
+              {/* Loop Closed Actuation Pulse */}
+              <circle r="4" fill="#f59e0b" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="920; 880" dur="1.2s" repeatCount="indefinite" />
+                <animate attributeName="cy" values="115; 115" dur="1.2s" repeatCount="indefinite" />
               </circle>
 
+              {/* Controllable Probe Tracer Glowing Beacon */}
               {probeHop > 0 && currentWaypoint && (
                 <circle
                   cx={currentWaypoint.cx}
                   cy={currentWaypoint.cy}
-                  r="8"
+                  r="9"
                   fill="#fbbf24"
                   filter="url(#glow-strong)"
                   className="animate-pulse"
@@ -816,7 +935,7 @@ export default function PipelineViewer({
                 setSelectedStage(0);
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-6 top-10 w-36 cursor-pointer group"
+              className="absolute left-[30px] top-[50px] w-[180px] cursor-pointer group"
               style={{ transform: 'translateZ(30px)' }}
             >
               <div
@@ -864,7 +983,7 @@ export default function PipelineViewer({
                 setSelectedStage(1);
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-52 top-10 w-36 cursor-pointer group"
+              className="absolute left-[240px] top-[50px] w-[175px] cursor-pointer group"
               style={{ transform: 'translateZ(35px)' }}
             >
               <div
@@ -895,23 +1014,23 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ZONE 3: 3D POD CLUSTER WORKLOAD */}
+            {/* ZONE 3: 3D POD CLUSTER WORKLOAD (Fixed bounded height, never collides with telemetry below) */}
             <div
               onClick={() => {
                 setSelectedStage(2);
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[390px] top-6 w-80 cursor-pointer group"
+              className="absolute left-[450px] top-[25px] w-[430px] cursor-pointer group"
               style={{ transform: 'translateZ(45px)' }}
             >
               <div
-                className={`rounded-2xl p-4 border transition-all shadow-2xl ${
+                className={`rounded-2xl p-3.5 border transition-all shadow-2xl ${
                   probeHop === 3
                     ? 'bg-[#14121a] border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.35)]'
                     : 'bg-[#0e0e16] border-purple-500/40 hover:border-purple-400'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
                       <Server className="w-3.5 h-3.5" />
@@ -932,34 +1051,31 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                <div className="bg-[#08080c] rounded-xl p-3 border border-zinc-800 min-h-[120px] flex items-center justify-center">
-                  <div className="grid grid-cols-5 gap-2.5 w-full">
+                {/* Compact Pod Rack Grid (6 columns, bounds max height cleanly) */}
+                <div className="bg-[#08080c] rounded-xl p-2.5 border border-zinc-800/90 max-h-[195px] overflow-hidden flex items-center justify-center">
+                  <div className="grid grid-cols-6 gap-1.5 w-full">
                     <AnimatePresence>
                       {Array.from({ length: actualPods }).map((_, idx) => {
                         const isPrewarmed = idx >= reactiveHpa && idx < actualPods;
-                        const isTargetedByProbe = probeHop === 3 && idx === (activePodTarget - 1);
+                        const isTargetedByProbe = probeHop === 3 && idx === activePodTarget - 1;
                         const podCpu = Math.min(100, Math.round(cpu + (idx % 3) * 4 - 4));
 
                         return (
                           <motion.div
                             key={`pod-blade-${idx}`}
-                            initial={{ scale: 0, y: -40, opacity: 0 }}
-                            animate={{ scale: 1, y: 0, opacity: 1 }}
-                            exit={{ scale: 0, y: 20, opacity: 0 }}
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
                             transition={{
                               type: 'spring',
                               stiffness: 400,
                               damping: 24,
-                              delay: idx * 0.02,
+                              delay: idx * 0.015,
                             }}
                             className="relative group/pod"
-                            style={{
-                              transformStyle: 'preserve-3d',
-                              perspective: '400px',
-                            }}
                           >
                             <div
-                              className={`rounded-lg p-1.5 text-center border transition-all duration-300 ${
+                              className={`rounded-md p-1 text-center border transition-all duration-300 ${
                                 isTargetedByProbe
                                   ? 'bg-amber-500/20 border-amber-400 shadow-[0_0_12px_#f59e0b] scale-110'
                                   : isPrewarmed
@@ -968,9 +1084,8 @@ export default function PipelineViewer({
                                   ? 'bg-rose-950/40 border-rose-500/60 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
                                   : 'bg-[#14141d] border-zinc-700/80 hover:border-cyan-400/80'
                               }`}
-                              style={{ transform: 'translateZ(10px)' }}
                             >
-                              <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center justify-between mb-0.5">
                                 <span
                                   className={`w-1.5 h-1.5 rounded-full ${
                                     isTargetedByProbe
@@ -982,7 +1097,7 @@ export default function PipelineViewer({
                                       : 'bg-emerald-400 shadow-[0_0_5px_#34d399]'
                                   }`}
                                 />
-                                <span className="text-[8px] font-mono text-zinc-400">
+                                <span className="text-[7.5px] font-mono text-zinc-400">
                                   #{idx + 1}
                                 </span>
                               </div>
@@ -1001,15 +1116,10 @@ export default function PipelineViewer({
                                   style={{ width: `${podCpu}%` }}
                                 />
                               </div>
-                              <span className="text-[7.5px] font-mono text-zinc-400 block truncate">
+                              <span className="text-[7px] font-mono text-zinc-400 block truncate">
                                 {podCpu}%
                               </span>
                             </div>
-
-                            <div
-                              className="absolute inset-0 bg-black/50 rounded-lg pointer-events-none -z-10"
-                              style={{ transform: 'translateZ(-8px) translateY(4px)' }}
-                            />
                           </motion.div>
                         );
                       })}
@@ -1017,7 +1127,7 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                <div className="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                <div className="mt-2 pt-1.5 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono text-zinc-400">
                   <span>
                     Avg Pod CPU: <strong className="text-white">{cpu}%</strong> (Target: 60%)
                   </span>
@@ -1028,14 +1138,14 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ZONE 4: TELEMETRY GATHERER */}
+            {/* ZONE 4: TELEMETRY GATHERER (Positioned at top: 390px with clear 80px+ vertical gap from Zone 3) */}
             <div
               onClick={() => {
                 setSelectedStage(3);
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[450px] top-[320px] w-56 cursor-pointer group"
-              style={{ transform: 'translateZ(30px)' }}
+              className="absolute left-[450px] top-[390px] w-[230px] cursor-pointer group"
+              style={{ transform: 'translateZ(35px)' }}
             >
               <div
                 className={`rounded-xl p-3 border transition-all shadow-xl ${
@@ -1071,7 +1181,7 @@ export default function PipelineViewer({
                 setSelectedStage(4);
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[740px] top-[260px] w-80 cursor-pointer group"
+              className="absolute left-[710px] top-[370px] w-[410px] cursor-pointer group"
               style={{ transform: 'translateZ(40px)' }}
             >
               <div
@@ -1185,7 +1295,7 @@ export default function PipelineViewer({
                 setSelectedStage(5);
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[880px] top-10 w-44 cursor-pointer group"
+              className="absolute left-[920px] top-[50px] w-[200px] cursor-pointer group"
               style={{ transform: 'translateZ(35px)' }}
             >
               <div
@@ -1217,8 +1327,41 @@ export default function PipelineViewer({
         </div>
       </div>
 
-      {/* 4. STAGE SELECTOR RIBBON */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+      {/* 4. LIVE PACKET PAYLOAD INSPECTOR CARD */}
+      {currentWaypoint && (
+        <div className="rounded-xl p-3.5 border border-amber-500/40 bg-[#0c0a07] shadow-xl text-xs font-mono space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-amber-300 font-bold">
+              <Terminal className="w-4 h-4" />
+              <span>LIVE PACKET PAYLOAD INSPECTOR (HOP {currentWaypoint.id}/6)</span>
+            </div>
+            <span className="text-[10px] text-zinc-400">
+              Total Incurred Latency: <strong className="text-amber-300">+{currentWaypoint.total}</strong>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px] bg-black/40 rounded-lg p-2.5 border border-zinc-800">
+            <div>
+              <span className="text-zinc-500 block">HTTP Request Context:</span>
+              <span className="text-zinc-200">GET /api/v1/workload HTTP/2.0</span>
+              <span className="text-zinc-400 block text-[10px]">Host: phpa-cluster.local</span>
+            </div>
+            <div>
+              <span className="text-zinc-500 block">Target Routing Destination:</span>
+              <span className="text-purple-300 font-bold">pod-0{activePodTarget} (10.244.1.{10 + activePodTarget})</span>
+              <span className="text-zinc-400 block text-[10px]">Weight: 100 • Health: Passing</span>
+            </div>
+            <div>
+              <span className="text-zinc-500 block">Actuation Status:</span>
+              <span className="text-emerald-400 font-bold">Closed-Loop Stable</span>
+              <span className="text-zinc-400 block text-[10px]">{actualPods} replicas active</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. STAGE SELECTOR RIBBON */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         {stages.map((stage) => {
           const Icon = stage.icon;
           const isSelected = selectedStage === stage.id;
@@ -1229,83 +1372,88 @@ export default function PipelineViewer({
                 setSelectedStage(stage.id);
                 setIsDrawerOpen(true);
               }}
-              className={`rounded-xl p-3 text-left transition-all relative overflow-hidden border ${
+              className={`text-left p-2.5 rounded-xl border transition-all flex items-start gap-2.5 ${
                 isSelected
-                  ? 'border-purple-500 bg-[#161424] shadow-md shadow-purple-500/10'
-                  : 'bg-[#0d0d14] border-zinc-800 hover:border-zinc-700'
+                  ? 'bg-zinc-800 border-purple-500 shadow-md ring-1 ring-purple-500/50'
+                  : 'bg-[#0d0d14] border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/60'
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <div
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                    isSelected ? 'bg-purple-500 text-white' : 'bg-zinc-800 text-zinc-400'
-                  }`}
-                >
-                  <Icon className="w-3 h-3" />
-                </div>
-                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />}
+              <div
+                className={`p-1.5 rounded-lg ${
+                  stage.color === 'cyan'
+                    ? 'bg-cyan-500/20 text-cyan-400'
+                    : stage.color === 'blue'
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : stage.color === 'purple'
+                    ? 'bg-purple-500/20 text-purple-400'
+                    : stage.color === 'emerald'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : stage.color === 'violet'
+                    ? 'bg-violet-500/20 text-violet-400'
+                    : 'bg-amber-500/20 text-amber-400'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
               </div>
-              <h4 className="text-[11px] font-bold text-white truncate">{stage.name}</h4>
-              <p className="text-[9.5px] text-zinc-400 truncate mt-0.5">{stage.subtitle}</p>
+              <div className="min-w-0 flex-1">
+                <div className="text-[11px] font-bold text-white truncate">{stage.name}</div>
+                <div className="text-[9px] text-zinc-400 truncate">{stage.subtitle}</div>
+              </div>
             </button>
           );
         })}
       </div>
 
-      {/* 5. DEEP INTERNAL STAGE INSPECTION MODAL */}
+      {/* 6. DEEP STAGE DIAGNOSTICS MODAL */}
       <AnimatePresence>
         {isDrawerOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.2 }}
-              className="w-full max-w-2xl bg-[#0e0e14] border border-zinc-700 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-[#0f0f18] border border-zinc-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-5 border-b border-zinc-800 bg-[#09090e]">
+              <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                  <div className="p-2 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-400">
                     {React.createElement(stages[selectedStage].icon, { className: 'w-5 h-5' })}
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono text-purple-400 uppercase tracking-wider font-semibold">
-                      Stage Inspection #{selectedStage + 1}
-                    </span>
-                    <h3 className="text-base font-bold text-white">
+                    <h3 className="text-sm font-bold text-white">
                       {stages[selectedStage].name}
                     </h3>
+                    <p className="text-xs text-zinc-400">
+                      {stages[selectedStage].subtitle}
+                    </p>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsDrawerOpen(false)}
-                    className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* Sub-Tabs Navigation */}
-              <div className="flex items-center gap-2 px-5 pt-3 border-b border-zinc-800 text-xs font-mono">
+              {/* Modal Sub-Tabs */}
+              <div className="flex items-center gap-2 px-4 pt-3 border-b border-zinc-800 bg-[#0a0a10] text-xs font-mono">
                 <button
                   onClick={() => setActiveTab('overview')}
-                  className={`pb-2.5 px-2 border-b-2 font-semibold transition-colors ${
+                  className={`pb-2 px-2 border-b-2 transition-colors ${
                     activeTab === 'overview'
-                      ? 'border-purple-500 text-purple-400'
+                      ? 'border-purple-400 text-purple-300 font-bold'
                       : 'border-transparent text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
-                  Architecture & Role
+                  Overview & Telemetry
                 </button>
                 <button
                   onClick={() => setActiveTab('internals')}
-                  className={`pb-2.5 px-2 border-b-2 font-semibold transition-colors ${
+                  className={`pb-2 px-2 border-b-2 transition-colors ${
                     activeTab === 'internals'
-                      ? 'border-purple-500 text-purple-400'
+                      ? 'border-purple-400 text-purple-300 font-bold'
                       : 'border-transparent text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -1314,114 +1462,154 @@ export default function PipelineViewer({
                 {selectedStage === 2 && (
                   <button
                     onClick={() => setActiveTab('pods')}
-                    className={`pb-2.5 px-2 border-b-2 font-semibold transition-colors ${
+                    className={`pb-2 px-2 border-b-2 transition-colors flex items-center gap-1.5 ${
                       activeTab === 'pods'
-                        ? 'border-purple-500 text-purple-400'
+                        ? 'border-purple-400 text-purple-300 font-bold'
                         : 'border-transparent text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
-                    Container Pods ({actualPods})
+                    <Server className="w-3 h-3" />
+                    <span>Container Pods ({actualPods})</span>
                   </button>
                 )}
                 <button
                   onClick={() => setActiveTab('yaml')}
-                  className={`pb-2.5 px-2 border-b-2 font-semibold transition-colors ${
+                  className={`pb-2 px-2 border-b-2 transition-colors ${
                     activeTab === 'yaml'
-                      ? 'border-purple-500 text-purple-400'
+                      ? 'border-purple-400 text-purple-300 font-bold'
                       : 'border-transparent text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
-                  Kubernetes Spec (YAML)
+                  Kubernetes YAML
                 </button>
               </div>
 
-              {/* Modal Body Content */}
-              <div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
-                {/* SUB-TAB 1: OVERVIEW */}
+              {/* Modal Body */}
+              <div className="p-4 overflow-y-auto flex-1 space-y-4">
                 {activeTab === 'overview' && (
-                  <div className="space-y-4 animate-fadeIn">
-                    <div>
-                      <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
-                        Operational Function
-                      </h4>
-                      <p className="text-zinc-300 leading-relaxed text-[12px]">
-                        {stages[selectedStage].description}
-                      </p>
-                    </div>
+                  <div className="space-y-4">
+                    <p className="text-xs text-zinc-300 leading-relaxed">
+                      {stages[selectedStage].description}
+                    </p>
 
-                    <div>
-                      <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
-                        Mathematical Formulation
-                      </h4>
-                      <div className="p-3 rounded-lg bg-[#07070b] border border-purple-500/30 text-purple-300 font-mono text-[11px] overflow-x-auto">
-                        <code>{stages[selectedStage].formula}</code>
+                    <div className="rounded-xl bg-zinc-950 p-3 border border-zinc-800">
+                      <h5 className="text-[11px] font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">
+                        Live Operational Metrics
+                      </h5>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {Object.entries(stages[selectedStage].internals).map(([k, v]) => (
+                          <div key={k} className="p-2 rounded bg-[#12121c] border border-zinc-800/80">
+                            <span className="text-zinc-400 text-[10px] block">{k}</span>
+                            <span className="font-mono text-white font-semibold mt-0.5 block truncate">
+                              {v}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* SUB-TAB 2: INTERNALS */}
                 {activeTab === 'internals' && (
-                  <div className="space-y-3 animate-fadeIn">
-                    <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1">
-                      Component Internal Telemetry
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {Object.entries(stages[selectedStage].internals).map(([key, val]) => (
-                        <div
-                          key={key}
-                          className="p-3 rounded-xl bg-[#07070b] border border-zinc-800 flex flex-col justify-between"
-                        >
-                          <span className="text-[10px] font-mono text-zinc-500 uppercase">{key}</span>
-                          <span className="text-white font-mono font-bold text-xs mt-1">{val}</span>
+                  <div className="space-y-4">
+                    <div className="rounded-xl bg-zinc-950 p-3.5 border border-zinc-800 font-mono">
+                      <span className="text-[10px] text-zinc-400 block mb-1.5 uppercase font-semibold tracking-wider">
+                        Autonomic Mathematical Formulation
+                      </span>
+                      <div className="p-3 bg-[#11111a] rounded-lg border border-purple-500/30 text-purple-300 text-xs overflow-x-auto">
+                        {stages[selectedStage].formula}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-zinc-950 p-3 border border-zinc-800 space-y-2 text-xs">
+                      <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold tracking-wider block">
+                        Subsystem Specifications
+                      </span>
+                      <div className="space-y-1.5 text-zinc-300">
+                        <div className="flex justify-between py-1 border-b border-zinc-900">
+                          <span className="text-zinc-400">Component Scope:</span>
+                          <span className="font-mono text-zinc-200">Kubernetes Core Data/Control Plane</span>
                         </div>
-                      ))}
+                        <div className="flex justify-between py-1 border-b border-zinc-900">
+                          <span className="text-zinc-400">Execution Frequency:</span>
+                          <span className="font-mono text-zinc-200">Continuous Event Loop (15s Cadence)</span>
+                        </div>
+                        <div className="flex justify-between py-1">
+                          <span className="text-zinc-400">Fault Tolerance:</span>
+                          <span className="font-mono text-emerald-400">Active HA with Fallback to Reactive HPA</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* SUB-TAB 3: CONTAINER PODS BREAKDOWN (Only for Stage 3) */}
                 {activeTab === 'pods' && selectedStage === 2 && (
-                  <div className="space-y-3 animate-fadeIn">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
-                        Running Pods Breakdown
-                      </h4>
-                      <span className="text-[10px] font-mono text-zinc-400">
-                        Target CPU: 60% • Max Limit: 500m
-                      </span>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
+                      <span>Workload: <strong>web-workload</strong></span>
+                      <span>{actualPods} pods in replica set</span>
                     </div>
 
-                    <div className="border border-zinc-800 rounded-xl overflow-hidden bg-[#07070b]">
-                      <table className="w-full text-[10.5px] font-mono text-left">
-                        <thead className="bg-[#12121c] text-zinc-400 border-b border-zinc-800">
+                    <div className="rounded-xl border border-zinc-800 overflow-hidden bg-zinc-950 text-xs font-mono">
+                      <table className="w-full text-left">
+                        <thead className="bg-[#12121e] text-[10px] text-zinc-400 border-b border-zinc-800">
                           <tr>
                             <th className="p-2">Pod Name</th>
                             <th className="p-2">IP Address</th>
-                            <th className="p-2">CPU</th>
+                            <th className="p-2">CPU%</th>
                             <th className="p-2">Memory</th>
-                            <th className="p-2">Allocated By</th>
+                            <th className="p-2">Uptime</th>
+                            <th className="p-2">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-800/60 text-zinc-300">
-                          {mockPodList.map((pod) => (
-                            <tr key={pod.id} className="hover:bg-zinc-900/50 transition-colors">
-                              <td className="p-2 text-white font-medium truncate max-w-[140px]">{pod.name}</td>
-                              <td className="p-2 text-cyan-400">{pod.ip}</td>
-                              <td className="p-2">
-                                <span className={pod.cpu > 80 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
-                                  {pod.cpu}%
-                                </span>
+                        <tbody className="divide-y divide-zinc-900">
+                          {containerPods.map((p) => (
+                            <tr
+                              key={p.id}
+                              className={`hover:bg-zinc-900/60 ${
+                                p.isTargeted
+                                  ? 'bg-amber-500/10'
+                                  : p.isPrewarmed
+                                  ? 'bg-purple-950/20'
+                                  : ''
+                              }`}
+                            >
+                              <td className="p-2 flex items-center gap-1.5 font-bold text-white">
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    p.isTargeted
+                                      ? 'bg-amber-400 animate-ping'
+                                      : p.isPrewarmed
+                                      ? 'bg-purple-400'
+                                      : 'bg-emerald-400'
+                                  }`}
+                                />
+                                <span>{p.id}</span>
                               </td>
-                              <td className="p-2 text-zinc-400">{pod.memory}</td>
+                              <td className="p-2 text-zinc-400">{p.ip}</td>
                               <td className="p-2">
-                                {pod.isLstmPrewarmed ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[9px] font-bold">
-                                    LSTM Pre-warm
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-12 bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                                    <div
+                                      className={`h-full ${p.cpu > 80 ? 'bg-rose-500' : 'bg-cyan-400'}`}
+                                      style={{ width: `${p.cpu}%` }}
+                                    />
+                                  </div>
+                                  <span className={p.cpu > 80 ? 'text-rose-400 font-bold' : 'text-zinc-300'}>
+                                    {p.cpu}%
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-2 text-zinc-400">{p.mem} MB</td>
+                              <td className="p-2 text-zinc-400">{p.age}</td>
+                              <td className="p-2">
+                                {p.isPrewarmed ? (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                                    LSTM Pre-warmed
                                   </span>
                                 ) : (
-                                  <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 text-[9px]">
-                                    Reactive HPA
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                    Ready
                                   </span>
                                 )}
                               </td>
@@ -1433,39 +1621,17 @@ export default function PipelineViewer({
                   </div>
                 )}
 
-                {/* SUB-TAB 4: YAML SPEC */}
                 {activeTab === 'yaml' && (
-                  <div className="space-y-2 animate-fadeIn">
-                    <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Terminal className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>Kubernetes Resource Manifest</span>
-                    </h4>
-                    <pre className="p-3.5 rounded-xl bg-[#07070b] border border-zinc-800 font-mono text-[11px] text-zinc-300 overflow-x-auto leading-relaxed">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                      <span>Production Deployment Manifest</span>
+                      <span className="text-[10px] text-zinc-500">YAML Format</span>
+                    </div>
+                    <pre className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed">
                       {stages[selectedStage].yaml}
                     </pre>
                   </div>
                 )}
-              </div>
-
-              {/* Modal Footer Actions */}
-              <div className="p-4 border-t border-zinc-800 bg-[#09090e] flex items-center justify-between">
-                <button
-                  onClick={() => {
-                    const next = (selectedStage + 1) % stages.length;
-                    setSelectedStage(next);
-                    setActiveTab('overview');
-                  }}
-                  className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 font-semibold"
-                >
-                  <span>Next Stage ({((selectedStage + 1) % stages.length) + 1})</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white text-xs font-semibold"
-                >
-                  Close Inspection
-                </button>
               </div>
             </motion.div>
           </div>
