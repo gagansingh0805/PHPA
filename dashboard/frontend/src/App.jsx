@@ -18,6 +18,24 @@ export default function App() {
   const [trafficMode, setTrafficMode] = useState('auto'); // 'auto' | 'manual'
   const [manualRps, setManualRps] = useState(125);
 
+  // Dynamic, user-configurable operational guardrails
+  const [guardrails, setGuardrails] = useState({
+    minPods: 2,
+    maxPods: 30,
+    targetCpu: 60,
+    cooldownSec: 60,
+  });
+  const guardrailsRef = useRef(guardrails);
+  useEffect(() => {
+    guardrailsRef.current = guardrails;
+  }, [guardrails]);
+
+  const [buttonFeedback, setButtonFeedback] = useState(null);
+  const flashButton = (name) => {
+    setButtonFeedback(name);
+    setTimeout(() => setButtonFeedback(null), 1200);
+  };
+
   const [logs, setLogs] = useState([
     {
       time: '00:00:01',
@@ -192,8 +210,10 @@ export default function App() {
       // 4. LSTM (rapid non-linear preemption)
       const lstmPred = mult > 1.0 ? Math.min(28, Math.round(idealDemand * 1.15)) : idealDemand;
 
-      // Actual Pods (Upper bound decision: Maximum)
-      const target = Math.max(reactiveHpa, linearPred, hwPred, lstmPred);
+      // Actual Pods (Upper bound decision: Maximum bounded by guardrails)
+      const { minPods, maxPods } = guardrailsRef.current;
+      const rawTarget = Math.max(reactiveHpa, linearPred, hwPred, lstmPred);
+      const target = Math.max(minPods, Math.min(maxPods, rawTarget));
       if (target > s.actualPods) {
         s.actualPods = target;
       } else if (target < s.actualPods) {
@@ -439,22 +459,40 @@ export default function App() {
   };
 
   const handleInjectSpike = () => {
+    flashButton('spike');
     simState.current.spikeMultiplier = 5.0;
     simState.current.spikeTicks = 8;
     const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
-    setLatest((prev) => ({ ...prev, is_spiking: true }));
+    const spikedRps = 520;
+    const { minPods, maxPods } = guardrailsRef.current;
+    const spikedIdeal = Math.max(minPods, Math.min(maxPods, Math.ceil(spikedRps / 25.0)));
+    const spikedLstm = Math.min(maxPods, Math.round(spikedIdeal * 1.2));
+    const newActual = Math.max(spikedIdeal, spikedLstm);
+
+    simState.current.actualPods = newActual;
+    setLatest((prev) => ({
+      ...prev,
+      is_spiking: true,
+      rps: spikedRps,
+      ideal_demand: spikedIdeal,
+      lstm_pred: spikedLstm,
+      actual_pods: newActual,
+      cpu_utilization: 64,
+      p95_latency_ms: 34.2,
+    }));
+
     setLogs((prev) => [
       ...prev.slice(-40),
       {
         time: timeLabel,
         level: 'SURGE',
         category: 'alert',
-        message: '💥 5x Flash Crowd Injected! Sudden surge to 450+ RPS. LSTM immediately preempts with +8 lead replicas.',
+        message: `💥 5x Flash Crowd Injected! Sudden surge to ${spikedRps} RPS. Stacked LSTM proactively pre-allocated ${newActual} pods.`,
         meta: {
           multiplier: 5.0,
-          burst_duration_ticks: 8,
-          synthetic_spike: true,
-          action: 'FLASH_CROWD_INJECTION',
+          burst_rps: spikedRps,
+          actuated_pods: newActual,
+          ideal_demand: spikedIdeal,
           timestamp: timeLabel,
         }
       },
@@ -467,10 +505,28 @@ export default function App() {
   };
 
   const handleAdjustRps = (delta) => {
+    flashButton(delta > 0 ? 'plus' : 'minus');
     setTrafficMode('manual');
-    const newRps = Math.max(25, Math.min(600, (manualRps || 125) + delta));
+    const currentRps = manualRps || latest.rps || 125;
+    const newRps = Math.max(25, Math.min(600, currentRps + delta));
     setManualRps(newRps);
     trafficControlRef.current = { mode: 'manual', rps: newRps };
+
+    const { minPods, maxPods } = guardrailsRef.current;
+    const newDemand = Math.max(minPods, Math.min(maxPods, Math.ceil(newRps / 25.0)));
+    const newLstm = Math.min(maxPods, Math.round(newDemand * 1.15));
+    const newPods = Math.max(newDemand, newLstm);
+
+    simState.current.actualPods = newPods;
+    setLatest((prev) => ({
+      ...prev,
+      rps: newRps,
+      ideal_demand: newDemand,
+      actual_pods: newPods,
+      lstm_pred: newLstm,
+      cpu_utilization: Math.min(100, Math.round((newRps / (newPods * 25.0)) * 60)),
+    }));
+
     const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
     setLogs((prev) => [
       ...prev.slice(-40),
@@ -479,11 +535,12 @@ export default function App() {
         level: delta > 0 ? 'SCALE' : 'COST',
         category: delta > 0 ? 'scale' : 'cost',
         message: delta > 0 
-          ? `📈 Manual traffic ramped to ${newRps} RPS (+${delta} RPS). Evaluators recalculating pod demand.`
-          : `📉 Manual traffic reduced to ${newRps} RPS (${delta} RPS). Cooldown timer initiated for downscaling.`,
+          ? `📈 Manual traffic ramped: ${currentRps} → ${newRps} RPS (+${delta} RPS). Cluster scaled to ${newPods} pods.`
+          : `📉 Manual traffic reduced: ${currentRps} → ${newRps} RPS (${delta} RPS). Cluster optimized to ${newPods} pods.`,
         meta: {
-          previous_rps: manualRps,
+          previous_rps: currentRps,
           new_rps: newRps,
+          actuated_pods: newPods,
           action: delta > 0 ? 'TRAFFIC_RAMP' : 'TRAFFIC_DROP',
           timestamp: timeLabel,
         }
@@ -492,28 +549,40 @@ export default function App() {
   };
 
   const handleTriggerLstmEvent = () => {
+    flashButton('lstm');
     const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
-    const predLead = Math.max(1, Math.round(latest.actual_pods * 0.25));
-    const targetPods = Math.min(30, latest.actual_pods + predLead);
+    const { maxPods } = guardrailsRef.current;
+    const currentPods = latest.actual_pods || 4;
+    const predLead = Math.max(2, Math.round(currentPods * 0.3));
+    const targetPods = Math.min(maxPods, currentPods + predLead);
+
+    simState.current.actualPods = targetPods;
+    setLatest((prev) => ({
+      ...prev,
+      actual_pods: targetPods,
+      lstm_pred: targetPods,
+    }));
+
     setLogs((prev) => [
       ...prev.slice(-40),
       {
         time: timeLabel,
         level: 'LSTM',
         category: 'insight',
-        message: `🧠 LSTM Synthetic Probe: Model projected +${predLead * 25} RPS inflection over next 45s. Pre-allocated ${targetPods} pods to maintain <35ms P95 latency.`,
+        message: `🧠 LSTM Synthetic Preemption: Model projected +${predLead * 25} RPS inflection over next 45s. Pre-allocated ${targetPods} pods (governing decision).`,
         meta: {
           lookahead_seconds: 45,
           predicted_target_pods: targetPods,
-          current_pods: latest.actual_pods,
+          current_pods: currentPods,
+          lead_replicas: predLead,
           confidence_score: 0.942,
-          neural_architecture: 'Stacked_LSTM_2x64_Hidden',
         }
       }
     ]);
   };
 
   const handleReset = () => {
+    flashButton('reset');
     prevPodsRef.current = 4;
     simState.current = {
       tick: 0,
@@ -530,16 +599,78 @@ export default function App() {
         lstm: { podSeconds: 0, deficits: 0, wasteSeconds: 0, errorSum: 0, count: 0 },
       },
     };
+    setTrafficMode('auto');
+    setManualRps(125);
+    trafficControlRef.current = { mode: 'auto', rps: 125 };
+    setLatest({
+      sim_time: 'Day 1, 00:00:00',
+      speed_factor: speedFactor,
+      is_playing: true,
+      is_spiking: false,
+      actual_pods: 4,
+      ideal_demand: 4,
+      reactive_hpa: 4,
+      linear_pred: 4,
+      holt_winters_pred: 4,
+      lstm_pred: 4,
+      rps: 125,
+      cpu_utilization: 60,
+      p95_latency_ms: 32.5,
+      sla_breaches: 0,
+      total_pod_hours: 0.0,
+      tick: 0,
+    });
     setHistory([]);
     setLogs([
       {
         time: '00:00:00',
         level: 'SCALE',
         category: 'scale',
-        message: 'Simulation reset. Baseline cluster active with 4 replicas.',
+        message: 'Simulation reset. Baseline cluster active with 4 replicas (125 RPS, 60% CPU).',
+        meta: { pods: 4, rps: 125, status: 'RESET_COMPLETE' },
       },
     ]);
     fetch('/api/control/reset', { method: 'POST' }).catch(() => {});
+  };
+
+  const handleUpdateGuardrail = (key, delta) => {
+    setGuardrails((prev) => {
+      let updatedVal = prev[key] + delta;
+      if (key === 'minPods') updatedVal = Math.max(1, Math.min(prev.maxPods - 1, updatedVal));
+      if (key === 'maxPods') updatedVal = Math.max(prev.minPods + 1, Math.min(100, updatedVal));
+      if (key === 'targetCpu') updatedVal = Math.max(30, Math.min(90, updatedVal));
+      if (key === 'cooldownSec') updatedVal = Math.max(0, Math.min(300, updatedVal));
+
+      const updated = { ...prev, [key]: updatedVal };
+      guardrailsRef.current = updated;
+
+      if (key === 'minPods' && latest.actual_pods < updatedVal) {
+        simState.current.actualPods = updatedVal;
+        setLatest((l) => ({ ...l, actual_pods: updatedVal }));
+      } else if (key === 'maxPods' && latest.actual_pods > updatedVal) {
+        simState.current.actualPods = updatedVal;
+        setLatest((l) => ({ ...l, actual_pods: updatedVal }));
+      }
+
+      const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
+      setLogs((logsPrev) => [
+        ...logsPrev.slice(-40),
+        {
+          time: timeLabel,
+          level: 'SCALE',
+          category: 'scale',
+          message: `🛡️ Operational Guardrail Updated: ${key} set to ${updatedVal}. Boundary enforced immediately.`,
+          meta: {
+            parameter: key,
+            new_value: updatedVal,
+            enforced: true,
+            timestamp: timeLabel,
+          },
+        },
+      ]);
+
+      return updated;
+    });
   };
 
   return (
@@ -874,44 +1005,60 @@ export default function App() {
                     <div className="grid grid-cols-2 gap-2 mb-2">
                       <button
                         onClick={handleInjectSpike}
-                        className="p-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 hover:border-rose-500/50 text-rose-300 flex flex-col items-center text-center transition-all group"
+                        className={`p-2.5 rounded-lg border transition-all flex flex-col items-center text-center group ${
+                          buttonFeedback === 'spike'
+                            ? 'bg-rose-500/30 border-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+                            : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 hover:border-rose-500/50 text-rose-300'
+                        }`}
                       >
                         <div className="flex items-center gap-1 font-semibold text-xs text-rose-200">
                           <Zap className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-rose-400" />
-                          <span>5x Flash Surge</span>
+                          <span>{buttonFeedback === 'spike' ? 'Surge Injected!' : '5x Flash Surge'}</span>
                         </div>
                         <span className="text-[10px] text-rose-400/80 mt-0.5 font-mono">+500 RPS spike</span>
                       </button>
 
                       <button
                         onClick={handleTriggerLstmEvent}
-                        className="p-2.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 flex flex-col items-center text-center transition-all group"
+                        className={`p-2.5 rounded-lg border transition-all flex flex-col items-center text-center group ${
+                          buttonFeedback === 'lstm'
+                            ? 'bg-purple-500/30 border-purple-400 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
+                            : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 hover:border-purple-500/50 text-purple-300'
+                        }`}
                       >
                         <div className="flex items-center gap-1 font-semibold text-xs text-purple-200">
                           <BrainCircuit className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-purple-400" />
-                          <span>Trigger LSTM</span>
+                          <span>{buttonFeedback === 'lstm' ? 'Preemption Active!' : 'Trigger LSTM'}</span>
                         </div>
                         <span className="text-[10px] text-purple-400/80 mt-0.5 font-mono">Proactive cycle</span>
                       </button>
 
                       <button
                         onClick={() => handleAdjustRps(50)}
-                        className="p-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-300 flex flex-col items-center text-center transition-all group"
+                        className={`p-2.5 rounded-lg border transition-all flex flex-col items-center text-center group ${
+                          buttonFeedback === 'plus'
+                            ? 'bg-cyan-500/30 border-cyan-400 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]'
+                            : 'bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/30 hover:border-cyan-500/50 text-cyan-300'
+                        }`}
                       >
                         <div className="flex items-center gap-1 font-semibold text-xs text-cyan-200">
                           <ArrowUpRight className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-cyan-400" />
-                          <span>+50 RPS Load</span>
+                          <span>{buttonFeedback === 'plus' ? '+50 Applied!' : '+50 RPS Load'}</span>
                         </div>
                         <span className="text-[10px] text-cyan-400/80 mt-0.5 font-mono">Scale-up trigger</span>
                       </button>
 
                       <button
                         onClick={() => handleAdjustRps(-50)}
-                        className="p-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300 flex flex-col items-center text-center transition-all group"
+                        className={`p-2.5 rounded-lg border transition-all flex flex-col items-center text-center group ${
+                          buttonFeedback === 'minus'
+                            ? 'bg-emerald-500/30 border-emerald-400 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300'
+                        }`}
                       >
                         <div className="flex items-center gap-1 font-semibold text-xs text-emerald-200">
                           <ArrowDownRight className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-emerald-400" />
-                          <span>-50 RPS Load</span>
+                          <span>{buttonFeedback === 'minus' ? '-50 Applied!' : '-50 RPS Load'}</span>
                         </div>
                         <span className="text-[10px] text-emerald-400/80 mt-0.5 font-mono">Cost optimization</span>
                       </button>
@@ -919,14 +1066,18 @@ export default function App() {
 
                     <button
                       onClick={handleReset}
-                      className="w-full py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 flex items-center justify-center gap-1.5 text-xs transition-colors font-mono"
+                      className={`w-full py-1.5 rounded-lg border flex items-center justify-center gap-1.5 text-xs transition-colors font-mono ${
+                        buttonFeedback === 'reset'
+                          ? 'bg-zinc-800 border-zinc-600 text-white shadow-sm'
+                          : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                      }`}
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Reset Cluster to Baseline (4 Replicas)</span>
+                      <span>{buttonFeedback === 'reset' ? 'Baseline Reset to 4 Pods!' : 'Reset Cluster to Baseline (4 Replicas)'}</span>
                     </button>
                   </div>
 
-                  {/* Card C: Operational Guardrails & Policies */}
+                  {/* Card C: Interactive Operational Guardrails & Policies */}
                   <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
                     <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
                       <div className="flex items-center gap-2">
@@ -936,31 +1087,104 @@ export default function App() {
                         <span className="font-semibold text-xs text-zinc-200 uppercase tracking-wider">Operational Guardrails</span>
                       </div>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono">
-                        Enforced
+                        Active & Enforced
                       </span>
                     </div>
 
-                    <div className="space-y-1.5 text-[11px] font-mono">
+                    <div className="space-y-2 text-[11px] font-mono">
+                      {/* 1. Min Replicas */}
                       <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
                         <span>Min Replica Boundary:</span>
-                        <span className="text-zinc-200 font-semibold">2 pods</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleUpdateGuardrail('minPods', -1)}
+                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
+                            title="Decrease minimum pods"
+                          >
+                            -
+                          </button>
+                          <span className="text-zinc-200 font-semibold min-w-[48px] text-center">{guardrails.minPods} pods</span>
+                          <button
+                            onClick={() => handleUpdateGuardrail('minPods', 1)}
+                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
+                            title="Increase minimum pods"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
+
+                      {/* 2. Max Replicas */}
                       <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
                         <span>Max Replica Boundary:</span>
-                        <span className="text-zinc-200 font-semibold">30 pods</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleUpdateGuardrail('maxPods', -5)}
+                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
+                            title="Decrease maximum pods"
+                          >
+                            -
+                          </button>
+                          <span className="text-zinc-200 font-semibold min-w-[48px] text-center">{guardrails.maxPods} pods</span>
+                          <button
+                            onClick={() => handleUpdateGuardrail('maxPods', 5)}
+                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
+                            title="Increase maximum pods"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
+
+                      {/* 3. Target Pod CPU */}
                       <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
                         <span>Target Pod CPU Load:</span>
-                        <span className="text-zinc-200 font-semibold">60%</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleUpdateGuardrail('targetCpu', -5)}
+                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
+                            title="Decrease target CPU"
+                          >
+                            -
+                          </button>
+                          <span className="text-zinc-200 font-semibold min-w-[48px] text-center">{guardrails.targetCpu}%</span>
+                          <button
+                            onClick={() => handleUpdateGuardrail('targetCpu', 5)}
+                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
+                            title="Increase target CPU"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
-                        <span>Scale-Up Delay:</span>
-                        <span className="text-cyan-400 font-semibold">0s (Immediate)</span>
-                      </div>
+
+                      {/* 4. Scale-Down Cooldown */}
                       <div className="flex items-center justify-between py-1 border-b border-zinc-900 text-zinc-400">
                         <span>Scale-Down Cooldown:</span>
-                        <span className="text-amber-400 font-semibold">60s (Anti-Flapping)</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleUpdateGuardrail('cooldownSec', -15)}
+                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
+                            title="Decrease cooldown window"
+                          >
+                            -
+                          </button>
+                          <span className="text-amber-400 font-semibold min-w-[48px] text-center">{guardrails.cooldownSec}s</span>
+                          <button
+                            onClick={() => handleUpdateGuardrail('cooldownSec', 15)}
+                            className="w-5 h-5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white"
+                            title="Increase cooldown window"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
+
+                      <div className="flex items-center justify-between py-1 text-zinc-400">
+                        <span>Scale-Up Delay:</span>
+                        <span className="text-cyan-400 font-semibold">0s (Immediate Proactive)</span>
+                      </div>
+
                       <div className="flex items-center justify-between py-1 text-zinc-400">
                         <span>PromQL Scrape Cadence:</span>
                         <span className="text-zinc-200 font-semibold">15s resolution</span>
