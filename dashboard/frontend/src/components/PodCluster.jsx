@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Box } from 'lucide-react';
 
@@ -6,6 +6,32 @@ export default function PodCluster({ actualPods, idealDemand, isSpiking }) {
   // Generate an array of pod indices [1, 2, ..., actualPods]
   const podCount = Math.max(1, actualPods || 1);
   const pods = Array.from({ length: podCount }, (_, i) => i + 1);
+  const scrollContainerRef = useRef(null);
+  const prevCountRef = useRef(podCount);
+
+  // Auto-scroll down as pods increase so newly added pods are instantly visible
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      if (podCount > prevCountRef.current) {
+        // Immediate scroll to bottom
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: 'smooth',
+        });
+        // Follow-up scroll after layout animation settles
+        const timer = setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({
+              top: scrollContainerRef.current.scrollHeight,
+              behavior: 'smooth',
+            });
+          }
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevCountRef.current = podCount;
+  }, [podCount]);
 
   return (
     <div className="bento-card rounded-xl p-3.5">
@@ -19,8 +45,11 @@ export default function PodCluster({ actualPods, idealDemand, isSpiking }) {
         </div>
       </div>
 
-      {/* Pod Grid */}
-      <div className="flex flex-wrap gap-2 min-h-[58px] p-3 rounded-lg bg-zinc-950/60 border border-zinc-800/80 items-center">
+      {/* Pod Grid with concise max-height and auto-scroll */}
+      <div
+        ref={scrollContainerRef}
+        className="flex flex-wrap gap-2 min-h-[58px] max-h-[160px] overflow-y-auto p-3 rounded-lg bg-zinc-950/60 border border-zinc-800/80 items-start content-start scroll-smooth"
+      >
         <AnimatePresence mode="popLayout">
           {pods.map((podNum) => (
             <motion.div
@@ -46,4 +75,3 @@ export default function PodCluster({ actualPods, idealDemand, isSpiking }) {
     </div>
   );
 }
-
