@@ -25,3 +25,6 @@ Thumbs.db
 # Binaries & coverage
 coverage/
 bin/
+
+# Local agent artifacts
+.agents/
