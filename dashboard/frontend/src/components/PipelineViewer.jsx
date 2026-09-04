@@ -93,6 +93,16 @@ export default function PipelineViewer({
 
   const reactiveHpa = latest.reactive_hpa || actualPods;
   const linearPred = latest.linear_pred || actualPods;
+
+  // Dynamic photon pacing:
+  // Scales directly with user-selected probeSpeed (0.5x, 1x, 2x, 4x) and live traffic workload (RPS)
+  const speedMult = Math.max(0.2, (probeSpeed || 1) * (rps > 350 ? 1.6 : rps > 180 ? 1.25 : 1.0));
+  const p1Dur = `${Math.max(0.18, 0.9 / speedMult).toFixed(2)}s`;
+  const p2Dur = `${Math.max(0.18, 0.95 / speedMult).toFixed(2)}s`;
+  const p3Dur = `${Math.max(0.25, 1.4 / speedMult).toFixed(2)}s`;
+  const p4Dur = `${Math.max(0.22, 1.2 / speedMult).toFixed(2)}s`;
+  const p5Dur = `${Math.max(0.28, 1.6 / speedMult).toFixed(2)}s`;
+  const p6Dur = `${Math.max(0.18, 1.0 / speedMult).toFixed(2)}s`;
   const hwPred = latest.holt_winters_pred || actualPods;
   const lstmPred = latest.lstm_pred || actualPods;
 
@@ -273,10 +283,10 @@ export default function PipelineViewer({
     },
   ];
 
-  // Auto-play probe stepping
+  // Auto-play probe stepping (duration scales inversely with probeSpeed)
   useEffect(() => {
     if (!isProbePlaying) return;
-    const intervalTime = 1200 / probeSpeed;
+    const intervalTime = Math.max(300, 1300 / probeSpeed);
     probeTimerRef.current = setTimeout(() => {
       setProbeHop((prev) => {
         if (prev >= 6) {
@@ -1102,13 +1112,14 @@ export default function PipelineViewer({
           </button>
 
           <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded p-0.5 text-[10px] font-mono">
-            {[0.5, 1, 2].map((spd) => (
+            {[0.5, 1, 2, 4].map((spd) => (
               <button
                 key={spd}
                 onClick={() => setProbeSpeed(spd)}
-                className={`px-1.5 py-0.5 rounded ${
+                className={`px-1.5 py-0.5 rounded transition-colors ${
                   probeSpeed === spd ? 'bg-amber-500 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
                 }`}
+                title={`Set visual propagation & probe velocity to ${spd}x`}
               >
                 {spd}x
               </button>
@@ -1354,49 +1365,80 @@ export default function PipelineViewer({
               {/* Wire 6: Scale Actuator scale patch closing loop into Pod Cluster (920 to 880) */}
               <path d="M 920 115 L 880 115" fill="none" stroke="rgba(245, 158, 11, 0.7)" strokeWidth="2.5" strokeDasharray="4 3" />
 
-              {/* Animated Continuous Photons (Confined Strictly to Wire Segments, Never Crossing Over Cards) */}
+              {/* Animated Continuous Photons (Speed & Frequency Dynamically Scaled by probeSpeed & RPS) */}
               {/* Photon 1: Traveling on Wire 1 (Edge to Ingress, stops at card entrance) */}
-              <circle r="3.5" fill="#06b6d4" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="210; 240" dur={rps > 300 ? '0.5s' : rps > 180 ? '0.9s' : '1.4s'} repeatCount="indefinite" />
-                <animate attributeName="cy" values="115; 115" dur={rps > 300 ? '0.5s' : rps > 180 ? '0.9s' : '1.4s'} repeatCount="indefinite" />
+              <circle key={`p1-${p1Dur}`} r="3.5" fill="#06b6d4" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="210; 240" dur={p1Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="115; 115" dur={p1Dur} repeatCount="indefinite" />
               </circle>
+              {/* High-workload secondary packet stream on Wire 1 */}
+              {rps > 200 && (
+                <circle key={`p1b-${p1Dur}`} r="2.8" fill="#38bdf8" filter="url(#glow-strong)" opacity="0.8">
+                  <animate attributeName="cx" values="210; 240" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                  <animate attributeName="cy" values="115; 115" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                </circle>
+              )}
 
               {/* Photon 2: Traveling on Wire 2 (Ingress exit to Pods entrance) */}
-              <circle r="3.5" fill="#06b6d4" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="415; 450" dur={rps > 300 ? '0.5s' : rps > 180 ? '0.9s' : '1.4s'} repeatCount="indefinite" />
-                <animate attributeName="cy" values="115; 115" dur={rps > 300 ? '0.5s' : rps > 180 ? '0.9s' : '1.4s'} repeatCount="indefinite" />
+              <circle key={`p2-${p2Dur}`} r="3.5" fill="#06b6d4" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="415; 450" dur={p2Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="115; 115" dur={p2Dur} repeatCount="indefinite" />
               </circle>
+              {/* High-workload secondary packet stream on Wire 2 */}
+              {rps > 200 && (
+                <circle key={`p2b-${p2Dur}`} r="2.8" fill="#38bdf8" filter="url(#glow-strong)" opacity="0.8">
+                  <animate attributeName="cx" values="415; 450" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                  <animate attributeName="cy" values="115; 115" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                </circle>
+              )}
 
               {/* Photon 3: Telemetry Scrape (From bottom edge of Pod Cluster 295 down to Telemetry 390) */}
-              <circle r="3.5" fill="#10b981" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="565; 565" dur="1.5s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="295; 390" dur="1.5s" repeatCount="indefinite" />
+              <circle key={`p3-${p3Dur}`} r="3.5" fill="#10b981" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="565; 565" dur={p3Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="295; 390" dur={p3Dur} repeatCount="indefinite" />
               </circle>
 
-              <circle r="3.5" fill="#a855f7" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="680; 710" dur="1.4s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="450; 450" dur="1.4s" repeatCount="indefinite" />
+              {/* Photon 4: Telemetry to Models Brain (680 to 710) */}
+              <circle key={`p4-${p4Dur}`} r="3.5" fill="#a855f7" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="680; 710" dur={p4Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="450; 450" dur={p4Dur} repeatCount="indefinite" />
               </circle>
 
-              <circle r="3.5" fill="#f59e0b" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="1020; 1020" dur="1.8s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="370; 180" dur="1.8s" repeatCount="indefinite" />
+              {/* Photon 5: Models to Actuator (1020, 370 down to 180) */}
+              <circle key={`p5-${p5Dur}`} r="3.5" fill="#f59e0b" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="1020; 1020" dur={p5Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="370; 180" dur={p5Dur} repeatCount="indefinite" />
               </circle>
 
-              <circle r="4" fill="#f59e0b" filter="url(#glow-strong)">
-                <animate attributeName="cx" values="920; 880" dur="1.2s" repeatCount="indefinite" />
-                <animate attributeName="cy" values="115; 115" dur="1.2s" repeatCount="indefinite" />
+              {/* Photon 6: Actuator patch into Pod Cluster (920 to 880) */}
+              <circle key={`p6-${p6Dur}`} r="4" fill="#f59e0b" filter="url(#glow-strong)">
+                <animate attributeName="cx" values="920; 880" dur={p6Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="115; 115" dur={p6Dur} repeatCount="indefinite" />
               </circle>
 
+              {/* Interactive Trace Probe: Smoothly glides between waypoints based on selected probeSpeed */}
               {probeHop > 0 && currentWaypoint && (
-                <circle
-                  cx={currentWaypoint.cx}
-                  cy={currentWaypoint.cy}
-                  r="9"
-                  fill="#fbbf24"
-                  filter="url(#glow-strong)"
-                  className="animate-pulse"
-                />
+                <g>
+                  <motion.circle
+                    key="probe-tracker"
+                    animate={{ cx: currentWaypoint.cx, cy: currentWaypoint.cy }}
+                    transition={{ duration: Math.max(0.18, 0.65 / probeSpeed), ease: 'easeInOut' }}
+                    r="9"
+                    fill="#fbbf24"
+                    filter="url(#glow-strong)"
+                  />
+                  <motion.circle
+                    key="probe-halo"
+                    animate={{ cx: currentWaypoint.cx, cy: currentWaypoint.cy }}
+                    transition={{ duration: Math.max(0.18, 0.65 / probeSpeed), ease: 'easeInOut' }}
+                    r="15"
+                    fill="none"
+                    stroke="#f59e0b"
+                    strokeWidth="2"
+                    opacity="0.6"
+                    className="animate-ping"
+                  />
+                </g>
               )}
             </svg>
 
