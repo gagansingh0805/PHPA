@@ -504,7 +504,7 @@ export default function App() {
                   <WorkloadChart data={history} />
                 </div>
 
-                {/* RIGHT COLUMN: 5 Columns (Traffic Throttle + Model Scorecard + Event Log) */}
+                {/* RIGHT COLUMN: 5 Columns (Traffic Throttle + Model Scorecard) */}
                 <div className="xl:col-span-5 space-y-4">
                   <TrafficThrottle
                     trafficMode={trafficMode}
@@ -514,7 +514,6 @@ export default function App() {
                     currentRps={latest.rps}
                   />
                   <ModelScorecard latest={latest} />
-                  <LiveEventLog logs={logs} onClear={() => setLogs([])} />
                 </div>
               </div>
             </div>
