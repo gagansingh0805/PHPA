@@ -898,62 +898,77 @@ export default function PipelineViewer({
               </button>
             </div>
 
-            {viewMode === '3d' && (
-              <>
-                <div className="flex items-center bg-zinc-900/90 border border-zinc-800 rounded-lg p-1 text-xs font-mono">
-                  <button
-                    onClick={() => handlePresetChange('isometric')}
-                    className={`px-2.5 py-1 rounded transition-colors ${
-                      viewPreset === 'isometric'
-                        ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                        : 'text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    Isometric (44°)
-                  </button>
-                  <button
-                    onClick={() => handlePresetChange('front')}
-                    className={`px-2.5 py-1 rounded transition-colors ${
-                      viewPreset === 'front'
-                        ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                        : 'text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    Front Flow (12°)
-                  </button>
-                  <button
-                    onClick={() => handlePresetChange('top')}
-                    className={`px-2.5 py-1 rounded transition-colors ${
-                      viewPreset === 'top'
-                        ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                        : 'text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    Top-Down (68°)
-                  </button>
-                </div>
-
+            {/* Camera Perspective & Reset Toolbar (Always visible, never collapses) */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center bg-zinc-900/90 border border-zinc-800 rounded-lg p-1 text-xs font-mono shadow-sm">
                 <button
-                  onClick={() => setIsOrbiting((prev) => !prev)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono font-medium transition-all ${
-                    isOrbiting
-                      ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                      : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                  onClick={() => {
+                    setViewMode('3d');
+                    handlePresetChange('isometric');
+                  }}
+                  className={`px-2.5 py-1 rounded transition-colors ${
+                    viewMode === '3d' && viewPreset === 'isometric'
+                      ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
                   }`}
+                  title="3D Isometric (44°)"
                 >
-                  <Compass className={`w-3.5 h-3.5 ${isOrbiting ? 'animate-spin' : ''}`} />
-                  <span>{isOrbiting ? 'Orbiting...' : 'Auto-Orbit'}</span>
+                  Isometric (44°)
                 </button>
-
                 <button
-                  onClick={handleResetCamera}
-                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
-                  title="Reset View"
+                  onClick={() => {
+                    setViewMode('3d');
+                    handlePresetChange('front');
+                  }}
+                  className={`px-2.5 py-1 rounded transition-colors ${
+                    viewMode === '3d' && viewPreset === 'front'
+                      ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                  title="3D Front Flow (12°)"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  Front Flow (12°)
                 </button>
-              </>
-            )}
+                <button
+                  onClick={() => {
+                    setViewMode('3d');
+                    handlePresetChange('top');
+                  }}
+                  className={`px-2.5 py-1 rounded transition-colors ${
+                    viewMode === '3d' && viewPreset === 'top'
+                      ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                  title="3D Top-Down (68°)"
+                >
+                  Top-Down (68°)
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (viewMode === '2d') setViewMode('3d');
+                  setIsOrbiting((prev) => !prev);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono font-medium transition-all ${
+                  viewMode === '3d' && isOrbiting
+                    ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                }`}
+                title={viewMode === '2d' ? 'Click to enter 3D Auto-Orbit' : 'Toggle slow 3D Auto-Orbit'}
+              >
+                <Compass className={`w-3.5 h-3.5 ${isOrbiting && viewMode === '3d' ? 'animate-spin' : ''}`} />
+                <span>{isOrbiting && viewMode === '3d' ? 'Orbiting...' : 'Auto-Orbit'}</span>
+              </button>
+
+              <button
+                onClick={handleResetCamera}
+                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
+                title="Reset View"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1982,12 +1997,158 @@ export default function PipelineViewer({
 
                 {activeTab === 'internals' && (
                   <div className="space-y-4">
-                    <div className="rounded-xl bg-zinc-950 p-3.5 border border-zinc-800 font-mono">
-                      <span className="text-[10px] text-zinc-400 block mb-1.5 uppercase font-semibold tracking-wider">
-                        Autonomic Mathematical Formulation
-                      </span>
-                      <div className="p-3 bg-[#11111a] rounded-lg border border-purple-500/30 text-purple-300 text-xs overflow-x-auto">
-                        {stages[selectedStage].formula}
+                    {/* Visual Academic Mathematical Formulation */}
+                    <div className="rounded-xl bg-zinc-950 p-4 border border-purple-500/40 shadow-xl space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-[10px] text-purple-300 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
+                          <span>AUTONOMIC MATHEMATICAL FORMULATION</span>
+                        </span>
+                        <span className="text-[9.5px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          Stage {selectedStage + 1} Formal Specification
+                        </span>
+                      </div>
+
+                      {/* Visual Math Expression */}
+                      <div className="p-4 bg-[#100f1a] rounded-xl border border-purple-500/30 flex items-center justify-center min-h-[70px]">
+                        {selectedStage === 0 && (
+                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
+                            <span className="italic font-bold text-cyan-400 text-lg">λ(t)</span>
+                            <span>=</span>
+                            <span className="italic font-semibold text-zinc-300">λ̄</span>
+                            <span>+</span>
+                            <span className="italic">A</span>
+                            <span>·</span>
+                            <span>sin</span>
+                            <span className="text-zinc-500 text-2xl">(</span>
+                            <span className="inline-flex flex-col items-center justify-center text-xs mx-1">
+                              <span className="border-b border-purple-400/60 pb-0.5 px-2 font-mono">2π · t</span>
+                              <span className="pt-0.5 font-mono">T</span>
+                            </span>
+                            <span className="text-zinc-500 text-2xl">)</span>
+                            <span>+</span>
+                            <span className="italic font-semibold text-rose-400">ξ(t)</span>
+                          </div>
+                        )}
+
+                        {selectedStage === 1 && (
+                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-blue-400 text-sm">P95 Latency</span>
+                            <span>≈</span>
+                            <span className="italic font-semibold text-zinc-300">L<sub>0</sub></span>
+                            <span>+</span>
+                            <span className="italic">β</span>
+                            <span>·</span>
+                            <span className="text-zinc-500 text-2xl">[</span>
+                            <span className="inline-flex flex-col items-center justify-center text-xs mx-1">
+                              <span className="border-b border-blue-400/60 pb-0.5 px-2 italic font-semibold text-cyan-300">λ(t)</span>
+                              <span className="pt-0.5 italic font-semibold text-purple-300">N<sub>actual</sub>(t) · C<sub>pod</sub></span>
+                            </span>
+                            <span className="text-zinc-500 text-2xl">]</span>
+                            <span className="text-xs text-zinc-400 -mt-2">α</span>
+                          </div>
+                        )}
+
+                        {selectedStage === 2 && (
+                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-purple-300 text-sm">U<sub>cpu</sub>(t)</span>
+                            <span>=</span>
+                            <span className="font-sans font-bold text-zinc-300 text-xs uppercase">min</span>
+                            <span className="text-zinc-500 text-2xl">(</span>
+                            <span className="font-mono text-zinc-300 text-sm">100%</span>
+                            <span className="text-zinc-500">,</span>
+                            <span className="inline-flex flex-col items-center justify-center text-xs mx-1">
+                              <span className="border-b border-purple-400/60 pb-0.5 px-2 italic font-semibold text-cyan-300">λ(t)</span>
+                              <span className="pt-0.5 italic font-semibold text-purple-300">N<sub>actual</sub>(t) · 25 RPS</span>
+                            </span>
+                            <span className="text-zinc-400">×</span>
+                            <span className="font-mono text-emerald-400 text-sm">60%</span>
+                            <span className="text-zinc-500 text-2xl">)</span>
+                          </div>
+                        )}
+
+                        {selectedStage === 3 && (
+                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-emerald-400 text-sm">R<sub>raw</sub></span>
+                            <span>=</span>
+                            <span className="text-3xl font-sans text-emerald-300 font-light leading-none">⌈</span>
+                            <span className="italic font-bold text-purple-300 mx-1">N<sub>current</sub></span>
+                            <span className="text-zinc-400">×</span>
+                            <span className="inline-flex flex-col items-center justify-center text-xs mx-2">
+                              <span className="border-b border-emerald-400/60 pb-0.5 px-2 font-mono text-zinc-200">Current CPU</span>
+                              <span className="pt-0.5 font-mono text-emerald-400">Target CPU (60%)</span>
+                            </span>
+                            <span className="text-3xl font-sans text-emerald-300 font-light leading-none">⌉</span>
+                          </div>
+                        )}
+
+                        {selectedStage === 4 && (
+                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-purple-300 text-sm">N<sub>target</sub></span>
+                            <span>=</span>
+                            <span className="font-sans font-bold text-purple-400 text-xs uppercase">max</span>
+                            <span className="text-zinc-500 text-2xl">(</span>
+                            <span className="font-mono text-cyan-300 text-xs">R<sub>hpa</sub></span>
+                            <span className="text-zinc-500">,</span>
+                            <span className="font-mono text-blue-300 text-xs">ŷ<sub>linear</sub></span>
+                            <span className="text-zinc-500">,</span>
+                            <span className="font-mono text-emerald-300 text-xs">ŷ<sub>hw</sub></span>
+                            <span className="text-zinc-500">,</span>
+                            <span className="font-mono text-purple-300 text-xs font-bold">ŷ<sub>lstm</sub></span>
+                            <span className="text-zinc-500 text-2xl">)</span>
+                          </div>
+                        )}
+
+                        {selectedStage === 5 && (
+                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-amber-400 text-sm">N<sub>actuated</sub></span>
+                            <span>=</span>
+                            <span className="font-sans font-bold text-amber-300 text-xs uppercase">clamp</span>
+                            <span className="text-zinc-500 text-xl">(</span>
+                            <span className="font-mono text-zinc-300 text-xs">min = 2</span>
+                            <span className="text-zinc-500">,</span>
+                            <span className="font-mono text-zinc-300 text-xs">max = 30</span>
+                            <span className="text-zinc-500">,</span>
+                            <span className="italic font-bold text-purple-300 text-sm">N<sub>target</sub></span>
+                            <span className="text-zinc-500 text-xl">)</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Live Value Substitution Box */}
+                      <div className="p-3 rounded-lg bg-[#0c0c16] border border-zinc-800 text-xs font-mono">
+                        <span className="text-zinc-500 text-[10px] uppercase font-bold block mb-1">
+                          Live Numerical Substitution:
+                        </span>
+                        {selectedStage === 0 && (
+                          <div className="text-zinc-300">
+                            λ(t) = <strong className="text-cyan-400">{rps} RPS</strong> (Base: 100 RPS, Diurnal Delta: {(rps - 100).toFixed(0)} RPS {isSpiking ? ', Flash Crowd: 5.0x Burst' : ''})
+                          </div>
+                        )}
+                        {selectedStage === 1 && (
+                          <div className="text-zinc-300">
+                            P95 = <strong className={p95 > 100 ? 'text-rose-400' : 'text-emerald-400'}>{p95} ms</strong> ≈ 3.8ms (Base) + 12 · ({rps} / ({actualPods} × 25)) ms
+                          </div>
+                        )}
+                        {selectedStage === 2 && (
+                          <div className="text-zinc-300">
+                            U<sub>cpu</sub> = <strong className="text-purple-300">{cpu}%</strong> = min(100%, ({rps} / ({actualPods} × 25)) × 60%)
+                          </div>
+                        )}
+                        {selectedStage === 3 && (
+                          <div className="text-zinc-300">
+                            R<sub>raw</sub> = ⌈ {actualPods} pods × ({cpu}% / 60%) ⌉ = <strong className="text-emerald-400">{reactiveHpa} replicas</strong>
+                          </div>
+                        )}
+                        {selectedStage === 4 && (
+                          <div className="text-zinc-300">
+                            N<sub>target</sub> = max( {reactiveHpa}, {linearPred}, {hwPred}, {lstmPred} ) = <strong className="text-purple-300">{maxVal} replicas via {winningModel}</strong>
+                          </div>
+                        )}
+                        {selectedStage === 5 && (
+                          <div className="text-zinc-300">
+                            N<sub>actuated</sub> = clamp(2, 30, {maxVal}) = <strong className="text-amber-400">{actualPods} replicas applied</strong>
+                          </div>
+                        )}
                       </div>
                     </div>
 
