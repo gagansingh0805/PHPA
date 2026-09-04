@@ -238,15 +238,15 @@ spec:
       </div>
 
       {/* 2. Interactive Visual Cluster Safety Spectrum (The Range Gauge) */}
-      <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 relative overflow-hidden">
-        <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+      <div className="bento-card rounded-xl p-3.5 sm:p-4 border border-zinc-800/90 bg-zinc-950/90 relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 mb-3 border-b border-zinc-800/80 gap-2">
           <div className="flex items-center gap-2">
-            <Gauge className="w-4 h-4 text-purple-400" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wide">
+            <Gauge className="w-4 h-4 text-purple-400 flex-shrink-0" />
+            <h3 className="text-xs font-bold text-white uppercase tracking-wide truncate">
               Live Replica Allocation Spectrum & Boundary Gauge
             </h3>
           </div>
-          <div className="flex items-center gap-2 font-mono text-[10px]">
+          <div className="flex items-center gap-2 font-mono text-[10px] self-start sm:self-auto">
             <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
               Safe Band: <strong className="text-emerald-400">{minPods} – {maxPods} pods</strong>
             </span>

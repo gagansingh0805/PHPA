@@ -130,7 +130,7 @@ export default function ModelDeepDive() {
             </span>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-xs text-amber-300 mb-3 border border-amber-500/20 text-center">
+          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-xs text-amber-300 mb-3 border border-amber-500/20 text-center overflow-x-auto">
             Target = ⌈ CurrentReplicas × ( CurrentMetric / TargetMetric ) ⌉
           </div>
 
@@ -162,7 +162,7 @@ export default function ModelDeepDive() {
             </span>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-xs text-blue-300 mb-3 border border-blue-500/20 text-center">
+          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-xs text-blue-300 mb-3 border border-blue-500/20 text-center overflow-x-auto">
             ŷ(t + lookahead) = β₁ · (t + lookahead) + β₀
           </div>
 
@@ -194,7 +194,7 @@ export default function ModelDeepDive() {
             </span>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-[11px] text-emerald-300 mb-3 border border-emerald-500/20 space-y-1">
+          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-[11px] text-emerald-300 mb-3 border border-emerald-500/20 space-y-1 overflow-x-auto">
             <div>Level:   L_t = α · (Y_t - S_t-m) + (1 - α) · (L_t-1 + b_t-1)</div>
             <div>Trend:   b_t = β · (L_t - L_t-1) + (1 - β) · b_t-1</div>
             <div>Season:  S_t = γ · (Y_t - L_t) + (1 - γ) · S_t-m</div>
@@ -228,7 +228,7 @@ export default function ModelDeepDive() {
             </span>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-[11px] text-purple-300 mb-3 border border-purple-500/20 space-y-1">
+          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-[11px] text-purple-300 mb-3 border border-purple-500/20 space-y-1 overflow-x-auto">
             <div>f_t = σ( W_f · [h_t-1, x_t] + b_f )  (Forget Gate)</div>
             <div>i_t = σ( W_i · [h_t-1, x_t] + b_i )  (Input Gate)</div>
             <div>C_t = f_t ⊙ C_t-1 + i_t ⊙ tanh( W_c · [h_t-1, x_t] + b_c )</div>

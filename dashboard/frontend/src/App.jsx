@@ -13,10 +13,35 @@ import LiveEventLog from './components/LiveEventLog';
 import OperationalGuardrails from './components/OperationalGuardrails';
 import DemoPresenter from './components/DemoPresenter';
 import Term from './components/Term';
-import { Sparkles, Activity, ShieldCheck, Zap, BrainCircuit, Server, DollarSign, Clock, ArrowUpRight, ArrowDownRight, Layers, Sliders, Play, RotateCcw, AlertTriangle, ShieldAlert, CheckCircle2, BarChart2 } from 'lucide-react';
+import { 
+  Sparkles, 
+  Activity, 
+  ShieldCheck, 
+  Zap, 
+  BrainCircuit, 
+  Server, 
+  DollarSign, 
+  Clock, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Layers, 
+  Sliders, 
+  Play, 
+  RotateCcw, 
+  AlertTriangle, 
+  ShieldAlert, 
+  CheckCircle2, 
+  BarChart2,
+  Menu,
+  LayoutDashboard,
+  Terminal,
+  BookOpen,
+  GitBranch
+} from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('lab'); // 'lab', 'home', 'models', 'pipeline'
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [trafficMode, setTrafficMode] = useState('auto'); // 'auto' | 'manual'
   const [manualRps, setManualRps] = useState(125);
 
@@ -918,7 +943,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-100 font-sans overflow-hidden">
-      {/* 1. Left Sidebar Navigation & Integrated Simulation Controller */}
+      {/* 1. Left Sidebar Navigation & Integrated Simulation Controller (Desktop + Mobile Drawer) */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -930,55 +955,103 @@ export default function App() {
         onReset={handleReset}
         simTime={latest.sim_time}
         isSpiking={latest.is_spiking}
+        isMobileOpen={isMobileMenuOpen}
+        onMobileClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* 2. Main Content Workspace */}
-      <div className="flex-1 flex flex-col h-screen overflow-y-auto">
+      <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0">
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-zinc-800/80 px-6 flex items-center justify-between bg-zinc-950/80 backdrop-blur-md sticky top-0 z-20 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-bold text-white tracking-wide">
-              {activeTab === 'lab' && 'Autoscaling Telemetry Lab'}
-              {activeTab === 'benchmark' && 'Multi-Model Performance & Efficiency Benchmark'}
-              {activeTab === 'logs' && 'Autoscaling Decision & Activity Stream'}
-              {activeTab === 'guardrails' && 'Operational Guardrails & Safety Policies'}
-              {activeTab === 'models' && 'Mathematical Formulations & Model Specifications'}
-              {activeTab === 'pipeline' && 'Kubernetes Operator Pipeline & Architecture'}
+        <header className="h-14 border-b border-zinc-800/80 px-3 sm:px-6 flex items-center justify-between bg-zinc-950/90 backdrop-blur-md sticky top-0 z-20 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Hamburger menu button for mobile */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex-shrink-0"
+              aria-label="Open navigation menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+
+            <h2 className="text-xs sm:text-sm font-bold text-white tracking-wide truncate">
+              {activeTab === 'lab' && <><span className="hidden sm:inline">Autoscaling </span>Telemetry Lab</>}
+              {activeTab === 'benchmark' && <><span className="hidden sm:inline">Multi-Model </span>Benchmarks</>}
+              {activeTab === 'logs' && <><span className="hidden sm:inline">Autoscaling </span>Decision Stream</>}
+              {activeTab === 'guardrails' && <><span className="hidden sm:inline">Operational </span>Guardrails</>}
+              {activeTab === 'models' && <><span className="hidden sm:inline">Mathematical </span>Formulations</>}
+              {activeTab === 'pipeline' && <><span className="hidden sm:inline">Architecture </span>Pipeline</>}
             </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
-              Active Pods: <strong className="text-cyan-400">{latest.actual_pods}</strong>
+
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 flex-shrink-0">
+              <span className="hidden sm:inline">Active </span>Pods: <strong className="text-cyan-400">{latest.actual_pods}</strong>
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {/* Launch Interactive Demo Button */}
             <button
               onClick={demoActive ? handleStopDemo : handleStartDemo}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-md ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold transition-all shadow-md ${
                 demoActive
                   ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30 border border-rose-400/50 animate-pulse'
                   : 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white shadow-purple-600/25 border border-purple-400/30 hover:scale-105 active:scale-95'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{demoActive ? 'Stop Demo' : 'Run Showcase Demo'}</span>
+              <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">{demoActive ? 'Stop Demo' : 'Run Showcase Demo'}</span>
+              <span className="sm:hidden">{demoActive ? 'Stop' : 'Demo'}</span>
             </button>
 
             {latest.is_spiking && (
-              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold animate-pulse">
+              <span className="flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] sm:text-xs font-bold animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                SURGE ACTIVE (5x)
+                <span className="hidden sm:inline">SURGE ACTIVE (5x)</span>
+                <span className="sm:hidden">5x SURGE</span>
               </span>
             )}
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
               ENGINE SYNCHRONIZED
+            </div>
+            {/* Mobile-only pulsing sync dot */}
+            <div className="sm:hidden flex items-center justify-center p-1 rounded-full bg-emerald-500/10 border border-emerald-500/30" title="Engine Synchronized">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
             </div>
           </div>
         </header>
 
+        {/* Mobile-Only Horizontal Scroll Tab Strip */}
+        <div className="lg:hidden flex items-center gap-1.5 px-3 py-2 bg-zinc-950/95 border-b border-zinc-800/80 overflow-x-auto whitespace-nowrap scrollbar-none z-10 flex-shrink-0">
+          {[
+            { id: 'lab', label: 'Lab', icon: LayoutDashboard },
+            { id: 'benchmark', label: 'Benchmarks', icon: BarChart2 },
+            { id: 'logs', label: 'Logs', icon: Terminal },
+            { id: 'guardrails', label: 'Guardrails', icon: ShieldCheck },
+            { id: 'models', label: 'Theory', icon: BookOpen },
+            { id: 'pipeline', label: 'Pipeline', icon: GitBranch },
+          ].map((t) => {
+            const Icon = t.icon;
+            const isActive = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                  isActive
+                    ? 'bg-purple-600 text-white shadow-sm shadow-purple-600/30'
+                    : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Content Body */}
-        <main className="flex-1 p-4 lg:p-6 space-y-4 max-w-[1650px] w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 space-y-4 max-w-[1650px] w-full mx-auto">
           {/* TAB 1: TELEMETRY LAB */}
           {activeTab === 'lab' && (
             <div className="space-y-4 animate-fadeIn">

@@ -14,7 +14,8 @@ import {
   Flame, 
   Activity, 
   Clock,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react';
 import Term from './Term';
 
@@ -28,7 +29,9 @@ export default function Sidebar({
   onInjectSpike,
   onReset,
   simTime,
-  isSpiking
+  isSpiking,
+  isMobileOpen = false,
+  onMobileClose
 }) {
   const navItems = [
     { id: 'lab', label: 'Telemetry Lab', desc: 'Real-time charts & pod cluster', icon: LayoutDashboard },
@@ -39,12 +42,12 @@ export default function Sidebar({
     { id: 'pipeline', label: 'Pipeline Architecture', desc: 'Kubernetes CRD & controller', icon: GitBranch },
   ];
 
-  return (
-    <aside className="w-64 bg-zinc-950 border-r border-zinc-800/80 flex flex-col justify-between h-screen sticky top-0 flex-shrink-0 select-none z-30">
-      {/* Top Branding */}
+  const renderSidebarContent = (isMobile = false) => (
+    <div className="flex flex-col justify-between h-full">
+      {/* Top Branding & Nav */}
       <div>
-        <div className="p-4 border-b border-zinc-800/80">
-          <div className="flex items-center gap-2.5">
+        <div className="p-4 border-b border-zinc-800/80 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 p-[1px] shadow-md shadow-purple-500/20 flex-shrink-0">
               <div className="w-full h-full bg-zinc-950 rounded-[7px] flex items-center justify-center">
                 <Zap className="w-4 h-4 text-cyan-400" />
@@ -62,6 +65,17 @@ export default function Sidebar({
               <p className="text-[10px] text-zinc-400 truncate">Autoscaling Research Testbed</p>
             </div>
           </div>
+
+          {/* Close button for mobile drawer */}
+          {isMobile && (
+            <button
+              onClick={onMobileClose}
+              className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+              aria-label="Close navigation"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Navigation Items */}
@@ -72,7 +86,10 @@ export default function Sidebar({
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (isMobile && onMobileClose) onMobileClose();
+                }}
                 className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left transition-all ${
                   isActive
                     ? 'bg-purple-600/15 border border-purple-500/30 text-white shadow-sm'
@@ -174,7 +191,32 @@ export default function Sidebar({
           <span>{isSpiking ? 'SURGE ACTIVE (5x)' : 'Inject 5x Flash Crowd'}</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* 1. Desktop Persistent Sidebar */}
+      <aside className="w-64 bg-zinc-950 border-r border-zinc-800/80 hidden lg:flex flex-col justify-between h-screen sticky top-0 flex-shrink-0 select-none z-30">
+        {renderSidebarContent(false)}
+      </aside>
+
+      {/* 2. Mobile Slide-Over Drawer */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            onClick={onMobileClose}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
+          />
+          {/* Drawer Panel */}
+          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-zinc-950 border-r border-zinc-800/90 z-50 flex flex-col justify-between h-full select-none shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-out">
+            {renderSidebarContent(true)}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
+
 

@@ -52,11 +52,22 @@ export default function PipelineViewer({
   // 1. View Mode: '3d' (Spatial 3D Canvas) vs '2d' (2D Crisp Schematic Architecture)
   const [viewMode, setViewMode] = useState('3d'); // '3d' | '2d'
 
+  const getResponsiveZoom = (base = 1) => {
+    if (typeof window !== 'undefined') {
+      const w = window.innerWidth;
+      if (w < 480) return 0.34 * base;
+      if (w < 640) return 0.42 * base;
+      if (w < 768) return 0.50 * base;
+      if (w < 1024) return 0.72 * base;
+    }
+    return base;
+  };
+
   // 2. Natural Mouse Drag-to-Orbit & Camera State
   const [pitch, setPitch] = useState(44); // RotateX: 12deg to 78deg
   const [yaw, setYaw] = useState(-18); // RotateZ: -80deg to 80deg
   const [roll, setRoll] = useState(8); // RotateY
-  const [zoom, setZoom] = useState(1); // 0.45 to 1.85
+  const [zoom, setZoom] = useState(() => getResponsiveZoom(1)); // 0.25 to 1.85
   const [viewPreset, setViewPreset] = useState('isometric');
   const [isOrbiting, setIsOrbiting] = useState(false);
 
@@ -118,21 +129,22 @@ export default function PipelineViewer({
   const handlePresetChange = (preset) => {
     setViewPreset(preset);
     setIsOrbiting(false);
+    const rZoom = getResponsiveZoom(1);
     if (preset === 'isometric') {
       setPitch(44);
       setYaw(-18);
       setRoll(8);
-      setZoom(1);
+      setZoom(rZoom);
     } else if (preset === 'front') {
       setPitch(12);
       setYaw(0);
       setRoll(0);
-      setZoom(1.05);
+      setZoom(rZoom * 1.05);
     } else if (preset === 'top') {
       setPitch(68);
       setYaw(0);
       setRoll(0);
-      setZoom(0.95);
+      setZoom(rZoom * 0.95);
     }
   };
 
@@ -149,11 +161,11 @@ export default function PipelineViewer({
     return () => clearInterval(orbitInterval);
   }, [isOrbiting, viewMode]);
 
-  // Window-level Pointer Drag Handlers (Smooth, reliable, never drops tracking)
+  // Window-level Pointer Drag Handlers (Smooth, reliable, works with mouse and touch)
   const handlePointerDown = (e) => {
     if (viewMode === '2d') return; // In 2D schematic, no rotation needed
     if (e.target.closest('button, input, a, select, [role="button"]')) return;
-    if (e.button !== 0) return; // Left mouse click only
+    if (e.pointerType !== 'touch' && e.button !== 0) return; // Left mouse click or touch
 
     e.preventDefault();
     const startX = e.clientX;
@@ -1200,7 +1212,7 @@ export default function PipelineViewer({
         </div>
 
         {/* Top-Left Instructions HUD */}
-        <div className="absolute top-3 left-4 z-20 pointer-events-none flex items-center gap-2 bg-zinc-900/90 border border-zinc-700/80 px-2.5 py-1 rounded-md text-[10px] font-mono text-zinc-400 shadow-md backdrop-blur-md">
+        <div className="absolute top-3 left-4 z-20 pointer-events-none hidden md:flex items-center gap-2 bg-zinc-900/90 border border-zinc-700/80 px-2.5 py-1 rounded-md text-[10px] font-mono text-zinc-400 shadow-md backdrop-blur-md">
           {viewMode === '3d' ? (
             <>
               <span>🖱️ Drag to Orbit</span>
@@ -1221,12 +1233,12 @@ export default function PipelineViewer({
         </div>
 
         {/* Dedicated Tactile Zoom & Tilt Controls (Top-Right) */}
-        <div className="absolute top-3 right-4 z-30 pointer-events-auto flex items-center gap-1.5 bg-zinc-900/90 border border-zinc-700/80 rounded-lg p-1 shadow-xl backdrop-blur-md text-xs font-mono">
-          <span className="text-[10px] text-zinc-400 px-1.5 py-0.5 font-bold">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-4 z-30 pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-zinc-900/90 border border-zinc-700/80 rounded-lg p-0.5 sm:p-1 shadow-xl backdrop-blur-md text-xs font-mono">
+          <span className="text-[9px] sm:text-[10px] text-zinc-400 px-1 sm:px-1.5 py-0.5 font-bold">
             {Math.round(zoom * 100)}%
           </span>
           <button
-            onClick={() => setZoom((prev) => Math.max(0.45, parseFloat((prev - 0.1).toFixed(2))))}
+            onClick={() => setZoom((prev) => Math.max(0.25, parseFloat((prev - 0.1).toFixed(2))))}
             className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
             title="Zoom Out"
           >
@@ -1240,11 +1252,11 @@ export default function PipelineViewer({
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setZoom(1.0)}
-            className="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] text-zinc-300 hover:text-white transition-colors"
-            title="Reset Zoom to 100%"
+            onClick={() => setZoom(getResponsiveZoom(1.0))}
+            className="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[9px] sm:text-[10px] text-zinc-300 hover:text-white transition-colors"
+            title="Fit Canvas"
           >
-            100%
+            Fit
           </button>
 
           {viewMode === '3d' && (

@@ -102,7 +102,7 @@ export default function TrafficThrottle({
         >
           {/* Slider */}
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-zinc-400 font-semibold min-w-[55px]">Throttle:</span>
+            <span className="text-[11px] text-zinc-400 font-semibold min-w-[50px] sm:min-w-[55px]">Throttle:</span>
             <input
               type="range"
               min="15"
@@ -110,15 +110,15 @@ export default function TrafficThrottle({
               step="5"
               value={manualRps}
               onChange={(e) => handleRpsUpdate(parseInt(e.target.value))}
-              className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              className="w-full h-2 sm:h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-500 py-1"
             />
-            <div className="min-w-[65px] text-right font-mono font-bold text-amber-400 text-xs">
+            <div className="min-w-[60px] sm:min-w-[65px] text-right font-mono font-bold text-amber-400 text-xs">
               {manualRps} RPS
             </div>
           </div>
 
           {/* Quick Presets */}
-          <div className="grid grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {presets.map((p) => {
               const Icon = p.icon;
               const isSelected = manualRps === p.rps;
