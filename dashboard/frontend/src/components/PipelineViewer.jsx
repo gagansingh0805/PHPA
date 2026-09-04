@@ -214,6 +214,7 @@ export default function PipelineViewer({
   }, []);
 
   // Step-by-Step Controllable Probe Tracer Mechanics
+  // Port coordinates are anchored strictly on outer boundary sockets (NEVER over card text)
   const waypoints = [
     {
       id: 1,
@@ -223,7 +224,7 @@ export default function PipelineViewer({
       delta: '0.0ms',
       total: '0.0ms',
       action: 'Client fires HTTP request; TLS handshake initiated at ingress perimeter.',
-      cx: 120,
+      cx: 210,
       cy: 115,
     },
     {
@@ -234,7 +235,7 @@ export default function PipelineViewer({
       delta: '+3.8ms',
       total: '3.8ms',
       action: 'TLS decrypted; Ingress selects least-loaded pod target via active health probes.',
-      cx: 325,
+      cx: 415,
       cy: 115,
     },
     {
@@ -245,8 +246,8 @@ export default function PipelineViewer({
       delta: '+14.4ms',
       total: '18.2ms',
       action: `Dispatched to pod-0${activePodTarget}; container CPU increments (+1.2%). HTTP 200 OK returned.`,
-      cx: 510,
-      cy: 95,
+      cx: 565,
+      cy: 295,
     },
     {
       id: 4,
@@ -256,7 +257,7 @@ export default function PipelineViewer({
       delta: '+14.2ms',
       total: '32.4ms',
       action: 'Pod CPU/Memory scraped; unready pods filtered; moving window buffer updated.',
-      cx: 565,
+      cx: 680,
       cy: 450,
     },
     {
@@ -267,8 +268,8 @@ export default function PipelineViewer({
       delta: '+12.7ms',
       total: '45.1ms',
       action: `Executed 4 models in parallel. Decision: Maximum picked ${winningModel} (${maxVal} replicas).`,
-      cx: 915,
-      cy: 450,
+      cx: 1020,
+      cy: 370,
     },
     {
       id: 6,
@@ -278,7 +279,7 @@ export default function PipelineViewer({
       delta: '+12.9ms',
       total: '58.0ms',
       action: `Deployment scale subresource patched to ${actualPods} pods. Control loop closed!`,
-      cx: 1020,
+      cx: 920,
       cy: 115,
     },
   ];
@@ -1442,28 +1443,69 @@ export default function PipelineViewer({
                 <animate attributeName="cy" values="115; 115" dur={p6Dur} repeatCount="indefinite" />
               </circle>
 
-              {/* Interactive Trace Probe: Smoothly glides between waypoints based on selected probeSpeed */}
-              {probeHop > 0 && currentWaypoint && (
+              {/* Interactive Trace Probe: Follows Orthogonal Wires (Zero Diagonals) and Docks at Border Ports (Never Covers Text) */}
+              {probeHop > 0 && (
                 <g>
-                  <motion.circle
-                    key="probe-tracker"
-                    animate={{ cx: currentWaypoint.cx, cy: currentWaypoint.cy }}
-                    transition={{ duration: Math.max(0.18, 0.65 / probeSpeed), ease: 'easeInOut' }}
-                    r="9"
-                    fill="#fbbf24"
-                    filter="url(#glow-strong)"
-                  />
-                  <motion.circle
-                    key="probe-halo"
-                    animate={{ cx: currentWaypoint.cx, cy: currentWaypoint.cy }}
-                    transition={{ duration: Math.max(0.18, 0.65 / probeSpeed), ease: 'easeInOut' }}
-                    r="15"
-                    fill="none"
-                    stroke="#f59e0b"
-                    strokeWidth="2"
-                    opacity="0.6"
-                    className="animate-ping"
-                  />
+                  {/* Active Orthogonal Wire Probe Photon: travels strictly along the wire of the active hop */}
+                  {probeHop === 1 && (
+                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                      <animate attributeName="cx" values="210; 240" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
+                  )}
+                  {probeHop === 2 && (
+                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                      <animate attributeName="cx" values="415; 450" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
+                  )}
+                  {probeHop === 3 && (
+                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                      <animate attributeName="cx" values="565; 565" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="295; 390" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
+                  )}
+                  {probeHop === 4 && (
+                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                      <animate attributeName="cx" values="680; 710" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="450; 450" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
+                  )}
+                  {probeHop === 5 && (
+                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                      <animate attributeName="cx" values="1020; 1020" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="370; 180" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
+                  )}
+                  {probeHop === 6 && (
+                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                      <animate attributeName="cx" values="920; 880" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
+                  )}
+
+                  {/* Docking Beacon Socket on the Border Port (Strictly anchored on wire socket, never over text) */}
+                  {currentWaypoint && (
+                    <g>
+                      <circle
+                        cx={currentWaypoint.cx}
+                        cy={currentWaypoint.cy}
+                        r="5.5"
+                        fill="#fbbf24"
+                        filter="url(#glow-strong)"
+                      />
+                      <circle
+                        cx={currentWaypoint.cx}
+                        cy={currentWaypoint.cy}
+                        r="10"
+                        fill="none"
+                        stroke="#f59e0b"
+                        strokeWidth="1.5"
+                        opacity="0.6"
+                        className="animate-ping"
+                      />
+                    </g>
+                  )}
                 </g>
               )}
             </svg>
