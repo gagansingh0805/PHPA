@@ -11,6 +11,7 @@ import PodCluster from './components/PodCluster';
 import ModelScorecard from './components/ModelScorecard';
 import LiveEventLog from './components/LiveEventLog';
 import OperationalGuardrails from './components/OperationalGuardrails';
+import DemoPresenter from './components/DemoPresenter';
 import Term from './components/Term';
 import { Sparkles, Activity, ShieldCheck, Zap, BrainCircuit, Server, DollarSign, Clock, ArrowUpRight, ArrowDownRight, Layers, Sliders, Play, RotateCcw, AlertTriangle, ShieldAlert, CheckCircle2, BarChart2 } from 'lucide-react';
 
@@ -769,6 +770,152 @@ export default function App() {
     });
   };
 
+  // Showcase Demo State & Controller
+  const [demoActive, setDemoActive] = useState(false);
+  const [demoStep, setDemoStep] = useState(0);
+  const [demoPaused, setDemoPaused] = useState(false);
+  const [demoTimeLeft, setDemoTimeLeft] = useState(10);
+
+  const demoStages = [
+    {
+      step: 0,
+      title: '1. Baseline Cluster Equilibrium',
+      tag: 'STEADY STATE',
+      tagColor: 'text-emerald-300 bg-emerald-500/20 border-emerald-500/40',
+      duration: 10,
+      tab: 'lab',
+      narrative: 'Cluster operates in steady state at 125 RPS. 4 baseline replicas comfortably service incoming traffic at 60% target CPU with zero latency degradation (P95: 32ms).',
+    },
+    {
+      step: 1,
+      title: '2. Sudden 5x Flash Crowd Surge',
+      tag: 'TRAFFIC SURGE',
+      tagColor: 'text-rose-300 bg-rose-500/20 border-rose-500/40',
+      duration: 12,
+      tab: 'lab',
+      narrative: 'Incoming traffic suddenly surges 400% to 520 RPS! Standard Kubernetes HPA suffers a 45s Prometheus moving-average scrape delay, leading to cold-start queue starvation.',
+    },
+    {
+      step: 2,
+      title: '3. Proactive Neural Preemption',
+      tag: 'LSTM PRE-WARMING',
+      tagColor: 'text-purple-300 bg-purple-500/20 border-purple-500/40',
+      duration: 14,
+      tab: 'lab',
+      narrative: 'The 2-Layer Stacked LSTM detects non-linear surge curvature 45s ahead of CPU metrics, pre-warming 22 pods into existence BEFORE queues saturate. Zero SLA breaches!',
+    },
+    {
+      step: 3,
+      title: '4. Multi-Model Attribution & SLA Protection',
+      tag: 'BENCHMARK AUDIT',
+      tagColor: 'text-cyan-300 bg-cyan-500/20 border-cyan-500/40',
+      duration: 14,
+      tab: 'benchmark',
+      narrative: 'Reviewing empirical research results: Stacked LSTM prevented 6 deficit ticks and eliminated the 1400ms cold-start spike suffered by vanilla HPA, saving $0.052 in idle compute.',
+    },
+    {
+      step: 4,
+      title: '5. Stabilization Cooldown & Cost Reclamation',
+      tag: 'FINOPS GOVERNANCE',
+      tagColor: 'text-amber-300 bg-amber-500/20 border-amber-500/40',
+      duration: 12,
+      tab: 'guardrails',
+      narrative: 'Traffic normalizes to 125 RPS. The 60s stabilization cooldown prevents rapid pod thrashing (flapping), safely decommissioning idle pods while strictly enforcing operational guardrails.',
+    }
+  ];
+
+  const executeDemoStage = (index) => {
+    const stage = demoStages[index];
+    if (!stage) return;
+    setActiveTab(stage.tab);
+    setDemoTimeLeft(stage.duration);
+
+    if (index === 0) {
+      handleSetTraffic(125, 'auto');
+    } else if (index === 1) {
+      handleInjectSpike();
+    } else if (index === 2) {
+      handleTriggerLstmEvent();
+    } else if (index === 3) {
+      // Viewing benchmark tab
+    } else if (index === 4) {
+      handleSetTraffic(125, 'manual');
+    }
+  };
+
+  const handleStartDemo = () => {
+    setDemoActive(true);
+    setDemoStep(0);
+    setDemoPaused(false);
+    executeDemoStage(0);
+  };
+
+  const handleStopDemo = () => {
+    setDemoActive(false);
+    setDemoPaused(false);
+  };
+
+  const handleNextDemoStep = () => {
+    if (demoStep < demoStages.length - 1) {
+      const nextIdx = demoStep + 1;
+      setDemoStep(nextIdx);
+      executeDemoStage(nextIdx);
+    } else {
+      handleStopDemo();
+    }
+  };
+
+  const handlePrevDemoStep = () => {
+    if (demoStep > 0) {
+      const prevIdx = demoStep - 1;
+      setDemoStep(prevIdx);
+      executeDemoStage(prevIdx);
+    }
+  };
+
+  // Demo auto-advancement timer
+  useEffect(() => {
+    if (!demoActive || demoPaused) return;
+
+    const timer = setInterval(() => {
+      setDemoTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (demoStep < demoStages.length - 1) {
+            const nextIdx = demoStep + 1;
+            setDemoStep(nextIdx);
+            executeDemoStage(nextIdx);
+            return demoStages[nextIdx].duration;
+          } else {
+            handleStopDemo();
+            return 0;
+          }
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [demoActive, demoPaused, demoStep]);
+
+  // Keyboard navigation for demo
+  useEffect(() => {
+    if (!demoActive) return;
+    const handleKeyDown = (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setDemoPaused((p) => !p);
+      } else if (e.code === 'ArrowRight') {
+        handleNextDemoStep();
+      } else if (e.code === 'ArrowLeft') {
+        handlePrevDemoStep();
+      } else if (e.code === 'Escape') {
+        handleStopDemo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [demoActive, demoStep]);
+
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-100 font-sans overflow-hidden">
       {/* 1. Left Sidebar Navigation & Integrated Simulation Controller */}
@@ -804,6 +951,19 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Launch Interactive Demo Button */}
+            <button
+              onClick={demoActive ? handleStopDemo : handleStartDemo}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-md ${
+                demoActive
+                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30 border border-rose-400/50 animate-pulse'
+                  : 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white shadow-purple-600/25 border border-purple-400/30 hover:scale-105 active:scale-95'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{demoActive ? 'Stop Demo' : 'Run Showcase Demo'}</span>
+            </button>
+
             {latest.is_spiking && (
               <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
@@ -1390,6 +1550,22 @@ export default function App() {
           </footer>
         </main>
       </div>
+
+      {/* Floating Interactive Showcase Demo Presenter */}
+      {demoActive && (
+        <DemoPresenter
+          step={demoStep}
+          totalSteps={demoStages.length}
+          currentStage={demoStages[demoStep]}
+          isPaused={demoPaused}
+          onTogglePause={() => setDemoPaused((p) => !p)}
+          onNext={handleNextDemoStep}
+          onPrev={handlePrevDemoStep}
+          onExit={handleStopDemo}
+          progress={((demoStages[demoStep].duration - demoTimeLeft) / demoStages[demoStep].duration) * 100}
+          secondsRemaining={demoTimeLeft}
+        />
+      )}
     </div>
   );
 }
