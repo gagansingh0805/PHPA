@@ -1,0 +1,27 @@
+# Node / Frontend
+**/node_modules/
+**/dist/
+**/dist-ssr/
+*.local
+
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+
+# Operating System & IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# Binaries & coverage
+coverage/
+bin/
