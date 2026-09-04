@@ -6,22 +6,12 @@ import {
   Layers,
   Cpu,
   CheckCircle2,
-  ArrowRight,
   Zap,
-  Sparkles,
-  Sliders,
-  Play,
-  Pause,
-  Box,
-  Radio,
+  RotateCcw,
   Network,
-  Database,
   Terminal,
   X,
-  RotateCcw,
   ChevronRight,
-  CornerDownRight,
-  ShieldCheck,
 } from 'lucide-react';
 
 export default function PipelineViewer({
@@ -45,7 +35,7 @@ export default function PipelineViewer({
 
   // Interactive single packet trace probe
   const [isTracingProbe, setIsTracingProbe] = useState(false);
-  const [probeHop, setProbeHop] = useState(0); // 0=idle, 1=clients, 2=ingress, 3=pods, 4=gatherer, 5=decision, 6=actuate
+  const [probeHop, setProbeHop] = useState(0);
   const [probeLog, setProbeLog] = useState([]);
 
   // Dynamic values with fallbacks
@@ -70,7 +60,6 @@ export default function PipelineViewer({
   else if (maxVal === linearPred) winningModel = 'Linear';
   else winningModel = 'Reactive HPA';
 
-  // Handle Preset Changes
   const handlePresetChange = (preset) => {
     setViewPreset(preset);
     setIsOrbiting(false);
@@ -92,7 +81,6 @@ export default function PipelineViewer({
     }
   };
 
-  // Subtle auto-orbit effect
   useEffect(() => {
     if (!isOrbiting) return;
     const orbitInterval = setInterval(() => {
@@ -101,7 +89,6 @@ export default function PipelineViewer({
     return () => clearInterval(orbitInterval);
   }, [isOrbiting]);
 
-  // Interactive Single Probe Packet Tracer
   const triggerProbeTrace = () => {
     if (isTracingProbe) return;
     setIsTracingProbe(true);
@@ -132,7 +119,7 @@ export default function PipelineViewer({
       setProbeHop(4);
       setProbeLog((prev) => [
         ...prev,
-        { hop: 4, name: 'k8shorizmetrics Gatherer', detail: `Telemetry vector harvested via cAdvisor scrape`, time: '+32.4ms' },
+        { hop: 4, name: 'k8shorizmetrics Gatherer', detail: 'Telemetry vector harvested via cAdvisor scrape', time: '+32.4ms' },
       ]);
     }, 2700);
 
@@ -148,7 +135,7 @@ export default function PipelineViewer({
       setProbeHop(6);
       setProbeLog((prev) => [
         ...prev,
-        { hop: 6, name: 'Kubernetes Scale Actuator', detail: `PATCH /scale subresource verified (Loop Closed)`, time: '+58.0ms' },
+        { hop: 6, name: 'Kubernetes Scale Actuator', detail: 'PATCH /scale subresource verified (Loop Closed)', time: '+58.0ms' },
       ]);
     }, 4500);
 
@@ -158,7 +145,6 @@ export default function PipelineViewer({
     }, 6200);
   };
 
-  // Pipeline stages technical metadata
   const stages = [
     {
       id: 0,
@@ -166,8 +152,7 @@ export default function PipelineViewer({
       subtitle: 'HTTP/gRPC Traffic Stream',
       icon: Activity,
       color: 'cyan',
-      description:
-        'External client workloads generate fluctuating HTTP requests following diurnal cyclic patterns or abrupt surges.',
+      description: 'External client workloads generate fluctuating HTTP requests following diurnal cyclic patterns or abrupt surges.',
       yaml: `apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: web-ingress\nspec:\n  rules:\n  - http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: web-service\n            port:\n              number: 80`,
       formula: 'Traffic Rate \\, \\lambda(t) = \\bar{\\lambda} + A \\sin(\\omega t) + \\xi(t)',
       metrics: [
@@ -182,8 +167,7 @@ export default function PipelineViewer({
       subtitle: 'Envoy Reverse Proxy',
       icon: Network,
       color: 'blue',
-      description:
-        'Terminates TLS, measures endpoint response latencies, and balances HTTP requests uniformly across available active pods.',
+      description: 'Terminates TLS, measures endpoint response latencies, and balances HTTP requests uniformly across available active pods.',
       yaml: `apiVersion: v1\nkind: Service\nmetadata:\n  name: web-service\nspec:\n  type: ClusterIP\n  selector:\n    app: web-workload\n  ports:\n  - port: 80\n    targetPort: 8080`,
       formula: 'P95 \\, Latency \\approx L_0 + \\beta \\left( \\frac{\\lambda(t)}{N_{actual}(t) \\cdot C_{pod}} \\right)',
       metrics: [
@@ -198,8 +182,7 @@ export default function PipelineViewer({
       subtitle: 'Active Pod Cluster (3D Data Plane)',
       icon: Server,
       color: 'purple',
-      description:
-        'Target deployment running the application workload. Pods process incoming requests and scale elastically based on PHPA decisions.',
+      description: 'Target deployment running the application workload. Pods process incoming requests and scale elastically based on PHPA decisions.',
       yaml: `apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web-workload\nspec:\n  replicas: ${actualPods}\n  template:\n    spec:\n      containers:\n      - name: web\n        resources:\n          limits: { cpu: "500m" }\n          requests: { cpu: "250m" }`,
       formula: 'U_{cpu}(t) = \\min\\left(100\\%, \\; \\frac{\\lambda(t)}{N_{actual}(t) \\cdot 25} \\times 60\\%\\right)',
       metrics: [
@@ -214,8 +197,7 @@ export default function PipelineViewer({
       subtitle: 'k8shorizmetrics & cAdvisor',
       icon: Layers,
       color: 'emerald',
-      description:
-        'Scrapes container CPU and memory usage from cAdvisor daemonsets, filters initializing pods, and computes the raw replica requirement.',
+      description: 'Scrapes container CPU and memory usage from cAdvisor daemonsets, filters initializing pods, and computes the raw replica requirement.',
       yaml: `gatherer:\n  metrics:\n  - type: Resource\n    resource:\n      name: cpu\n      target:\n        type: Utilization\n        averageUtilization: 60\n  scrapeInterval: 15s`,
       formula: 'R_{raw} = \\left\\lceil N_{current} \\times \\frac{\\text{CurrentCPU}}{\\text{TargetCPU (60%)}} \\right\\rceil',
       metrics: [
@@ -230,8 +212,7 @@ export default function PipelineViewer({
       subtitle: 'Parallel Multi-Model Ensemble',
       icon: Cpu,
       color: 'violet',
-      description:
-        'Pipes historical metrics concurrently to Reactive HPA, Linear Regression, Holt-Winters, and 2-Layer LSTM models, synthesizing recommendations via DecisionType: Maximum.',
+      description: 'Pipes historical metrics concurrently to Reactive HPA, Linear Regression, Holt-Winters, and 2-Layer LSTM models, synthesizing recommendations via DecisionType: Maximum.',
       yaml: `apiVersion: phpa.custom.k8s/v1alpha1\nkind: PredictiveHPA\nmetadata:\n  name: web-phpa\nspec:\n  decisionType: "Maximum"\n  models:\n  - type: "LSTM"\n    layers: 2\n    hiddenUnits: 64\n  - type: "HoltWinters"\n    seasonLength: 60\n  - type: "Linear"`,
       formula: 'N_{target} = \\max\\left( R_{hpa}, \\; \\hat{y}_{linear}, \\; \\hat{y}_{hw}, \\; \\hat{y}_{lstm} \\right)',
       metrics: [
@@ -246,8 +227,7 @@ export default function PipelineViewer({
       subtitle: 'Kubernetes API Subresource Client',
       icon: CheckCircle2,
       color: 'amber',
-      description:
-        'Enforces cooldown stabilization windows, clamps replicas between min/max boundaries, and patches the deployment scale subresource.',
+      description: 'Enforces cooldown stabilization windows, clamps replicas between min/max boundaries, and patches the deployment scale subresource.',
       yaml: `PATCH /apis/apps/v1/namespaces/default/deployments/web-workload/scale\nContent-Type: application/merge-patch+json\n\n{\n  "spec": {\n    "replicas": ${actualPods}\n  }\n}`,
       formula: 'N_{actuated} = \\text{clamp}\\left(\\min=2, \\; \\max=30, \\; N_{target}\\right)',
       metrics: [
@@ -262,7 +242,6 @@ export default function PipelineViewer({
     <div className="space-y-4 animate-fadeIn">
       {/* 1. Header & Camera HUD Toolbar */}
       <div className="bento-card rounded-2xl p-4 lg:p-5 border border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl relative overflow-hidden">
-        {/* Subtle Ambient Background Gradient */}
         <div className="absolute -top-24 -left-24 w-72 h-72 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -282,9 +261,7 @@ export default function PipelineViewer({
             </p>
           </div>
 
-          {/* Action & Viewport Controls */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Probe Trace Button */}
             <button
               onClick={triggerProbeTrace}
               disabled={isTracingProbe}
@@ -298,7 +275,6 @@ export default function PipelineViewer({
               {isTracingProbe ? `Tracing Hop ${probeHop}/6...` : 'Send Trace Probe'}
             </button>
 
-            {/* Camera View Presets */}
             <div className="flex items-center bg-zinc-900/90 border border-zinc-800 p-0.5 rounded-lg text-xs">
               <button
                 onClick={() => handlePresetChange('isometric')}
@@ -332,7 +308,6 @@ export default function PipelineViewer({
               </button>
             </div>
 
-            {/* Auto Orbit Toggle */}
             <button
               onClick={() => setIsOrbiting((prev) => !prev)}
               className={`p-1.5 rounded-lg border text-xs transition-all ${
@@ -347,7 +322,6 @@ export default function PipelineViewer({
           </div>
         </div>
 
-        {/* Camera Tilt Micro-Sliders */}
         <div className="mt-3 pt-3 border-t border-zinc-800/60 flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-zinc-400">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
@@ -400,7 +374,6 @@ export default function PipelineViewer({
             </div>
           </div>
 
-          {/* Quick Metrics Bar */}
           <div className="flex items-center gap-3">
             <span>
               Workload: <strong className="text-cyan-400">{rps} RPS</strong>
@@ -419,13 +392,11 @@ export default function PipelineViewer({
 
       {/* 2. Interactive 3D Spatial Canvas Viewport */}
       <div className="relative w-full rounded-2xl border border-zinc-800/80 bg-[#050508] overflow-hidden shadow-2xl min-h-[600px] flex items-center justify-center select-none">
-        {/* Background Cyber Ambient Lights */}
         <div className="absolute inset-0 pointer-events-none opacity-40">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px]" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px]" />
         </div>
 
-        {/* Trace Probe Active HUD Banner */}
         <AnimatePresence>
           {isTracingProbe && (
             <motion.div
@@ -450,7 +421,6 @@ export default function PipelineViewer({
           )}
         </AnimatePresence>
 
-        {/* 3D Scene World Container with Dynamic Camera Perspective */}
         <div
           className="w-full h-[620px] flex items-center justify-center transition-transform duration-300 ease-out"
           style={{
@@ -478,11 +448,10 @@ export default function PipelineViewer({
                 boxShadow: '0 30px 100px rgba(0,0,0,0.8) inset',
               }}
             >
-              {/* Floor glowing boundary accents */}
               <div className="absolute inset-0 rounded-3xl border border-cyan-500/10 shadow-[0_0_30px_rgba(6,182,212,0.05)]" />
             </div>
 
-            {/* SVG Circuit Highway with Animated Photons & Feedback Loop */}
+            {/* SVG Circuit Highway */}
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none z-10"
               style={{ transform: 'translateZ(5px)' }}
@@ -491,14 +460,6 @@ export default function PipelineViewer({
                 <linearGradient id="grad-req" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
                   <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.8" />
-                </linearGradient>
-                <linearGradient id="grad-telemetry" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
-                </linearGradient>
-                <linearGradient id="grad-actuation" x1="100%" y1="100%" x2="0%" y2="0%">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
-                  <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.9" />
                 </linearGradient>
                 <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="3" result="blur" />
@@ -509,105 +470,38 @@ export default function PipelineViewer({
                 </filter>
               </defs>
 
-              {/* Path 1: Client Edge (x:140, y:120) -> Ingress (x:230, y:120) */}
-              <path
-                d="M 140 120 L 230 120"
-                fill="none"
-                stroke="rgba(6, 182, 212, 0.25)"
-                strokeWidth="2"
-                strokeDasharray="4 3"
-              />
+              <path d="M 140 120 L 230 120" fill="none" stroke="rgba(6, 182, 212, 0.25)" strokeWidth="2" strokeDasharray="4 3" />
+              <path d="M 330 120 L 440 120" fill="none" stroke="rgba(6, 182, 212, 0.4)" strokeWidth="2.5" />
+              <path d="M 560 220 L 560 320" fill="none" stroke="rgba(16, 185, 129, 0.35)" strokeWidth="2" strokeDasharray="5 3" />
+              <path d="M 660 360 L 760 360" fill="none" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="2.5" />
+              <path d="M 950 310 L 950 180" fill="none" stroke="rgba(245, 158, 11, 0.4)" strokeWidth="2" strokeDasharray="4 3" />
+              <path d="M 900 120 L 710 120" fill="none" stroke="rgba(6, 182, 212, 0.5)" strokeWidth="2" strokeDasharray="3 3" />
 
-              {/* Path 2: Ingress (x:330, y:120) -> Pod Cluster Ingress Port (x:440, y:120) */}
-              <path
-                d="M 330 120 L 440 120"
-                fill="none"
-                stroke="rgba(6, 182, 212, 0.4)"
-                strokeWidth="2.5"
-              />
-
-              {/* Path 3: Pod Cluster (x:560, y:220) -> Telemetry Gatherer (x:560, y:320) */}
-              <path
-                d="M 560 220 L 560 320"
-                fill="none"
-                stroke="rgba(16, 185, 129, 0.35)"
-                strokeWidth="2"
-                strokeDasharray="5 3"
-              />
-
-              {/* Path 4: Telemetry Gatherer (x:660, y:360) -> PHPA Models Dispatcher (x:760, y:360) */}
-              <path
-                d="M 660 360 L 760 360"
-                fill="none"
-                stroke="rgba(168, 85, 247, 0.4)"
-                strokeWidth="2.5"
-              />
-
-              {/* Path 5: PHPA Controller (x:950, y:310) -> Scale Actuator Node (x:950, y:180) */}
-              <path
-                d="M 950 310 L 950 180"
-                fill="none"
-                stroke="rgba(245, 158, 11, 0.4)"
-                strokeWidth="2"
-                strokeDasharray="4 3"
-              />
-
-              {/* Path 6: Actuator Loopback -> Pod Cluster Scale Subresource (x:900, y:120) -> (x:710, y:120) */}
-              <path
-                d="M 900 120 L 710 120"
-                fill="none"
-                stroke="rgba(6, 182, 212, 0.5)"
-                strokeWidth="2"
-                strokeDasharray="3 3"
-              />
-
-              {/* Animated Continuous Particles */}
-              {/* Request Ingress Flow */}
               <circle r="4" fill="#06b6d4" filter="url(#glow)">
-                <animate
-                  attributeName="cx"
-                  values="140; 230; 330; 440"
-                  dur={isSpiking ? '0.8s' : '1.8s'}
-                  repeatCount="indefinite"
-                />
+                <animate attributeName="cx" values="140; 230; 330; 440" dur={isSpiking ? '0.8s' : '1.8s'} repeatCount="indefinite" />
                 <animate attributeName="cy" values="120; 120; 120; 120" dur={isSpiking ? '0.8s' : '1.8s'} repeatCount="indefinite" />
               </circle>
-              <circle r="3" fill="#a855f7" opacity="0.8" filter="url(#glow)">
-                <animate
-                  attributeName="cx"
-                  values="140; 230; 330; 440"
-                  begin="0.6s"
-                  dur={isSpiking ? '0.8s' : '1.8s'}
-                  repeatCount="indefinite"
-                />
-                <animate attributeName="cy" values="120; 120; 120; 120" begin="0.6s" dur={isSpiking ? '0.8s' : '1.8s'} repeatCount="indefinite" />
-              </circle>
 
-              {/* Pod Telemetry Upward Stream */}
               <circle r="3.5" fill="#10b981" filter="url(#glow)">
                 <animate attributeName="cx" values="560; 560" dur="2.2s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="220; 320" dur="2.2s" repeatCount="indefinite" />
               </circle>
 
-              {/* Evaluator to Models Stream */}
               <circle r="3.5" fill="#a855f7" filter="url(#glow)">
                 <animate attributeName="cx" values="660; 760" dur="1.6s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="360; 360" dur="1.6s" repeatCount="indefinite" />
               </circle>
 
-              {/* Models to Scale Actuator */}
               <circle r="3.5" fill="#f59e0b" filter="url(#glow)">
                 <animate attributeName="cx" values="950; 950" dur="2.0s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="310; 180" dur="2.0s" repeatCount="indefinite" />
               </circle>
 
-              {/* Actuation Loopback into Pods */}
               <circle r="4" fill="#06b6d4" filter="url(#glow)">
                 <animate attributeName="cx" values="900; 710" dur="1.5s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="120; 120" dur="1.5s" repeatCount="indefinite" />
               </circle>
 
-              {/* Dedicated Trace Probe Golden Particle */}
               {isTracingProbe && (
                 <circle r="7" fill="#fbbf24" filter="url(#glow)">
                   {probeHop === 1 && <animate attributeName="cx" values="60; 140" dur="0.8s" fill="freeze" />}
@@ -626,9 +520,7 @@ export default function PipelineViewer({
               )}
             </svg>
 
-            {/* ==================================================================== */}
-            {/* ZONE 1: TRAFFIC EDGE (Top-Left, z=30) */}
-            {/* ==================================================================== */}
+            {/* ZONE 1: TRAFFIC EDGE */}
             <div
               onClick={() => {
                 setSelectedStage(0);
@@ -670,9 +562,7 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ==================================================================== */}
-            {/* ZONE 2: INGRESS GATEWAY & ENVOY (Top-Left-Center, z=35) */}
-            {/* ==================================================================== */}
+            {/* ZONE 2: INGRESS GATEWAY */}
             <div
               onClick={() => {
                 setSelectedStage(1);
@@ -695,11 +585,7 @@ export default function PipelineViewer({
                 </h4>
                 <div className="mt-2 flex items-baseline justify-between text-xs">
                   <span className="text-zinc-400 text-[10px]">P95 Latency:</span>
-                  <span
-                    className={`font-mono font-bold ${
-                      p95 > 100 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'
-                    }`}
-                  >
+                  <span className={`font-mono font-bold ${p95 > 100 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
                     {p95}ms
                   </span>
                 </div>
@@ -707,9 +593,7 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ==================================================================== */}
-            {/* ZONE 3: 3D POD CLUSTER WORKLOAD (Center, z=45) */}
-            {/* ==================================================================== */}
+            {/* ZONE 3: 3D POD CLUSTER */}
             <div
               onClick={() => {
                 setSelectedStage(2);
@@ -719,7 +603,6 @@ export default function PipelineViewer({
               style={{ transform: 'translateZ(45px)' }}
             >
               <div className="bento-card rounded-2xl p-4 border border-purple-500/40 bg-zinc-900/95 hover:border-purple-400 transition-all shadow-2xl shadow-purple-950/30">
-                {/* Header info */}
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
@@ -741,7 +624,6 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                {/* 3D Isometric Server Blades Grid */}
                 <div className="bg-zinc-950/80 rounded-xl p-3 border border-zinc-800/80 min-h-[120px] flex items-center justify-center">
                   <div className="grid grid-cols-5 gap-2.5 w-full">
                     <AnimatePresence>
@@ -767,7 +649,6 @@ export default function PipelineViewer({
                               perspective: '400px',
                             }}
                           >
-                            {/* 3D Server Blade Cube with Isometric Depth */}
                             <div
                               className={`rounded-lg p-1.5 text-center border transition-all duration-300 ${
                                 isPrewarmed
@@ -776,11 +657,8 @@ export default function PipelineViewer({
                                   ? 'bg-amber-950/50 border-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
                                   : 'bg-zinc-900 border-zinc-700/80 hover:border-cyan-400/80'
                               }`}
-                              style={{
-                                transform: 'translateZ(10px)',
-                              }}
+                              style={{ transform: 'translateZ(10px)' }}
                             >
-                              {/* Top LED Status Indicator */}
                               <div className="flex items-center justify-between mb-1">
                                 <span
                                   className={`w-1.5 h-1.5 rounded-full ${
@@ -796,7 +674,6 @@ export default function PipelineViewer({
                                 </span>
                               </div>
 
-                              {/* Pod CPU Utilization Bar */}
                               <div className="w-full bg-zinc-800 rounded-full h-1 overflow-hidden my-0.5">
                                 <div
                                   className={`h-full rounded-full ${
@@ -810,7 +687,6 @@ export default function PipelineViewer({
                               </span>
                             </div>
 
-                            {/* 3D Isometric Extrusion Shadow/Pedestal */}
                             <div
                               className="absolute inset-0 bg-black/40 rounded-lg pointer-events-none -z-10"
                               style={{
@@ -824,7 +700,6 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                {/* Sub-bar with Live CPU and Demand Gap */}
                 <div className="mt-2.5 pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono text-zinc-400">
                   <span>
                     Avg Pod CPU: <strong className="text-white">{cpu}%</strong> (Target: 60%)
@@ -836,9 +711,7 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ==================================================================== */}
-            {/* ZONE 4: TELEMETRY GATHERER (Bottom-Center, z=30) */}
-            {/* ==================================================================== */}
+            {/* ZONE 4: TELEMETRY GATHERER */}
             <div
               onClick={() => {
                 setSelectedStage(3);
@@ -869,9 +742,7 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ==================================================================== */}
-            {/* ZONE 5: PHPA MODEL DISPATCHER & MAX DECISION (Bottom-Right, z=40) */}
-            {/* ==================================================================== */}
+            {/* ZONE 5: PHPA MODEL DISPATCHER & MAX DECISION */}
             <div
               onClick={() => {
                 setSelectedStage(4);
@@ -900,9 +771,7 @@ export default function PipelineViewer({
                   </span>
                 </div>
 
-                {/* 4 Models Execution Micro-Cards */}
                 <div className="grid grid-cols-2 gap-2 mt-2">
-                  {/* Model 1: Reactive HPA */}
                   <div
                     className={`rounded-lg p-2 border text-[11px] transition-all ${
                       winningModel === 'Reactive HPA'
@@ -922,7 +791,6 @@ export default function PipelineViewer({
                     </div>
                   </div>
 
-                  {/* Model 2: Linear Regression */}
                   <div
                     className={`rounded-lg p-2 border text-[11px] transition-all ${
                       winningModel === 'Linear'
@@ -942,7 +810,6 @@ export default function PipelineViewer({
                     </div>
                   </div>
 
-                  {/* Model 3: Holt-Winters */}
                   <div
                     className={`rounded-lg p-2 border text-[11px] transition-all ${
                       winningModel === 'Holt-Winters'
@@ -962,7 +829,6 @@ export default function PipelineViewer({
                     </div>
                   </div>
 
-                  {/* Model 4: 2-Layer LSTM */}
                   <div
                     className={`rounded-lg p-2 border text-[11px] transition-all ${
                       winningModel === 'LSTM'
@@ -983,7 +849,6 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                {/* Synthesis Decision Output */}
                 <div className="mt-2.5 pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono">
                   <span className="text-zinc-400">MAX Output:</span>
                   <span className="text-emerald-400 font-bold">
@@ -993,9 +858,7 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ==================================================================== */}
-            {/* ZONE 6: SCALE ACTUATOR (Top-Right, z=35) */}
-            {/* ==================================================================== */}
+            {/* ZONE 6: SCALE ACTUATOR */}
             <div
               onClick={() => {
                 setSelectedStage(5);
@@ -1026,13 +889,12 @@ export default function PipelineViewer({
           </div>
         </div>
 
-        {/* Floating Hint Overlay on Bottom Right of Canvas */}
         <div className="absolute bottom-3 right-4 z-20 pointer-events-none text-[10px] font-mono text-zinc-500 bg-zinc-950/80 px-2.5 py-1 rounded-md border border-zinc-800/80 backdrop-blur-md">
           Tip: Click on any stage component to inspect architecture & live telemetry
         </div>
       </div>
 
-      {/* 3. Stage Selector Ribbon (Direct Navigation & Overview) */}
+      {/* 3. Stage Selector Ribbon */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {stages.map((stage) => {
           const Icon = stage.icon;
@@ -1069,7 +931,7 @@ export default function PipelineViewer({
         })}
       </div>
 
-      {/* 4. Slide-Out Glassmorphic Stage Inspection Drawer (21st.dev Style) */}
+      {/* 4. Slide-Out Glassmorphic Stage Inspection Drawer */}
       <AnimatePresence>
         {isDrawerOpen && (
           <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
@@ -1080,7 +942,6 @@ export default function PipelineViewer({
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
               className="w-full max-w-lg bg-zinc-950 border-l border-zinc-800 p-6 flex flex-col h-full overflow-y-auto shadow-2xl"
             >
-              {/* Drawer Header */}
               <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
@@ -1103,9 +964,7 @@ export default function PipelineViewer({
                 </button>
               </div>
 
-              {/* Drawer Content */}
               <div className="py-5 space-y-5 flex-1 text-xs">
-                {/* Stage Description */}
                 <div>
                   <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
                     Architecture & Role
@@ -1115,7 +974,6 @@ export default function PipelineViewer({
                   </p>
                 </div>
 
-                {/* Live Telemetry Attributes */}
                 <div>
                   <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">
                     Live Telemetry Metrics
@@ -1133,7 +991,6 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                {/* Mathematical Formulation */}
                 <div>
                   <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">
                     Autonomic Formulation
@@ -1143,7 +1000,6 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                {/* Kubernetes CRD / Configuration Snippet */}
                 <div>
                   <h4 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <Terminal className="w-3.5 h-3.5 text-zinc-400" />
@@ -1155,7 +1011,6 @@ export default function PipelineViewer({
                 </div>
               </div>
 
-              {/* Drawer Footer Action */}
               <div className="pt-4 border-t border-zinc-800 flex items-center justify-between">
                 <button
                   onClick={() => {

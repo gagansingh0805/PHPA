@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Info } from 'lucide-react';
 
@@ -85,15 +86,52 @@ const GLOSSARY = {
 
 export default function Term({ id, children, className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
-  const info = GLOSSARY[id?.toLowerCase()] || null;
+  const [coords, setCoords] = useState({ top: 0, left: 0, placement: 'top', arrowLeft: 0 });
+  const triggerRef = useRef(null);
   const timeoutRef = useRef(null);
+  const info = GLOSSARY[id?.toLowerCase()] || null;
 
-  if (!info) {
-    return <span className={className}>{children}</span>;
-  }
+  const updatePosition = () => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const tooltipWidth = 290;
+    const tooltipHeightEst = 145;
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Center horizontally over trigger
+    const triggerCenterX = rect.left + rect.width / 2;
+    let left = triggerCenterX - tooltipWidth / 2;
+
+    // Clamp horizontal position so tooltip never bleeds offscreen
+    const margin = 12;
+    if (left < margin) {
+      left = margin;
+    } else if (left + tooltipWidth > viewportWidth - margin) {
+      left = viewportWidth - tooltipWidth - margin;
+    }
+
+    // Calculate relative arrow position pointing directly to trigger center
+    const arrowLeft = Math.max(16, Math.min(tooltipWidth - 16, triggerCenterX - left));
+
+    // Vertical placement: default 'top' unless space above is tight (< 160px)
+    const spaceAbove = rect.top;
+    const placement = spaceAbove >= tooltipHeightEst + 16 ? 'top' : 'bottom';
+
+    let top = 0;
+    if (placement === 'top') {
+      top = rect.top - 8;
+    } else {
+      top = rect.bottom + 8;
+    }
+
+    setCoords({ top, left, placement, arrowLeft });
+  };
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    updatePosition();
     setIsOpen(true);
   };
 
@@ -103,52 +141,110 @@ export default function Term({ id, children, className = '' }) {
     }, 150);
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [isOpen]);
+
+  if (!info) {
+    return <span className={className}>{children}</span>;
+  }
+
   return (
-    <span
-      className={`relative inline-block cursor-help ${className}`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <span className="border-b border-dotted border-zinc-400/70 hover:border-purple-400 hover:text-purple-200 transition-colors">
-        {children}
+    <>
+      <span
+        ref={triggerRef}
+        className={`relative inline-block cursor-help ${className}`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <span className="border-b border-dotted border-zinc-400/70 hover:border-purple-400 hover:text-purple-200 transition-colors">
+          {children}
+        </span>
       </span>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.96 }}
-            transition={{ duration: 0.15 }}
-            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-72 p-3 rounded-xl bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 shadow-2xl text-left text-xs pointer-events-none"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-zinc-800">
-              <div className="flex items-center gap-1.5 font-bold text-white text-[11px]">
-                <Info className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
-                <span className="truncate">{info.term}</span>
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {isOpen && (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: `${coords.top}px`,
+                  left: `${coords.left}px`,
+                  zIndex: 999999,
+                  transform: coords.placement === 'top' ? 'translateY(-100%)' : 'none',
+                  pointerEvents: 'auto',
+                }}
+                onMouseEnter={() => {
+                  if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                }}
+                onMouseLeave={handleMouseLeave}
+              >
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    y: coords.placement === 'top' ? 6 : -6,
+                    scale: 0.95,
+                  }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{
+                    opacity: 0,
+                    y: coords.placement === 'top' ? 4 : -4,
+                    scale: 0.95,
+                  }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  className="w-72 p-3 rounded-xl bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/90 shadow-[0_16px_40px_rgba(0,0,0,0.85)] text-left text-xs relative"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-zinc-800">
+                    <div className="flex items-center gap-1.5 font-bold text-white text-[11px]">
+                      <Info className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                      <span className="truncate">{info.term}</span>
+                    </div>
+                    <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase flex-shrink-0 font-semibold">
+                      {info.category}
+                    </span>
+                  </div>
+
+                  {/* Definition */}
+                  <p className="text-zinc-300 text-[10.5px] leading-relaxed mb-2">
+                    {info.definition}
+                  </p>
+
+                  {/* Significance in Autoscaling */}
+                  <div className="p-2 rounded-lg bg-zinc-950/80 border border-zinc-800 text-[9.5px] text-zinc-400 leading-snug">
+                    <strong className="text-zinc-200 font-semibold">Autoscaling Impact:</strong>{' '}
+                    {info.significance}
+                  </div>
+
+                  {/* Pointer arrow with matching border and background */}
+                  {coords.placement === 'top' ? (
+                    <div
+                      className="absolute top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-zinc-700/90"
+                      style={{ left: `${coords.arrowLeft}px`, transform: 'translateX(-50%)' }}
+                    />
+                  ) : (
+                    <div
+                      className="absolute bottom-full w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-zinc-700/90"
+                      style={{ left: `${coords.arrowLeft}px`, transform: 'translateX(-50%)' }}
+                    />
+                  )}
+                </motion.div>
               </div>
-              <span className="text-[8px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase flex-shrink-0">
-                {info.category}
-              </span>
-            </div>
-
-            {/* Definition */}
-            <p className="text-zinc-300 text-[10px] leading-relaxed mb-1.5">
-              {info.definition}
-            </p>
-
-            {/* Significance in Autoscaling */}
-            <div className="p-1.5 rounded-lg bg-zinc-950/80 border border-zinc-800 text-[9px] text-zinc-400 leading-snug">
-              <strong className="text-zinc-200 font-semibold">Autoscaling Impact:</strong> {info.significance}
-            </div>
-
-            {/* Downward pointer triangle */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-zinc-800"></div>
-          </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
-    </span>
+    </>
   );
 }
 
