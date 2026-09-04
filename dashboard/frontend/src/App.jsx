@@ -549,6 +549,12 @@ export default function App() {
               speedFactor={speedFactor}
               trafficMode={trafficMode}
               manualRps={manualRps}
+              setManualRps={setManualRps}
+              setTrafficMode={setTrafficMode}
+              onInjectSpike={handleInjectSpike}
+              onTogglePlay={handleTogglePlay}
+              onSpeedChange={handleSpeedChange}
+              onReset={handleReset}
             />
           )}
 
