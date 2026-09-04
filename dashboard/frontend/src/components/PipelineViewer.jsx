@@ -27,6 +27,13 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  GitBranch,
+  ShieldAlert,
+  ArrowRight,
+  BarChart3,
+  TrendingUp,
+  Clock,
+  Radio,
 } from 'lucide-react';
 
 export default function PipelineViewer({
@@ -42,7 +49,10 @@ export default function PipelineViewer({
   onSpeedChange,
   onReset,
 }) {
-  // 1. Natural Mouse Drag-to-Orbit & Camera State
+  // 1. View Mode: '3d' (Spatial 3D Canvas) vs '2d' (2D Crisp Schematic Architecture)
+  const [viewMode, setViewMode] = useState('3d'); // '3d' | '2d'
+
+  // 2. Natural Mouse Drag-to-Orbit & Camera State
   const [pitch, setPitch] = useState(44); // RotateX: 12deg to 78deg
   const [yaw, setYaw] = useState(-18); // RotateZ: -80deg to 80deg
   const [roll, setRoll] = useState(8); // RotateY
@@ -60,12 +70,12 @@ export default function PipelineViewer({
 
   const [isCursorGrabbing, setIsCursorGrabbing] = useState(false);
 
-  // 2. Stage Inspector State
+  // 3. Stage Inspector State
   const [selectedStage, setSelectedStage] = useState(2); // default to Pod Workload
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'internals' | 'pods' | 'yaml'
+  const [activeTab, setActiveTab] = useState('diagram'); // 'diagram' | 'overview' | 'internals' | 'pods' | 'yaml'
 
-  // 3. Step-by-Step Controllable Probe Tracer State
+  // 4. Step-by-Step Controllable Probe Tracer State
   const [probeHop, setProbeHop] = useState(0); // 0=idle, 1=ingestion, 2=ingress, 3=pod, 4=gatherer, 5=models, 6=actuator
   const [isProbePlaying, setIsProbePlaying] = useState(false);
   const [probeSpeed, setProbeSpeed] = useState(1); // 0.5, 1, 2
@@ -122,15 +132,16 @@ export default function PipelineViewer({
 
   // Subtle auto-orbit
   useEffect(() => {
-    if (!isOrbiting) return;
+    if (!isOrbiting || viewMode === '2d') return;
     const orbitInterval = setInterval(() => {
       setYaw((prev) => (prev >= 40 ? -40 : prev + 0.25));
     }, 50);
     return () => clearInterval(orbitInterval);
-  }, [isOrbiting]);
+  }, [isOrbiting, viewMode]);
 
   // Window-level Pointer Drag Handlers (Smooth, reliable, never drops tracking)
   const handlePointerDown = (e) => {
+    if (viewMode === '2d') return; // In 2D schematic, no rotation needed
     if (e.target.closest('button, input, a, select, [role="button"]')) return;
     if (e.button !== 0) return; // Left mouse click only
 
@@ -439,9 +450,409 @@ export default function PipelineViewer({
     },
   ];
 
+  // Helper renderer for each Stage's Real-Time Visual Architecture Diagram
+  const renderStageDiagram = () => {
+    switch (selectedStage) {
+      case 0: // Client Edge Ingestion
+        return (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-[#0b0b12] border border-cyan-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-cyan-400 font-bold font-mono text-xs">
+                  <Activity className="w-4 h-4" />
+                  <span>REAL-TIME TRAFFIC ARRIVAL & INGRESS WAVE DIAGRAM</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                  {rps} RPS Live
+                </span>
+              </div>
+
+              {/* Animated Wave SVG */}
+              <div className="relative h-28 w-full bg-[#07070b] rounded-lg border border-zinc-800 overflow-hidden flex items-center justify-center">
+                <svg className="w-full h-full" viewBox="0 0 500 100" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="waveGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.5" />
+                      <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.02" />
+                    </linearGradient>
+                  </defs>
+                  {/* Diurnal Waveform Area */}
+                  <path
+                    d={`M 0 60 Q 125 ${isSpiking ? 10 : 30}, 250 55 T 500 ${isSpiking ? 15 : 60} L 500 100 L 0 100 Z`}
+                    fill="url(#waveGrad)"
+                  />
+                  {/* Waveform Stroke */}
+                  <path
+                    d={`M 0 60 Q 125 ${isSpiking ? 10 : 30}, 250 55 T 500 ${isSpiking ? 15 : 60}`}
+                    fill="none"
+                    stroke="#06b6d4"
+                    strokeWidth="2.5"
+                  />
+                  {/* Scanning Cursor */}
+                  <line x1="250" y1="0" x2="250" y2="100" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="3 3" />
+                  <circle cx="250" cy={isSpiking ? 32 : 55} r="4" fill="#fbbf24" className="animate-ping" />
+                </svg>
+                <div className="absolute top-2 right-2 text-[10px] font-mono text-zinc-400 bg-black/60 px-2 py-0.5 rounded border border-zinc-800">
+                  {isSpiking ? '💥 Poisson Flash Crowd Surge Active' : '🌊 Diurnal Base Sine Wave + Noise'}
+                </div>
+              </div>
+
+              {/* Architectural Block Diagram */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <div className="text-zinc-500 text-[10px]">1. Client Pool</div>
+                  <div className="text-white font-bold mt-1">Web & API Clients</div>
+                  <div className="text-cyan-400 text-[10px] mt-0.5">{Math.round(rps * 1.8)} Connections</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-cyan-500/40 shadow-sm">
+                  <div className="text-cyan-400 text-[10px] flex items-center justify-center gap-1">
+                    <span>2. TLS Edge Gateway</span>
+                  </div>
+                  <div className="text-white font-bold mt-1">ALB / NodePort</div>
+                  <div className="text-emerald-400 text-[10px] mt-0.5">TLS 1.3 (~1.2ms)</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <div className="text-zinc-500 text-[10px]">3. Target Stream</div>
+                  <div className="text-white font-bold mt-1">Envoy Reverse Proxy</div>
+                  <div className="text-purple-400 text-[10px] mt-0.5">HTTP/2.0 Stream</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 1: // Ingress Router & Envoy
+        return (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-[#0b0b12] border border-blue-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-blue-400 font-bold font-mono text-xs">
+                  <Network className="w-4 h-4" />
+                  <span>ENVOY REVERSE PROXY & WEIGHTED ROUTING DIAGRAM</span>
+                </div>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${p95 > 100 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'}`}>
+                  P95: {p95}ms (SLA: 100ms)
+                </span>
+              </div>
+
+              {/* Envoy Router Dispatch Topology */}
+              <div className="bg-[#07070b] p-3 rounded-lg border border-zinc-800">
+                <div className="flex items-center justify-between text-xs font-mono mb-2">
+                  <span className="text-zinc-400">Incoming Ingress Stream</span>
+                  <span className="text-blue-400">Weighted Round-Robin Multiplexing</span>
+                </div>
+
+                <div className="space-y-2">
+                  {Array.from({ length: Math.min(4, actualPods) }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs font-mono">
+                      <span className="w-16 text-zinc-500 text-[10px]">Lane {i + 1}:</span>
+                      <div className="flex-1 bg-zinc-900 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500 rounded-full animate-pulse"
+                          style={{ width: `${100 / Math.min(4, actualPods)}%` }}
+                        />
+                      </div>
+                      <span className="text-zinc-300 w-28 text-right text-[10px]">
+                        pod-web-0{i + 1} ({Math.round(rps / actualPods)} req/s)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <span className="text-zinc-500 text-[10px]">Circuit Breaker Status:</span>
+                  <div className="text-emerald-400 font-bold mt-1">Closed (Healthy Traffic)</div>
+                  <span className="text-zinc-500 text-[10px]">0 Pod Ejections</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <span className="text-zinc-500 text-[10px]">Keep-Alive Pool:</span>
+                  <div className="text-cyan-400 font-bold mt-1">2,048 Max Sockets</div>
+                  <span className="text-zinc-500 text-[10px]">Zero Handshake Latency</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2: // Kubernetes Workload Pods Cluster
+        return (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-[#0b0b12] border border-purple-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-purple-400 font-bold font-mono text-xs">
+                  <Server className="w-4 h-4" />
+                  <span>KUBERNETES DATA PLANE POD REPLICA SET ARCHITECTURE</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                  {actualPods} Active Pods
+                </span>
+              </div>
+
+              {/* Data Plane Rack View */}
+              <div className="bg-[#07070b] p-3 rounded-lg border border-zinc-800">
+                <div className="text-[10px] font-mono text-zinc-400 mb-2 flex items-center justify-between">
+                  <span>Cluster Deployment: default/web-workload</span>
+                  <span>Target CPU: 60% • Cluster Avg: {cpu}%</span>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {containerPods.slice(0, 8).map((p) => (
+                    <div
+                      key={p.id}
+                      className={`p-2 rounded-lg border text-[10px] font-mono ${
+                        p.isPrewarmed
+                          ? 'bg-purple-950/40 border-purple-400 text-purple-200'
+                          : p.cpu > 80
+                          ? 'bg-rose-950/40 border-rose-500 text-rose-200'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-bold">{p.id}</span>
+                        {p.isPrewarmed && (
+                          <span className="text-[8px] px-1 rounded bg-purple-500/30 text-purple-300">
+                            LSTM
+                          </span>
+                        )}
+                      </div>
+                      <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden my-1">
+                        <div
+                          className={`h-full ${p.cpu > 80 ? 'bg-rose-500' : p.isPrewarmed ? 'bg-purple-400' : 'bg-cyan-400'}`}
+                          style={{ width: `${p.cpu}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-[9px] text-zinc-400">
+                        <span>CPU: {p.cpu}%</span>
+                        <span>{p.mem}MB</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <span className="text-zinc-500 text-[10px]">CPU Limit:</span>
+                  <div className="text-white font-bold">500m</div>
+                </div>
+                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <span className="text-zinc-500 text-[10px]">CPU Request:</span>
+                  <div className="text-white font-bold">250m</div>
+                </div>
+                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <span className="text-zinc-500 text-[10px]">Per-Pod Capacity:</span>
+                  <div className="text-cyan-400 font-bold">~25 RPS</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3: // Telemetry Harvester
+        return (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-[#0b0b12] border border-emerald-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold font-mono text-xs">
+                  <Layers className="w-4 h-4" />
+                  <span>AUTONOMIC METRICS HARVESTING PIPELINE (cAdvisor & k8shorizmetrics)</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  15s Scrape Cycle
+                </span>
+              </div>
+
+              {/* 4-Step Scrape Flow Pipeline */}
+              <div className="grid grid-cols-4 gap-2 text-xs font-mono text-center">
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <div className="text-emerald-400 font-bold text-[11px]">Step 1: Scrape</div>
+                  <div className="text-zinc-300 mt-1">cAdvisor Daemon</div>
+                  <div className="text-zinc-500 text-[9px] mt-0.5">Kubelet /metrics</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <div className="text-emerald-400 font-bold text-[11px]">Step 2: Filter</div>
+                  <div className="text-zinc-300 mt-1">Unready Excluded</div>
+                  <div className="text-zinc-500 text-[9px] mt-0.5">0 Initializers filtered</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <div className="text-emerald-400 font-bold text-[11px]">Step 3: Buffer</div>
+                  <div className="text-zinc-300 mt-1">50-Step Window</div>
+                  <div className="text-zinc-500 text-[9px] mt-0.5">Sliding metric vector</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-emerald-500/40 shadow-sm">
+                  <div className="text-emerald-400 font-bold text-[11px]">Step 4: Dispatch</div>
+                  <div className="text-white font-bold mt-1">Parallel Brain</div>
+                  <div className="text-purple-400 text-[9px] mt-0.5">Piped to 4 Models</div>
+                </div>
+              </div>
+
+              {/* Raw Replica Calculation Box */}
+              <div className="bg-[#07070b] p-3 rounded-lg border border-zinc-800 flex items-center justify-between text-xs font-mono">
+                <div>
+                  <span className="text-zinc-500 text-[10px]">Calculated Raw Replica Demand:</span>
+                  <div className="text-white font-bold mt-0.5">
+                    ceil({actualPods} pods × {cpu}% / 60%) = <span className="text-emerald-400">{reactiveHpa} pods</span>
+                  </div>
+                </div>
+                <div className="text-right text-[10px] text-zinc-400">
+                  <span>Feed latency: <strong className="text-zinc-200">12ms</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4: // PHPA Parallel Models Brain (The Multi-Model Forecasting Matrix)
+        return (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-[#0b0b12] border border-purple-500/40 space-y-3 shadow-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-purple-400 font-bold font-mono text-xs">
+                  <Cpu className="w-4 h-4" />
+                  <span>PARALLEL MULTI-MODEL FORECASTING MATRIX & DECISION CORE</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">
+                  Strategy: DecisionType: Maximum
+                </span>
+              </div>
+
+              {/* 4 Parallel Models Comparison Grid */}
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                {/* Model 1: Reactive HPA */}
+                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Reactive HPA' ? 'bg-zinc-800/80 border-cyan-400 shadow-md ring-1 ring-cyan-400/50' : 'bg-zinc-900/80 border-zinc-800'}`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-cyan-300">1. Reactive HPA</span>
+                    {winningModel === 'Reactive HPA' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-cyan-500/30 text-cyan-300 font-bold">WINNER</span>}
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-white mt-1">
+                    {reactiveHpa} <span className="text-xs font-normal text-zinc-400">replicas</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 mt-1 leading-snug">
+                    Standard Kubernetes ratio rule. Evaluates lagging CPU load: ceil(N × CurrentCPU / TargetCPU).
+                  </p>
+                </div>
+
+                {/* Model 2: Linear Regression */}
+                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Linear' ? 'bg-blue-950/40 border-blue-400 shadow-md ring-1 ring-blue-400/50' : 'bg-zinc-900/80 border-zinc-800'}`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-blue-300">2. Linear OLS</span>
+                    {winningModel === 'Linear' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-blue-500/30 text-blue-300 font-bold">WINNER</span>}
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-white mt-1">
+                    {linearPred} <span className="text-xs font-normal text-zinc-400">replicas</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 mt-1 leading-snug">
+                    Ordinary Least Squares trend extrapolation on the 50-step metrics vector.
+                  </p>
+                </div>
+
+                {/* Model 3: Holt-Winters */}
+                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Holt-Winters' ? 'bg-emerald-950/40 border-emerald-400 shadow-md ring-1 ring-emerald-400/50' : 'bg-zinc-900/80 border-zinc-800'}`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-emerald-300">3. Holt-Winters</span>
+                    {winningModel === 'Holt-Winters' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/30 text-emerald-300 font-bold">WINNER</span>}
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-white mt-1">
+                    {hwPred} <span className="text-xs font-normal text-zinc-400">replicas</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 mt-1 leading-snug">
+                    Triple exponential smoothing capturing diurnal seasonal cycles and baseline drift.
+                  </p>
+                </div>
+
+                {/* Model 4: 2-Layer LSTM */}
+                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'LSTM' ? 'bg-purple-950/60 border-purple-400 shadow-lg ring-1 ring-purple-400/60' : 'bg-zinc-900/80 border-zinc-800'}`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-purple-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span>4. 2-Layer LSTM</span>
+                    </span>
+                    {winningModel === 'LSTM' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-purple-500/40 text-purple-200 font-bold animate-pulse">WINNER</span>}
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-purple-300 mt-1">
+                    {lstmPred} <span className="text-xs font-normal text-zinc-400">replicas</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-300 mt-1 leading-snug">
+                    Deep recurrent lookahead neural network with 64 hidden units. Predicts flash surges 45s ahead of CPU tripwires!
+                  </p>
+                </div>
+              </div>
+
+              {/* The MAX Decision Synthesizer Gate */}
+              <div className="p-3 bg-[#08080e] rounded-xl border border-purple-500/30 flex items-center justify-between text-xs font-mono">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold">
+                    MAX
+                  </div>
+                  <div>
+                    <div className="text-zinc-400 text-[10px]">DecisionType: Maximum Envelope:</div>
+                    <div className="text-white font-bold text-sm">
+                      Actuating <span className="text-emerald-400">{maxVal} Replicas</span> via {winningModel}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right text-[10px] text-zinc-400">
+                  <span>Preemptive lead time: <strong className="text-cyan-300">+45s</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 5: // Scale Actuator
+        return (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-[#0b0b12] border border-amber-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-amber-400 font-bold font-mono text-xs">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>KUBERNETES SCALECLIENT ACTUATION & FEEDBACK LOOP</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  Loop Closed
+                </span>
+              </div>
+
+              {/* 3-Step Actuation Sequence */}
+              <div className="grid grid-cols-3 gap-2 text-xs font-mono text-center">
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <div className="text-amber-400 font-bold text-[11px]">1. Stabilization</div>
+                  <div className="text-zinc-300 mt-1">300s Cooldown</div>
+                  <div className="text-zinc-500 text-[9px] mt-0.5">Prevents thrashing</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
+                  <div className="text-amber-400 font-bold text-[11px]">2. Boundary Clamp</div>
+                  <div className="text-white font-bold mt-1">[2, 30] Pods</div>
+                  <div className="text-zinc-500 text-[9px] mt-0.5">Min/Max limits</div>
+                </div>
+                <div className="p-2.5 rounded-lg bg-zinc-900 border border-amber-500/40 shadow-sm">
+                  <div className="text-amber-400 font-bold text-[11px]">3. REST PATCH</div>
+                  <div className="text-cyan-300 font-bold mt-1">K8s API Server</div>
+                  <div className="text-emerald-400 text-[9px] mt-0.5">200 OK Applied</div>
+                </div>
+              </div>
+
+              {/* Live JSON Merge Patch Payload */}
+              <div className="bg-[#07070b] p-3 rounded-lg border border-zinc-800 font-mono text-xs">
+                <span className="text-zinc-500 text-[10px] block mb-1">PATCH /apis/apps/v1/namespaces/default/deployments/web-workload/scale:</span>
+                <pre className="text-amber-300 text-[11px]">
+                  {`{ "spec": { "replicas": ${actualPods} } }`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-4 animate-fadeIn select-none">
-      {/* 1. TOP CONTROL DOCK: Camera Angles + Real-Time Live Traffic Deck */}
+      {/* 1. TOP CONTROL DOCK: View Mode Toggle + Camera Angles + Real-Time Live Traffic Deck */}
       <div className="rounded-2xl p-4 lg:p-5 border border-zinc-700/80 bg-[#0d0d14] shadow-xl relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
 
@@ -450,71 +861,99 @@ export default function PipelineViewer({
             <div className="flex items-center gap-2.5">
               <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#06b6d4]"></span>
               <h2 className="text-base font-bold text-white tracking-wide">
-                PHPA 3D Motion Architectural Pipeline
+                PHPA Architectural Pipeline Visualizer
               </h2>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 font-semibold">
                 Live Interactive Lab
               </span>
             </div>
             <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-              Drag anywhere to orbit in 3D • Adjust live traffic below to watch the 3D pod blades scale elastically in real time.
+              Switch between 3D Spatial Canvas or 2D Crisp Schematic • Click any stage to open deep real-time architecture diagrams.
             </p>
           </div>
 
-          {/* Quick Angles & Auto-Orbit Controls */}
+          {/* Mode Switch + Quick Angles Controls */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center bg-zinc-900/90 border border-zinc-800 rounded-lg p-1 text-xs font-mono">
+            {/* View Mode Toggle: 3D Spatial vs 2D Crisp Schematic */}
+            <div className="flex items-center bg-zinc-950 border border-zinc-700 rounded-lg p-1 text-xs font-mono">
               <button
-                onClick={() => handlePresetChange('isometric')}
-                className={`px-2.5 py-1 rounded transition-colors ${
-                  viewPreset === 'isometric'
-                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                onClick={() => setViewMode('3d')}
+                className={`px-3 py-1 rounded transition-all font-semibold ${
+                  viewMode === '3d'
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                Isometric (44°)
+                🌐 3D Spatial
               </button>
               <button
-                onClick={() => handlePresetChange('front')}
-                className={`px-2.5 py-1 rounded transition-colors ${
-                  viewPreset === 'front'
-                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                onClick={() => setViewMode('2d')}
+                className={`px-3 py-1 rounded transition-all font-semibold ${
+                  viewMode === '2d'
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                Front Flow (12°)
-              </button>
-              <button
-                onClick={() => handlePresetChange('top')}
-                className={`px-2.5 py-1 rounded transition-colors ${
-                  viewPreset === 'top'
-                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                Top-Down (68°)
+                📐 2D Crisp Flow
               </button>
             </div>
 
-            <button
-              onClick={() => setIsOrbiting((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono font-medium transition-all ${
-                isOrbiting
-                  ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <Compass className={`w-3.5 h-3.5 ${isOrbiting ? 'animate-spin' : ''}`} />
-              <span>{isOrbiting ? 'Orbiting...' : 'Auto-Orbit'}</span>
-            </button>
+            {viewMode === '3d' && (
+              <>
+                <div className="flex items-center bg-zinc-900/90 border border-zinc-800 rounded-lg p-1 text-xs font-mono">
+                  <button
+                    onClick={() => handlePresetChange('isometric')}
+                    className={`px-2.5 py-1 rounded transition-colors ${
+                      viewPreset === 'isometric'
+                        ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Isometric (44°)
+                  </button>
+                  <button
+                    onClick={() => handlePresetChange('front')}
+                    className={`px-2.5 py-1 rounded transition-colors ${
+                      viewPreset === 'front'
+                        ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Front Flow (12°)
+                  </button>
+                  <button
+                    onClick={() => handlePresetChange('top')}
+                    className={`px-2.5 py-1 rounded transition-colors ${
+                      viewPreset === 'top'
+                        ? 'bg-purple-600 text-white font-semibold shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Top-Down (68°)
+                  </button>
+                </div>
 
-            <button
-              onClick={handleResetCamera}
-              className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
-              title="Reset View"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-            </button>
+                <button
+                  onClick={() => setIsOrbiting((prev) => !prev)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono font-medium transition-all ${
+                    isOrbiting
+                      ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                      : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <Compass className={`w-3.5 h-3.5 ${isOrbiting ? 'animate-spin' : ''}`} />
+                  <span>{isOrbiting ? 'Orbiting...' : 'Auto-Orbit'}</span>
+                </button>
+
+                <button
+                  onClick={handleResetCamera}
+                  className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
+                  title="Reset View"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -699,13 +1138,13 @@ export default function PipelineViewer({
         </div>
       </div>
 
-      {/* 3. RAZOR-SHARP 3D SPATIAL CANVAS VIEWPORT */}
+      {/* 3. MAIN CANVAS VIEWPORT (3D Spatial OR 2D Crisp Flow Architecture) */}
       <div
         ref={canvasRef}
         onPointerDown={handlePointerDown}
         onDoubleClick={handleResetCamera}
         className={`relative w-full rounded-2xl border border-zinc-700/80 bg-[#07070b] overflow-hidden shadow-2xl min-h-[660px] flex items-center justify-center ${
-          isCursorGrabbing ? 'cursor-grabbing' : 'cursor-grab'
+          viewMode === '3d' ? (isCursorGrabbing ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
         }`}
         style={{
           WebkitFontSmoothing: 'antialiased',
@@ -719,11 +1158,23 @@ export default function PipelineViewer({
 
         {/* Top-Left Instructions HUD */}
         <div className="absolute top-3 left-4 z-20 pointer-events-none flex items-center gap-2 bg-zinc-900/90 border border-zinc-700/80 px-2.5 py-1 rounded-md text-[10px] font-mono text-zinc-400 shadow-md backdrop-blur-md">
-          <span>🖱️ Drag to Orbit</span>
-          <span className="text-zinc-600">•</span>
-          <span>Hold Ctrl + Scroll to Zoom</span>
-          <span className="text-zinc-600">•</span>
-          <span>Double-click to Reset</span>
+          {viewMode === '3d' ? (
+            <>
+              <span>🖱️ Drag to Orbit</span>
+              <span className="text-zinc-600">•</span>
+              <span>Hold Ctrl + Scroll to Zoom</span>
+              <span className="text-zinc-600">•</span>
+              <span>Double-click to Reset</span>
+            </>
+          ) : (
+            <>
+              <span className="text-cyan-400 font-bold">📐 2D Crisp Flow Mode Active</span>
+              <span className="text-zinc-600">•</span>
+              <span>Zero-tilt razor-sharp vector architecture</span>
+              <span className="text-zinc-600">•</span>
+              <span>Click any card for deep diagrams</span>
+            </>
+          )}
         </div>
 
         {/* Dedicated Tactile Zoom & Tilt Controls (Top-Right) */}
@@ -753,37 +1204,39 @@ export default function PipelineViewer({
             100%
           </button>
 
-          <div className="w-[1px] h-4 bg-zinc-700 mx-0.5" />
-
-          {/* Direct Tilt & Turn D-Pad */}
-          <button
-            onClick={() => setPitch((p) => Math.max(12, p - 6))}
-            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
-            title="Tilt Up"
-          >
-            <ChevronUp className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setPitch((p) => Math.min(78, p + 6))}
-            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
-            title="Tilt Down"
-          >
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setYaw((y) => Math.max(-80, y - 10))}
-            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
-            title="Turn Left"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setYaw((y) => Math.min(80, y + 10))}
-            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
-            title="Turn Right"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          {viewMode === '3d' && (
+            <>
+              <div className="w-[1px] h-4 bg-zinc-700 mx-0.5" />
+              <button
+                onClick={() => setPitch((p) => Math.max(12, p - 6))}
+                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                title="Tilt Up"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setPitch((p) => Math.min(78, p + 6))}
+                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                title="Tilt Down"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setYaw((y) => Math.max(-80, y - 10))}
+                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                title="Turn Left"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setYaw((y) => Math.min(80, y + 10))}
+                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                title="Turn Right"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Live Trace Packet Details Toast */}
@@ -816,26 +1269,37 @@ export default function PipelineViewer({
           )}
         </AnimatePresence>
 
-        {/* 3D Scene Viewport */}
+        {/* Main Diagram Canvas: 3D Transform vs 2D Flat */}
         <div
           className="w-full h-[640px] flex items-center justify-center transition-transform duration-100 ease-out"
-          style={{
-            perspective: '1400px',
-            perspectiveOrigin: '50% 50%',
-          }}
+          style={
+            viewMode === '3d'
+              ? {
+                  perspective: '1400px',
+                  perspectiveOrigin: '50% 50%',
+                }
+              : {}
+          }
         >
           <div
             className="relative w-[1160px] h-[600px] transition-transform duration-150 ease-out"
-            style={{
-              transformStyle: 'preserve-3d',
-              transform: `rotateX(${pitch}deg) rotateY(${roll}deg) rotateZ(${yaw}deg) scale(${zoom})`,
-            }}
+            style={
+              viewMode === '3d'
+                ? {
+                    transformStyle: 'preserve-3d',
+                    transform: `rotateX(${pitch}deg) rotateY(${roll}deg) rotateZ(${yaw}deg) scale(${zoom})`,
+                  }
+                : {
+                    transform: `scale(${zoom})`,
+                    transformOrigin: '50% 50%',
+                  }
+            }
           >
-            {/* 3D Grid Floor */}
+            {/* Grid Floor */}
             <div
               className="absolute inset-0 rounded-3xl pointer-events-none border border-zinc-800/80"
               style={{
-                transform: 'translateZ(-35px)',
+                transform: viewMode === '3d' ? 'translateZ(-35px)' : 'none',
                 backgroundImage: `
                   linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
                   linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
@@ -850,7 +1314,7 @@ export default function PipelineViewer({
             {/* SVG Circuit Highway */}
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none z-10"
-              style={{ transform: 'translateZ(5px)' }}
+              style={{ transform: viewMode === '3d' ? 'translateZ(5px)' : 'none' }}
             >
               <defs>
                 <linearGradient id="grad-req" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -867,56 +1331,39 @@ export default function PipelineViewer({
               </defs>
 
               {/* Highway Paths */}
-              {/* Path 1: Edge Ingress to Envoy Mesh */}
               <path d="M 210 115 L 240 115" fill="none" stroke="rgba(6, 182, 212, 0.5)" strokeWidth="2.5" strokeDasharray="4 3" />
-              
-              {/* Path 2: Envoy Mesh to Target Pod Cluster */}
               <path d="M 415 115 L 450 115" fill="none" stroke="rgba(6, 182, 212, 0.6)" strokeWidth="2.5" />
-              
-              {/* Path 3: Pod Cluster downward scrape to Telemetry Harvester */}
               <path d="M 565 315 L 565 390" fill="none" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="2.5" strokeDasharray="5 3" />
-              
-              {/* Path 4: Telemetry Harvester stream to PHPA Models Brain */}
               <path d="M 680 450 L 710 450" fill="none" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2.5" />
-              
-              {/* Path 5: Models Brain recommendation up to Scale Actuator */}
               <path d="M 1020 370 L 1020 180" fill="none" stroke="rgba(245, 158, 11, 0.6)" strokeWidth="2.5" strokeDasharray="5 3" />
-              
-              {/* Path 6: Scale Actuator scale patch closing loop into Pod Cluster */}
               <path d="M 920 115 L 880 115" fill="none" stroke="rgba(245, 158, 11, 0.7)" strokeWidth="2.5" strokeDasharray="4 3" />
 
               {/* Animated Continuous Photons */}
-              {/* Request Ingestion Stream */}
               <circle r="4" fill="#06b6d4" filter="url(#glow-strong)">
                 <animate attributeName="cx" values="210; 240; 415; 450" dur={rps > 300 ? '0.6s' : rps > 180 ? '1.1s' : '1.8s'} repeatCount="indefinite" />
                 <animate attributeName="cy" values="115; 115; 115; 115" dur={rps > 300 ? '0.6s' : rps > 180 ? '1.1s' : '1.8s'} repeatCount="indefinite" />
               </circle>
 
-              {/* Telemetry Scrape Stream */}
               <circle r="3.5" fill="#10b981" filter="url(#glow-strong)">
                 <animate attributeName="cx" values="565; 565" dur="2.0s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="315; 390" dur="2.0s" repeatCount="indefinite" />
               </circle>
 
-              {/* Brain Neural Stream */}
               <circle r="3.5" fill="#a855f7" filter="url(#glow-strong)">
                 <animate attributeName="cx" values="680; 710" dur="1.4s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="450; 450" dur="1.4s" repeatCount="indefinite" />
               </circle>
 
-              {/* Actuation Command Stream */}
               <circle r="3.5" fill="#f59e0b" filter="url(#glow-strong)">
                 <animate attributeName="cx" values="1020; 1020" dur="1.8s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="370; 180" dur="1.8s" repeatCount="indefinite" />
               </circle>
 
-              {/* Loop Closed Actuation Pulse */}
               <circle r="4" fill="#f59e0b" filter="url(#glow-strong)">
                 <animate attributeName="cx" values="920; 880" dur="1.2s" repeatCount="indefinite" />
                 <animate attributeName="cy" values="115; 115" dur="1.2s" repeatCount="indefinite" />
               </circle>
 
-              {/* Controllable Probe Tracer Glowing Beacon */}
               {probeHop > 0 && currentWaypoint && (
                 <circle
                   cx={currentWaypoint.cx}
@@ -933,10 +1380,11 @@ export default function PipelineViewer({
             <div
               onClick={() => {
                 setSelectedStage(0);
+                setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
               className="absolute left-[30px] top-[50px] w-[180px] cursor-pointer group"
-              style={{ transform: 'translateZ(30px)' }}
+              style={{ transform: viewMode === '3d' ? 'translateZ(30px)' : 'none' }}
             >
               <div
                 className={`rounded-xl p-3 border transition-all shadow-xl ${
@@ -950,11 +1398,11 @@ export default function PipelineViewer({
                     <Activity className="w-3.5 h-3.5" />
                   </div>
                   {isSpiking ? (
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse">
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse">
                       5X SURGE
                     </span>
                   ) : (
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">
                       LIVE
                     </span>
                   )}
@@ -963,7 +1411,7 @@ export default function PipelineViewer({
                   1. Traffic Ingestion
                 </h4>
                 <div className="mt-2 flex items-baseline justify-between text-xs">
-                  <span className="text-zinc-400 text-[10px]">Volume:</span>
+                  <span className="text-zinc-400 text-[11px]">Volume:</span>
                   <span className="font-mono font-bold text-cyan-400">{rps} RPS</span>
                 </div>
                 <div className="w-full bg-zinc-800 rounded-full h-1 mt-1 overflow-hidden">
@@ -981,10 +1429,11 @@ export default function PipelineViewer({
             <div
               onClick={() => {
                 setSelectedStage(1);
+                setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
               className="absolute left-[240px] top-[50px] w-[175px] cursor-pointer group"
-              style={{ transform: 'translateZ(35px)' }}
+              style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
                 className={`rounded-xl p-3 border transition-all shadow-xl ${
@@ -997,7 +1446,7 @@ export default function PipelineViewer({
                   <div className="w-6 h-6 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
                     <Network className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold">
                     Envoy Mesh
                   </span>
                 </div>
@@ -1005,23 +1454,24 @@ export default function PipelineViewer({
                   2. Ingress Router
                 </h4>
                 <div className="mt-2 flex items-baseline justify-between text-xs">
-                  <span className="text-zinc-400 text-[10px]">P95 Latency:</span>
+                  <span className="text-zinc-400 text-[11px]">P95 Latency:</span>
                   <span className={`font-mono font-bold ${p95 > 100 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
                     {p95}ms
                   </span>
                 </div>
-                <div className="text-[9px] text-zinc-500 mt-1">Weighted Round Robin</div>
+                <div className="text-[10px] text-zinc-400 mt-1">Weighted Round Robin</div>
               </div>
             </div>
 
-            {/* ZONE 3: 3D POD CLUSTER WORKLOAD (Fixed bounded height, never collides with telemetry below) */}
+            {/* ZONE 3: 3D POD CLUSTER WORKLOAD */}
             <div
               onClick={() => {
                 setSelectedStage(2);
+                setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
               className="absolute left-[450px] top-[25px] w-[430px] cursor-pointer group"
-              style={{ transform: 'translateZ(45px)' }}
+              style={{ transform: viewMode === '3d' ? 'translateZ(45px)' : 'none' }}
             >
               <div
                 className={`rounded-2xl p-3.5 border transition-all shadow-2xl ${
@@ -1039,19 +1489,19 @@ export default function PipelineViewer({
                       <h4 className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
                         3. Target Pods Cluster
                       </h4>
-                      <span className="text-[9px] font-mono text-zinc-400">
+                      <span className="text-[10px] font-mono text-zinc-400">
                         k8s: default/web-workload
                       </span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
                       {actualPods} Active Replicas
                     </span>
                   </div>
                 </div>
 
-                {/* Compact Pod Rack Grid (6 columns, bounds max height cleanly) */}
+                {/* Compact Pod Rack Grid */}
                 <div className="bg-[#08080c] rounded-xl p-2.5 border border-zinc-800/90 max-h-[195px] overflow-hidden flex items-center justify-center">
                   <div className="grid grid-cols-6 gap-1.5 w-full">
                     <AnimatePresence>
@@ -1097,14 +1547,14 @@ export default function PipelineViewer({
                                       : 'bg-emerald-400 shadow-[0_0_5px_#34d399]'
                                   }`}
                                 />
-                                <span className="text-[7.5px] font-mono text-zinc-400">
+                                <span className="text-[8px] font-mono text-zinc-400">
                                   #{idx + 1}
                                 </span>
                               </div>
 
                               <div className="w-full bg-zinc-800 rounded-full h-1 overflow-hidden my-0.5">
                                 <div
-                                  className={`h-full rounded-full ${
+                                  className={`h-full ${
                                     isTargetedByProbe
                                       ? 'bg-amber-400'
                                       : podCpu > 80
@@ -1116,7 +1566,7 @@ export default function PipelineViewer({
                                   style={{ width: `${podCpu}%` }}
                                 />
                               </div>
-                              <span className="text-[7px] font-mono text-zinc-400 block truncate">
+                              <span className="text-[7.5px] font-mono text-zinc-400 block truncate">
                                 {podCpu}%
                               </span>
                             </div>
@@ -1127,7 +1577,7 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                <div className="mt-2 pt-1.5 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                <div className="mt-2 pt-1.5 border-t border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-400">
                   <span>
                     Avg Pod CPU: <strong className="text-white">{cpu}%</strong> (Target: 60%)
                   </span>
@@ -1138,14 +1588,15 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ZONE 4: TELEMETRY GATHERER (Positioned at top: 390px with clear 80px+ vertical gap from Zone 3) */}
+            {/* ZONE 4: TELEMETRY GATHERER */}
             <div
               onClick={() => {
                 setSelectedStage(3);
+                setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
               className="absolute left-[450px] top-[390px] w-[230px] cursor-pointer group"
-              style={{ transform: 'translateZ(35px)' }}
+              style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
                 className={`rounded-xl p-3 border transition-all shadow-xl ${
@@ -1158,17 +1609,17 @@ export default function PipelineViewer({
                   <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
                     <Layers className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">
                     15s Cadence
                   </span>
                 </div>
                 <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
                   4. k8shorizmetrics
                 </h4>
-                <p className="text-[10px] text-zinc-400 mt-1 line-clamp-1">
-                  cAdvisor scrape & replica baseline buffer
+                <p className="text-[11px] text-zinc-400 mt-1 line-clamp-1">
+                  cAdvisor scrape & metric buffer
                 </p>
-                <div className="mt-2 flex items-center justify-between text-[10px] font-mono">
+                <div className="mt-2 flex items-center justify-between text-[11px] font-mono">
                   <span className="text-zinc-500">Unready pods:</span>
                   <span className="text-emerald-400 font-semibold">0 filtered</span>
                 </div>
@@ -1179,10 +1630,11 @@ export default function PipelineViewer({
             <div
               onClick={() => {
                 setSelectedStage(4);
+                setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
               className="absolute left-[710px] top-[370px] w-[410px] cursor-pointer group"
-              style={{ transform: 'translateZ(40px)' }}
+              style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
             >
               <div
                 className={`rounded-2xl p-4 border transition-all shadow-2xl ${
@@ -1200,12 +1652,12 @@ export default function PipelineViewer({
                       <h4 className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
                         5. Parallel Model Evaluator
                       </h4>
-                      <span className="text-[9px] font-mono text-zinc-400">
+                      <span className="text-[10px] font-mono text-zinc-400">
                         Dispatching 4 Models Concurrently
                       </span>
                     </div>
                   </div>
-                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
                     MAX Envelope
                   </span>
                 </div>
@@ -1222,9 +1674,9 @@ export default function PipelineViewer({
                       <span className="text-zinc-500">Reactive HPA</span>
                       {winningModel === 'Reactive HPA' && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-white">
+                    <div className="flex items-baseline justify-between font-mono font-bold text-white text-xs">
                       <span>{reactiveHpa}</span>
-                      <span className="text-[9px] font-normal text-zinc-500">pods</span>
+                      <span className="text-[10px] font-normal text-zinc-500">pods</span>
                     </div>
                   </div>
 
@@ -1239,9 +1691,9 @@ export default function PipelineViewer({
                       <span className="text-zinc-500">Linear OLS</span>
                       {winningModel === 'Linear' && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-white">
+                    <div className="flex items-baseline justify-between font-mono font-bold text-white text-xs">
                       <span>{linearPred}</span>
-                      <span className="text-[9px] font-normal text-zinc-500">pods</span>
+                      <span className="text-[10px] font-normal text-zinc-500">pods</span>
                     </div>
                   </div>
 
@@ -1256,9 +1708,9 @@ export default function PipelineViewer({
                       <span className="text-zinc-500">Holt-Winters</span>
                       {winningModel === 'Holt-Winters' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-white">
+                    <div className="flex items-baseline justify-between font-mono font-bold text-white text-xs">
                       <span>{hwPred}</span>
-                      <span className="text-[9px] font-normal text-zinc-500">pods</span>
+                      <span className="text-[10px] font-normal text-zinc-500">pods</span>
                     </div>
                   </div>
 
@@ -1273,14 +1725,14 @@ export default function PipelineViewer({
                       <span className="text-purple-300 font-semibold">2-Layer LSTM</span>
                       {winningModel === 'LSTM' && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />}
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-white">
+                    <div className="flex items-baseline justify-between font-mono font-bold text-white text-xs">
                       <span className="text-purple-300">{lstmPred}</span>
-                      <span className="text-[9px] font-normal text-zinc-500">pods</span>
+                      <span className="text-[10px] font-normal text-zinc-500">pods</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between text-[10px] font-mono">
+                <div className="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px] font-mono">
                   <span className="text-zinc-400">MAX Output:</span>
                   <span className="text-emerald-400 font-bold">
                     {maxVal} Replicas via {winningModel}
@@ -1293,10 +1745,11 @@ export default function PipelineViewer({
             <div
               onClick={() => {
                 setSelectedStage(5);
+                setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
               className="absolute left-[920px] top-[50px] w-[200px] cursor-pointer group"
-              style={{ transform: 'translateZ(35px)' }}
+              style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
                 className={`rounded-xl p-3 border transition-all shadow-xl ${
@@ -1309,7 +1762,7 @@ export default function PipelineViewer({
                   <div className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">
                     ScaleClient
                   </span>
                 </div>
@@ -1317,10 +1770,10 @@ export default function PipelineViewer({
                   6. Scale Actuator
                 </h4>
                 <div className="mt-2 flex items-baseline justify-between text-xs">
-                  <span className="text-zinc-400 text-[10px]">Patched:</span>
+                  <span className="text-zinc-400 text-[11px]">Patched:</span>
                   <span className="font-mono font-bold text-cyan-400">{actualPods} pods</span>
                 </div>
-                <div className="text-[9px] text-zinc-500 mt-0.5 font-mono">Loop Closed ⚡</div>
+                <div className="text-[10px] text-zinc-400 mt-0.5 font-mono">Loop Closed ⚡</div>
               </div>
             </div>
           </div>
@@ -1370,6 +1823,7 @@ export default function PipelineViewer({
               key={stage.id}
               onClick={() => {
                 setSelectedStage(stage.id);
+                setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
               className={`text-left p-2.5 rounded-xl border transition-all flex items-start gap-2.5 ${
@@ -1397,32 +1851,35 @@ export default function PipelineViewer({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-[11px] font-bold text-white truncate">{stage.name}</div>
-                <div className="text-[9px] text-zinc-400 truncate">{stage.subtitle}</div>
+                <div className="text-[9.5px] text-zinc-400 truncate">{stage.subtitle}</div>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* 6. DEEP STAGE DIAGNOSTICS MODAL */}
+      {/* 6. DEEP STAGE DIAGNOSTICS & ARCHITECTURE DIAGRAM MODAL */}
       <AnimatePresence>
         {isDrawerOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#0f0f18] border border-zinc-700 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+              className="bg-[#0e0e18] border border-zinc-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
+              <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/70">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-400">
                     {React.createElement(stages[selectedStage].icon, { className: 'w-5 h-5' })}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">
-                      {stages[selectedStage].name}
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>{stages[selectedStage].name}</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 font-normal">
+                        Internal Mechanics
+                      </span>
                     </h3>
                     <p className="text-xs text-zinc-400">
                       {stages[selectedStage].subtitle}
@@ -1437,11 +1894,22 @@ export default function PipelineViewer({
                 </button>
               </div>
 
-              {/* Modal Sub-Tabs */}
+              {/* Modal Sub-Tabs: Diagrams First! */}
               <div className="flex items-center gap-2 px-4 pt-3 border-b border-zinc-800 bg-[#0a0a10] text-xs font-mono">
                 <button
+                  onClick={() => setActiveTab('diagram')}
+                  className={`pb-2 px-2.5 border-b-2 transition-colors flex items-center gap-1.5 ${
+                    activeTab === 'diagram'
+                      ? 'border-cyan-400 text-cyan-300 font-bold'
+                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <GitBranch className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Real-Time Flow Diagram</span>
+                </button>
+                <button
                   onClick={() => setActiveTab('overview')}
-                  className={`pb-2 px-2 border-b-2 transition-colors ${
+                  className={`pb-2 px-2.5 border-b-2 transition-colors ${
                     activeTab === 'overview'
                       ? 'border-purple-400 text-purple-300 font-bold'
                       : 'border-transparent text-zinc-400 hover:text-zinc-200'
@@ -1451,18 +1919,18 @@ export default function PipelineViewer({
                 </button>
                 <button
                   onClick={() => setActiveTab('internals')}
-                  className={`pb-2 px-2 border-b-2 transition-colors ${
+                  className={`pb-2 px-2.5 border-b-2 transition-colors ${
                     activeTab === 'internals'
                       ? 'border-purple-400 text-purple-300 font-bold'
                       : 'border-transparent text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
-                  Internal Mechanics
+                  Math Formulation
                 </button>
                 {selectedStage === 2 && (
                   <button
                     onClick={() => setActiveTab('pods')}
-                    className={`pb-2 px-2 border-b-2 transition-colors flex items-center gap-1.5 ${
+                    className={`pb-2 px-2.5 border-b-2 transition-colors flex items-center gap-1.5 ${
                       activeTab === 'pods'
                         ? 'border-purple-400 text-purple-300 font-bold'
                         : 'border-transparent text-zinc-400 hover:text-zinc-200'
@@ -1474,7 +1942,7 @@ export default function PipelineViewer({
                 )}
                 <button
                   onClick={() => setActiveTab('yaml')}
-                  className={`pb-2 px-2 border-b-2 transition-colors ${
+                  className={`pb-2 px-2.5 border-b-2 transition-colors ${
                     activeTab === 'yaml'
                       ? 'border-purple-400 text-purple-300 font-bold'
                       : 'border-transparent text-zinc-400 hover:text-zinc-200'
@@ -1486,19 +1954,21 @@ export default function PipelineViewer({
 
               {/* Modal Body */}
               <div className="p-4 overflow-y-auto flex-1 space-y-4">
+                {activeTab === 'diagram' && renderStageDiagram()}
+
                 {activeTab === 'overview' && (
                   <div className="space-y-4">
                     <p className="text-xs text-zinc-300 leading-relaxed">
                       {stages[selectedStage].description}
                     </p>
 
-                    <div className="rounded-xl bg-zinc-950 p-3 border border-zinc-800">
+                    <div className="rounded-xl bg-zinc-950 p-3.5 border border-zinc-800">
                       <h5 className="text-[11px] font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">
                         Live Operational Metrics
                       </h5>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         {Object.entries(stages[selectedStage].internals).map(([k, v]) => (
-                          <div key={k} className="p-2 rounded bg-[#12121c] border border-zinc-800/80">
+                          <div key={k} className="p-2.5 rounded bg-[#12121c] border border-zinc-800/80">
                             <span className="text-zinc-400 text-[10px] block">{k}</span>
                             <span className="font-mono text-white font-semibold mt-0.5 block truncate">
                               {v}
