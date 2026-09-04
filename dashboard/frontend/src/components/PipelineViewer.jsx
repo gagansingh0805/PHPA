@@ -56,7 +56,7 @@ export default function PipelineViewer({
   const [pitch, setPitch] = useState(44); // RotateX: 12deg to 78deg
   const [yaw, setYaw] = useState(-18); // RotateZ: -80deg to 80deg
   const [roll, setRoll] = useState(8); // RotateY
-  const [zoom, setZoom] = useState(1); // 0.65 to 1.50
+  const [zoom, setZoom] = useState(1); // 0.45 to 1.85
   const [viewPreset, setViewPreset] = useState('isometric');
   const [isOrbiting, setIsOrbiting] = useState(false);
 
@@ -944,6 +944,32 @@ export default function PipelineViewer({
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Prominent Zoom In / Out Controls */}
+              <div className="flex items-center bg-zinc-950 border border-zinc-700/90 rounded-lg p-1 text-xs font-mono shadow-sm">
+                <button
+                  onClick={() => setZoom((prev) => Math.max(0.45, parseFloat((prev - 0.1).toFixed(2))))}
+                  className="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors flex items-center justify-center"
+                  title="Zoom Out (-10%)"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  onClick={() => setZoom(1.0)}
+                  className="px-2 py-0.5 rounded hover:bg-zinc-800 text-[11px] font-bold text-zinc-300 hover:text-white transition-colors min-w-[44px] text-center"
+                  title="Click to reset zoom to 100%"
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+
+                <button
+                  onClick={() => setZoom((prev) => Math.min(1.85, parseFloat((prev + 0.1).toFixed(2))))}
+                  className="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors flex items-center justify-center"
+                  title="Zoom In (+10%)"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
               <button
                 onClick={() => {
@@ -1199,18 +1225,18 @@ export default function PipelineViewer({
             {Math.round(zoom * 100)}%
           </span>
           <button
-            onClick={() => setZoom((prev) => Math.min(1.5, parseFloat((prev + 0.1).toFixed(2))))}
-            className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
-            title="Zoom In"
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setZoom((prev) => Math.max(0.65, parseFloat((prev - 0.1).toFixed(2))))}
+            onClick={() => setZoom((prev) => Math.max(0.45, parseFloat((prev - 0.1).toFixed(2))))}
             className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
             title="Zoom Out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setZoom((prev) => Math.min(1.85, parseFloat((prev + 0.1).toFixed(2))))}
+            className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+            title="Zoom In"
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setZoom(1.0)}
