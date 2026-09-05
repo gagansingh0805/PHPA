@@ -1,7 +1,8 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, RoundedBox, Edges, Line, Html } from '@react-three/drei';
+import gsap from 'gsap';
 import {
   Globe,
   Smartphone,
@@ -120,7 +121,7 @@ const ARCH_NODES = [
     id: 'traffic-ingestion',
     stageId: 0,
     layer: 2,
-    title: '1. Traffic Ingestion',
+    title: 'Traffic Ingestion',
     subtitle: 'HTTP/gRPC Stream',
     position: [0.0, 2.2, 1.8],
     size: [2.6, 1.4, 0.35],
@@ -133,7 +134,7 @@ const ARCH_NODES = [
     id: 'ingress-router',
     stageId: 1,
     layer: 2,
-    title: '2. Ingress Router',
+    title: 'Ingress Router',
     subtitle: 'Envoy Service Mesh',
     position: [4.0, 2.2, 1.8],
     size: [2.6, 1.4, 0.35],
@@ -163,483 +164,530 @@ const ARCH_NODES = [
     id: 'k8s-metrics',
     stageId: 3,
     layer: 4,
-    title: '4. k8shorizmetrics',
+    title: 'k8shorizmetrics',
     subtitle: 'cAdvisor Daemon Scrape',
     position: [-0.6, -0.4, -4.5],
     size: [2.6, 1.5, 0.35],
     htmlWidth: 195,
     icon: Layers,
     color: '#10b981',
-    isPrimary: true,
+    isCollector: true,
   },
 
-  // The 4 Parallel Forecasting Models (Rendered as independent 3D objects!)
+  // 4 Parallel Forecasting Models
   {
     id: 'model-hpa',
     stageId: 4,
     layer: 4,
+    modelKey: 'hpa',
     title: 'Reactive HPA',
-    subtitle: 'Rule-Based Baseline',
-    position: [2.5, 1.35, -4.8],
-    size: [2.2, 0.85, 0.3],
-    htmlWidth: 165,
-    icon: Cpu,
-    color: '#6366f1',
-    modelKey: 'Reactive HPA',
+    subtitle: '⌈Cur × (CPU/60%)⌉',
+    position: [2.8, 1.8, -4.8],
+    size: [2.6, 1.05, 0.3],
+    htmlWidth: 185,
+    icon: Zap,
+    color: '#10b981',
+    isModel: true,
   },
   {
     id: 'model-ols',
     stageId: 4,
     layer: 4,
-    title: 'Linear OLS Regressor',
-    subtitle: 'Trend Rate dy/dt',
-    position: [2.5, 0.45, -4.8],
-    size: [2.2, 0.85, 0.3],
-    htmlWidth: 165,
-    icon: Activity,
-    color: '#6366f1',
-    modelKey: 'Linear',
+    modelKey: 'ols',
+    title: 'Linear OLS Trend',
+    subtitle: 'dy/dt Regression Slope',
+    position: [2.8, 0.6, -4.8],
+    size: [2.6, 1.05, 0.3],
+    htmlWidth: 185,
+    icon: Cpu,
+    color: '#10b981',
+    isModel: true,
   },
   {
     id: 'model-hw',
     stageId: 4,
     layer: 4,
-    title: 'Holt-Winters Seasonal',
-    subtitle: 'Triple Exponential',
-    position: [2.5, -0.45, -4.8],
-    size: [2.2, 0.85, 0.3],
-    htmlWidth: 165,
-    icon: Layers,
-    color: '#6366f1',
-    modelKey: 'Holt-Winters',
+    modelKey: 'hw',
+    title: 'Holt-Winters',
+    subtitle: 'Triple Exp. Smoothing',
+    position: [2.8, -0.6, -4.8],
+    size: [2.6, 1.05, 0.3],
+    htmlWidth: 185,
+    icon: Sparkles,
+    color: '#10b981',
+    isModel: true,
   },
   {
     id: 'model-lstm',
     stageId: 4,
     layer: 4,
-    title: '2-Layer Stacked LSTM',
-    subtitle: 'Deep Neural Memory',
-    position: [2.5, -1.35, -4.8],
-    size: [2.2, 0.85, 0.3],
-    htmlWidth: 165,
-    icon: Sparkles,
-    color: '#6366f1',
-    modelKey: 'LSTM',
+    modelKey: 'lstm',
+    title: '2-Layer LSTM',
+    subtitle: 'Deep Sequence Predictor',
+    position: [2.8, -1.8, -4.8],
+    size: [2.6, 1.05, 0.3],
+    htmlWidth: 185,
+    icon: Cpu,
+    color: '#10b981',
+    isModel: true,
   },
 
-  // MAX Arbiter (Decision Engine)
+  // Decision & Actuation Engine
   {
     id: 'max-arbiter',
     stageId: 4,
     layer: 4,
-    title: '5. MAX Arbiter',
-    subtitle: 'Upper Envelope Decision',
-    position: [5.5, -0.05, -4.8],
+    title: 'MAX Arbiter',
+    subtitle: 'Envelope Selector',
+    position: [6.2, 0.0, -4.8],
     size: [2.6, 1.8, 0.35],
-    htmlWidth: 200,
-    icon: Cpu,
+    htmlWidth: 195,
+    icon: Shield,
     color: '#10b981',
-    isPrimary: true,
+    isArbiter: true,
   },
-
-  // Scale Actuator (ScaleClient)
   {
     id: 'scale-actuator',
     stageId: 5,
     layer: 4,
-    title: '6. Scale Actuator',
-    subtitle: 'Kube-API ScaleClient',
-    position: [5.0, 1.8, -3.8],
-    size: [2.6, 1.4, 0.35],
+    title: 'Scale Actuator',
+    subtitle: 'Kube-API /scale PATCH',
+    position: [6.2, 2.0, -4.8],
+    size: [2.6, 1.3, 0.35],
     htmlWidth: 195,
-    icon: Zap,
-    color: '#f59e0b',
-    isPrimary: true,
+    icon: RotateCcw,
+    color: '#10b981',
+    isActuator: true,
   },
 
-  // --- LAYER 5: STATE & METRICS DATA LAYER (Bottom: Y=-3.2, Z=-2.4) ---
+  // --- LAYER 5: STATE & PERSISTENCE DATA LAYER (Bottom: Y=-3.2, Z=-2.4) ---
   {
-    id: 'data-metrics',
+    id: 'tsdb-store',
     stageId: 3,
     layer: 5,
     title: 'Metrics TSDB Store',
-    subtitle: 'Prometheus / Timescale',
-    position: [-2.6, -3.2, -2.4],
-    size: [2.6, 1.2, 0.3],
-    htmlWidth: 180,
+    subtitle: 'Prometheus Time-Series',
+    position: [-2.2, -3.2, -2.4],
+    size: [2.8, 1.3, 0.35],
+    htmlWidth: 200,
     icon: Database,
     color: '#f43f5e',
   },
   {
-    id: 'data-etcd',
+    id: 'etcd-store',
     stageId: 5,
     layer: 5,
-    title: 'Config & State Store',
-    subtitle: 'etcd / k8s Control State',
-    position: [2.6, -3.2, -2.4],
-    size: [2.6, 1.2, 0.3],
-    htmlWidth: 180,
+    title: 'Config & etcd State',
+    subtitle: 'Cluster Desired State',
+    position: [2.2, -3.2, -2.4],
+    size: [2.8, 1.3, 0.35],
+    htmlWidth: 200,
     icon: HardDrive,
     color: '#f43f5e',
   },
 ];
 
-/* =========================================================================
-   3. Directional 3D Pipes & Data Flow Highways
-   ========================================================================= */
+/* Directional inter-layer conduits with continuous photon streams */
 const ARCH_PIPES = [
   // Layer 1 -> Layer 2
-  { id: 'p-web-waf', start: [-3.8, 3.8, 3.8], end: [-4.0, 2.9, 1.8], color: '#38bdf8' },
+  { id: 'p-web-traffic', start: [-3.8, 3.8, 3.8], end: [0.0, 2.9, 1.8], color: '#38bdf8' },
   { id: 'p-mob-traffic', start: [0.0, 3.8, 3.8], end: [0.0, 2.9, 1.8], color: '#38bdf8' },
-  { id: 'p-api-ingress', start: [3.8, 3.8, 3.8], end: [4.0, 2.9, 1.8], color: '#38bdf8' },
-
-  // Layer 2 internal
+  { id: 'p-api-waf', start: [3.8, 3.8, 3.8], end: [4.0, 2.9, 1.8], color: '#38bdf8' },
   { id: 'p-waf-traffic', start: [-2.8, 2.2, 1.8], end: [-1.3, 2.2, 1.8], color: '#3b82f6' },
-  { id: 'p-traffic-ingress', start: [1.3, 2.2, 1.8], end: [2.7, 2.2, 1.8], color: '#3b82f6' },
 
-  // Layer 2 -> Layer 3 (Ingress to Web Workload)
-  { id: 'p-ingress-workload', start: [3.0, 1.5, 1.8], end: [1.7, 0.4, 0.2], color: '#8b5cf6' },
+  // Layer 2 -> Layer 3
+  { id: 'p-traffic-router', start: [1.3, 2.2, 1.8], end: [2.7, 2.2, 1.8], color: '#3b82f6' },
+  { id: 'p-router-workload', start: [4.0, 1.55, 1.8], end: [0.0, 1.0, 0.2], color: '#8b5cf6' },
 
-  // Layer 3 -> Layer 4 (Workload to Circular Pod Cluster)
-  { id: 'p-workload-pods', start: [-1.7, 0.3, 0.2], end: [-3.8, -0.4, -2.8], color: '#a855f7' },
+  // Layer 3 -> Layer 4 (Workload -> Pod Cluster & Metrics)
+  { id: 'p-workload-pods', start: [0.0, -0.4, 0.2], end: [-3.8, 0.5, -4.2], color: '#a855f7' },
+  { id: 'p-pods-metrics', start: [-2.1, -0.4, -4.2], end: [-1.9, -0.4, -4.5], color: '#10b981' },
 
-  // Layer 4 Internal: Pod Cluster -> Metrics Collector
-  { id: 'p-pods-metrics', start: [-2.4, -0.4, -4.2], end: [-1.9, -0.4, -4.5], color: '#10b981' },
+  // Metrics -> 4 Parallel Models
+  { id: 'p-met-hpa', start: [0.7, -0.1, -4.5], end: [1.5, 1.8, -4.8], color: '#10b981' },
+  { id: 'p-met-ols', start: [0.7, -0.3, -4.5], end: [1.5, 0.6, -4.8], color: '#10b981' },
+  { id: 'p-met-hw', start: [0.7, -0.5, -4.5], end: [1.5, -0.6, -4.8], color: '#10b981' },
+  { id: 'p-met-lstm', start: [0.7, -0.7, -4.5], end: [1.5, -1.8, -4.8], color: '#10b981' },
 
-  // Layer 4 Internal: Metrics Collector -> 4 Forecasting Models in Parallel
-  { id: 'p-met-hpa', start: [0.7, -0.4, -4.5], end: [1.4, 1.35, -4.8], color: '#6366f1' },
-  { id: 'p-met-ols', start: [0.7, -0.4, -4.5], end: [1.4, 0.45, -4.8], color: '#6366f1' },
-  { id: 'p-met-hw', start: [0.7, -0.4, -4.5], end: [1.4, -0.45, -4.8], color: '#6366f1' },
-  { id: 'p-met-lstm', start: [0.7, -0.4, -4.5], end: [1.4, -1.35, -4.8], color: '#6366f1' },
+  // Models -> MAX Arbiter
+  { id: 'p-hpa-arb', start: [4.1, 1.8, -4.8], end: [4.9, 0.4, -4.8], color: '#10b981' },
+  { id: 'p-ols-arb', start: [4.1, 0.6, -4.8], end: [4.9, 0.2, -4.8], color: '#10b981' },
+  { id: 'p-hw-arb', start: [4.1, -0.6, -4.8], end: [4.9, -0.2, -4.8], color: '#10b981' },
+  { id: 'p-lstm-arb', start: [4.1, -1.8, -4.8], end: [4.9, -0.4, -4.8], color: '#10b981' },
 
-  // Layer 4 Internal: 4 Models -> MAX Arbiter
-  { id: 'p-hpa-arbiter', start: [3.6, 1.35, -4.8], end: [4.2, 0.4, -4.8], color: '#6366f1' },
-  { id: 'p-ols-arbiter', start: [3.6, 0.45, -4.8], end: [4.2, 0.1, -4.8], color: '#6366f1' },
-  { id: 'p-hw-arbiter', start: [3.6, -0.45, -4.8], end: [4.2, -0.2, -4.8], color: '#6366f1' },
-  { id: 'p-lstm-arbiter', start: [3.6, -1.35, -4.8], end: [4.2, -0.5, -4.8], color: '#6366f1' },
+  // Arbiter -> Actuator
+  { id: 'p-arb-act', start: [6.2, 0.9, -4.8], end: [6.2, 1.35, -4.8], color: '#10b981' },
 
-  // Layer 4 Internal: MAX Arbiter -> Scale Actuator
-  { id: 'p-arbiter-actuator', start: [5.5, 0.85, -4.8], end: [5.0, 1.1, -3.8], color: '#10b981' },
-
-  // Layer 5 -> Layer 4: Metrics TSDB -> Models & etcd -> Scale Actuator
-  { id: 'p-data-models', start: [-1.3, -2.6, -2.4], end: [1.4, -1.35, -4.8], color: '#f43f5e' },
-  { id: 'p-etcd-actuator', start: [3.9, -2.6, -2.4], end: [5.0, 1.1, -3.8], color: '#f43f5e' },
+  // Scraper -> TSDB Store / Actuator -> etcd Store
+  { id: 'p-scrape-tsdb', start: [-0.6, -1.15, -4.5], end: [-2.2, -2.55, -2.4], color: '#f43f5e' },
+  { id: 'p-act-etcd', start: [6.2, 1.35, -4.8], end: [2.2, -2.55, -2.4], color: '#f43f5e' },
 ];
 
 /* =========================================================================
-   4. Circular Target Pods Cluster Mesh (Centerpiece)
+   3. Circular Target Pods Cluster Component (Radial 3D arrangement)
    ========================================================================= */
 function CircularTargetPodsCluster({
   center = [-3.8, -0.4, -4.2],
   actualPods = 4,
-  idealDemand = 4,
-  cpu = 50,
+  idealDemand = 5,
+  cpu = 72,
   isSelected = false,
   isDark = true,
   onSelect,
 }) {
-  const radius = 1.4;
-  const podCount = Math.min(10, Math.max(1, actualPods));
+  const [hoveredPod, setHoveredPod] = useState(null);
+  const ringRadius = 1.75;
+  const totalPodsCount = Math.max(actualPods, 6);
 
-  // Angles for circular arrangement
-  const podPositions = useMemo(() => {
-    return Array.from({ length: podCount }).map((_, idx) => {
-      const angle = (idx / podCount) * Math.PI * 2 - Math.PI / 2;
-      return {
-        idx,
-        x: center[0] + Math.cos(angle) * radius,
-        y: center[1],
-        z: center[2] + Math.sin(angle) * radius,
-        angle,
-      };
-    });
-  }, [podCount, center]);
+  // Generate pod positions in a 3D circle around center
+  const podNodes = useMemo(() => {
+    const list = [];
+    for (let i = 0; i < totalPodsCount; i++) {
+      const angle = (i / totalPodsCount) * Math.PI * 2;
+      const x = center[0] + Math.cos(angle) * ringRadius;
+      const z = center[2] + Math.sin(angle) * ringRadius;
+      const y = center[1] + Math.sin(angle * 2) * 0.12;
+      const podCpu = Math.max(12, Math.round(cpu + Math.sin(i * 1.8) * 14));
+      list.push({
+        id: `pod-${i}`,
+        index: i,
+        position: [x, y, z],
+        cpu: podCpu,
+        isActive: i < actualPods,
+      });
+    }
+    return list;
+  }, [center, totalPodsCount, actualPods, cpu]);
 
   return (
     <group>
-      {/* Central Ring Rail */}
-      <mesh position={center} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius - 0.08, radius + 0.08, 64]} />
+      {/* Radial Base Orbit Ring */}
+      <mesh position={[center[0], center[1] - 0.28, center[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[ringRadius - 0.05, ringRadius + 0.05, 48]} />
         <meshBasicMaterial
-          color={isDark ? '#3f3f46' : '#cbd5e1'}
+          color={isSelected ? '#10b981' : isDark ? '#334155' : '#cbd5e1'}
           transparent
-          opacity={0.45}
+          opacity={isDark ? 0.65 : 0.85}
         />
       </mesh>
 
-      {/* Central Cluster Console Node */}
-      <group position={center}>
-        <RoundedBox
-          args={[2.8, 1.7, 0.35]}
-          radius={0.08}
-          smoothness={4}
+      {/* Central Interactive Pedestal Console */}
+      <group
+        position={center}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect?.(2);
+        }}
+        className="cursor-pointer"
+      >
+        <RoundedBox args={[1.8, 1.1, 0.3]} radius={0.06} smoothness={4}>
+          <meshStandardMaterial
+            color={isSelected ? (isDark ? '#064e3b' : '#d1fae5') : isDark ? '#0f172a' : '#ffffff'}
+            metalness={0.2}
+            roughness={0.25}
+          />
+          <Edges
+            color={isSelected ? '#10b981' : isDark ? '#3b82f6' : '#94a3b8'}
+            lineWidth={isSelected ? 3 : 1.5}
+          />
+        </RoundedBox>
+
+        <Html
+          position={[0, 0, 0.17]}
+          center
+          distanceFactor={10.2}
+          transform
+          style={{ width: '150px', pointerEvents: 'none' }}
+        >
+          <div
+            className={`p-2 rounded border text-center font-mono select-none ${
+              isDark
+                ? 'bg-zinc-950/90 border-emerald-500/40 text-zinc-200'
+                : 'bg-white/95 border-emerald-500/50 text-zinc-800'
+            } shadow-md backdrop-blur-sm`}
+          >
+            <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-emerald-500">
+              <Server className="w-3 h-3" />
+              <span>Target Cluster</span>
+            </div>
+            <div className="mt-1 flex items-center justify-center gap-2 text-[11px]">
+              <div>
+                <span className="text-[9px] block text-zinc-400">Avg CPU</span>
+                <span className="font-bold text-amber-500">{cpu}%</span>
+              </div>
+              <div className="w-[1px] h-5 bg-zinc-300 dark:bg-zinc-700" />
+              <div>
+                <span className="text-[9px] block text-zinc-400">Pods</span>
+                <span className="font-bold text-emerald-500">{actualPods}</span>
+              </div>
+            </div>
+            <div className="text-[8px] text-zinc-400 mt-1">Target: 60% • Ideal: {idealDemand}</div>
+          </div>
+        </Html>
+      </group>
+
+      {/* Individual Radial Pod Nodes */}
+      {podNodes.map((pod) => (
+        <group
+          key={pod.id}
+          position={pod.position}
+          onPointerOver={() => setHoveredPod(pod.id)}
+          onPointerOut={() => setHoveredPod(null)}
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(2);
           }}
         >
-          <meshStandardMaterial
-            color={isDark ? '#09090b' : '#ffffff'}
-            roughness={0.25}
-            metalness={0.1}
-          />
-          <Edges
-            threshold={15}
-            color={isSelected ? '#a855f7' : isDark ? '#3f3f46' : '#cbd5e1'}
-          />
-        </RoundedBox>
+          <RoundedBox args={[0.55, 0.65, 0.25]} radius={0.04} smoothness={4}>
+            <meshStandardMaterial
+              color={
+                pod.isActive
+                  ? isDark
+                    ? '#022c22'
+                    : '#ecfdf5'
+                  : isDark
+                  ? '#18181b'
+                  : '#f4f4f5'
+              }
+              roughness={0.3}
+            />
+            <Edges
+              color={
+                pod.isActive
+                  ? pod.cpu > 70
+                    ? '#f59e0b'
+                    : '#10b981'
+                  : isDark
+                  ? '#3f3f46'
+                  : '#cbd5e1'
+              }
+              lineWidth={pod.isActive ? 2 : 1}
+            />
+          </RoundedBox>
 
-        <Html position={[0, 0, 0.22]} center distanceFactor={10.2} className="pointer-events-auto select-none">
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect?.(2);
-            }}
-            className={`flex flex-col p-2.5 rounded-xl border transition-all cursor-pointer ${
-              isSelected
-                ? 'bg-purple-900/40 border-purple-500 shadow-lg ring-1 ring-purple-500/50'
-                : isDark
-                ? 'bg-zinc-950/95 border-zinc-800 hover:border-zinc-600 shadow-md'
-                : 'bg-white/98 border-zinc-200 hover:border-zinc-300 shadow-md'
-            }`}
-            style={{ width: '220px' }}
+          <Html
+            position={[0, 0, 0.15]}
+            center
+            distanceFactor={10.5}
+            transform
+            style={{ width: '68px', pointerEvents: 'none' }}
           >
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5">
-                <Server className="w-3.5 h-3.5 text-purple-500" />
-                <span className="text-[10px] font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                  3. Target Pods Cluster
-                </span>
+            <div
+              className={`p-1 rounded text-center font-mono select-none text-[8px] ${
+                pod.isActive
+                  ? isDark
+                    ? 'bg-zinc-900/90 text-zinc-200 border border-emerald-500/30'
+                    : 'bg-white/95 text-zinc-800 border border-emerald-500/40'
+                  : isDark
+                  ? 'bg-zinc-900/60 text-zinc-500 border border-zinc-700/30'
+                  : 'bg-zinc-100 text-zinc-400 border border-zinc-300'
+              }`}
+            >
+              <div className="flex items-center justify-center gap-0.5">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    pod.isActive
+                      ? pod.cpu > 70
+                        ? 'bg-amber-400 animate-ping'
+                        : 'bg-emerald-400'
+                      : 'bg-zinc-400'
+                  }`}
+                />
+                <span className="font-bold">pod-{pod.index}</span>
               </div>
-              <span className="text-[8.5px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/30">
-                {actualPods} Replicas
-              </span>
-            </div>
-            <span className="text-[8px] font-mono text-zinc-500 truncate mb-1">
-              Radial Pod Mesh Orbit
-            </span>
-            <div className="flex items-center justify-between text-[8px] font-mono text-zinc-600 dark:text-zinc-400 pt-1 border-t border-zinc-200/80 dark:border-zinc-800/80">
-              <span>Avg CPU: <strong className="text-zinc-900 dark:text-zinc-100">{cpu}%</strong></span>
-              <span>Ideal: <strong className="text-zinc-900 dark:text-zinc-100">{idealDemand}</strong></span>
-            </div>
-          </div>
-        </Html>
-      </group>
-
-      {/* Radial Pod Replicas Arranged in Circle */}
-      {podPositions.map((pod) => {
-        const podCpu = Math.min(100, Math.max(10, Math.round(cpu + (pod.idx % 3) * 4 - 4)));
-        return (
-          <group key={`pod-${pod.idx}`} position={[pod.x, pod.y, pod.z]}>
-            {/* Pod Pedestal Cylinder */}
-            <mesh position={[0, -0.15, 0]}>
-              <cylinderGeometry args={[0.22, 0.24, 0.28, 24]} />
-              <meshStandardMaterial
-                color={isDark ? '#18181b' : '#f1f5f9'}
-                roughness={0.3}
-                metalness={0.2}
-              />
-            </mesh>
-
-            {/* Glowing Status Beacon */}
-            <mesh position={[0, 0.05, 0]}>
-              <sphereGeometry args={[0.09, 16, 16]} />
-              <meshBasicMaterial color="#10b981" />
-            </mesh>
-
-            {/* Mini Pod Blade HTML Tag */}
-            <Html position={[0, 0.28, 0]} center distanceFactor={10.2} className="pointer-events-none select-none">
-              <div className="flex flex-col items-center bg-zinc-900/90 text-white dark:bg-zinc-100/90 dark:text-zinc-900 px-1.5 py-0.5 rounded text-[7.5px] font-mono shadow-sm border border-zinc-700/60 dark:border-zinc-300/60 whitespace-nowrap">
-                <span className="font-bold">Pod #{pod.idx + 1}</span>
-                <span className="text-[6.5px] opacity-80">{podCpu}% CPU</span>
+              <div
+                className={`font-semibold ${
+                  pod.cpu > 70 ? 'text-amber-500' : 'text-emerald-500'
+                }`}
+              >
+                {pod.cpu}%
               </div>
-            </Html>
-          </group>
-        );
-      })}
+            </div>
+          </Html>
+        </group>
+      ))}
     </group>
   );
 }
 
 /* =========================================================================
-   5. Standard 3D Node Mesh
+   4. Architecture Node Component
    ========================================================================= */
-function ArchitectureNode({
-  node,
-  isSelected,
-  isDark,
-  latest,
-  onSelect,
-}) {
-  const Icon = node.icon || Box;
-  const isWinner =
-    node.modelKey &&
-    (latest?.winningModel === node.modelKey ||
-      (node.modelKey === 'Linear' && latest?.winningModel === 'Linear OLS'));
+function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
+  const Icon = node.icon;
+  const [hovered, setHovered] = useState(false);
+
+  // Dynamic telemetry values
+  const rps = latest?.rps ?? 1840;
+  const p95 = latest?.p95 ?? 44;
+  const cpu = latest?.cpu ?? 68;
+  const actualPods = latest?.actualPods ?? 4;
+  const linearPred = latest?.linearPred ?? 5;
+  const hwPred = latest?.hwPred ?? 6;
+  const lstmPred = latest?.lstmPred ?? 7;
+  const hpaPred = latest?.hpaPred ?? Math.ceil(actualPods * (cpu / 60));
+  const maxVal = Math.max(hpaPred, linearPred, hwPred, lstmPred);
+
+  // Determine model status
+  let modelVal = null;
+  let isWinning = false;
+  if (node.isModel) {
+    if (node.modelKey === 'hpa') {
+      modelVal = hpaPred;
+      isWinning = maxVal === hpaPred;
+    } else if (node.modelKey === 'ols') {
+      modelVal = linearPred;
+      isWinning = maxVal === linearPred;
+    } else if (node.modelKey === 'hw') {
+      modelVal = hwPred;
+      isWinning = maxVal === hwPred;
+    } else if (node.modelKey === 'lstm') {
+      modelVal = lstmPred;
+      isWinning = maxVal === lstmPred;
+    }
+  }
+
+  // Node background styling
+  const nodeBgColor = isSelected
+    ? isDark
+      ? '#064e3b'
+      : '#ecfdf5'
+    : hovered
+    ? isDark
+      ? '#1e293b'
+      : '#f1f5f9'
+    : isDark
+    ? '#0f172a'
+    : '#ffffff';
+
+  const borderColor = isSelected
+    ? '#10b981'
+    : isWinning
+    ? '#10b981'
+    : hovered
+    ? node.color
+    : isDark
+    ? '#334155'
+    : '#cbd5e1';
 
   return (
-    <group position={node.position}>
-      <RoundedBox
-        args={node.size}
-        radius={0.06}
-        smoothness={4}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect?.(node.stageId);
-        }}
-      >
-        <meshStandardMaterial
-          color={isDark ? '#09090b' : '#ffffff'}
-          roughness={0.25}
-          metalness={0.1}
-        />
-        <Edges
-          threshold={15}
-          color={
-            isWinner
-              ? '#10b981'
-              : isSelected
-              ? node.color
-              : isDark
-              ? '#27272a'
-              : '#e2e8f0'
-          }
-        />
+    <group
+      position={node.position}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect?.(node.stageId);
+      }}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+      className="cursor-pointer"
+    >
+      {/* 3D Box Chassis */}
+      <RoundedBox args={node.size} radius={0.06} smoothness={4}>
+        <meshStandardMaterial color={nodeBgColor} metalness={0.15} roughness={0.3} />
+        <Edges color={borderColor} lineWidth={isSelected || isWinning ? 3 : hovered ? 2 : 1.2} />
       </RoundedBox>
 
-      {/* HTML Overlay Label */}
+      {/* Winning Model Halo Ring */}
+      {isWinning && (
+        <mesh position={[0, 0, -0.05]} rotation={[0, 0, 0]}>
+          <ringGeometry args={[node.size[0] * 0.5, node.size[0] * 0.53, 32]} />
+          <meshBasicMaterial color="#10b981" transparent opacity={0.7} />
+        </mesh>
+      )}
+
+      {/* HTML Interface Label on the Front Face */}
       <Html
-        position={[0, 0, node.size[2] / 2 + 0.05]}
+        position={[0, 0, node.size[2] * 0.5 + 0.02]}
         center
         distanceFactor={10.2}
-        className="pointer-events-auto select-none"
+        transform
+        style={{ width: `${node.htmlWidth}px`, pointerEvents: 'none' }}
       >
         <div
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect?.(node.stageId);
-          }}
-          style={{ width: `${node.htmlWidth}px` }}
-          className={`flex flex-col p-2.5 rounded-xl border transition-all cursor-pointer ${
-            isWinner
-              ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.25)] ring-1 ring-emerald-500/50'
-              : isSelected
-              ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-1 ring-zinc-500/40'
-              : isDark
-              ? 'bg-zinc-950/90 border-zinc-800 hover:border-zinc-600 shadow-sm'
-              : 'bg-white/95 border-zinc-200 hover:border-zinc-300 shadow-sm'
-          }`}
+          className={`p-2 rounded font-mono select-none transition-all duration-150 ${
+            isDark
+              ? 'bg-zinc-950/90 text-zinc-100 border border-zinc-800/80 shadow-md'
+              : 'bg-white/95 text-zinc-900 border border-zinc-200/90 shadow-sm'
+          } backdrop-blur-sm`}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-1.5">
-              <Icon className="w-3.5 h-3.5" style={{ color: node.color }} />
-              <span className="text-[10px] font-mono font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                {node.title}
+          <div className="flex items-center justify-between gap-1 mb-1">
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              <span style={{ color: node.color }} className="flex-shrink-0">
+                <Icon className="w-3.5 h-3.5" />
               </span>
+              <span className="text-[11px] font-bold truncate">{node.title}</span>
             </div>
-            {node.modelKey && (
-              <span className={`text-[7.5px] font-mono font-bold px-1.5 py-0.2 rounded border ${
-                isWinner
-                  ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/40'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
-              }`}>
-                {isWinner ? 'WINNER' : 'MODEL'}
-              </span>
-            )}
-            {node.id === 'traffic-ingestion' && (
-              <span className="text-[8px] font-mono font-bold px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                LIVE
+            {isWinning && (
+              <span className="text-[8px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-500 font-bold border border-emerald-500/40 animate-pulse">
+                WINNER
               </span>
             )}
           </div>
 
-          <span className="text-[8px] font-mono text-zinc-500 truncate mb-1">
+          <div className="text-[9px] text-zinc-400 dark:text-zinc-500 truncate mb-1">
             {node.subtitle}
-          </span>
+          </div>
 
-          {/* Node Specific Dynamic Telemetry */}
+          {/* Node-specific dynamic telemetry widgets */}
           {node.id === 'traffic-ingestion' && (
-            <div className="mt-0.5">
-              <div className="flex items-baseline justify-between text-[9px] font-mono">
-                <span className="text-zinc-500">Volume:</span>
-                <strong className="text-zinc-900 dark:text-zinc-100">{latest.rps || 125} RPS</strong>
-              </div>
-              <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-1 overflow-hidden mt-1">
-                <div
-                  className="h-full bg-sky-500 transition-all duration-300"
-                  style={{ width: `${Math.min(100, Math.round(((latest.rps || 125) / 500) * 100))}%` }}
-                />
-              </div>
+            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
+              <span className="text-zinc-500">Rate:</span>
+              <span className="font-bold text-sky-500">{rps} RPS</span>
             </div>
           )}
 
           {node.id === 'ingress-router' && (
-            <div className="flex items-baseline justify-between text-[9px] font-mono mt-0.5">
-              <span className="text-zinc-500">P95 Latency:</span>
-              <strong className="text-zinc-900 dark:text-zinc-100">{latest.p95_latency_ms || 32.5}ms</strong>
+            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
+              <span className="text-zinc-500">P95 Lat:</span>
+              <span className="font-bold text-blue-500">{p95}ms</span>
             </div>
           )}
 
           {node.id === 'backend-workload' && (
-            <div className="flex items-baseline justify-between text-[9px] font-mono mt-0.5">
-              <span className="text-zinc-500">Target Scale:</span>
-              <strong className="text-purple-600 dark:text-purple-400 font-bold">{latest.actual_pods || 4} Pods</strong>
+            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
+              <span className="text-zinc-500">Replica Target:</span>
+              <span className="font-bold text-purple-500">{actualPods} active pods</span>
             </div>
           )}
 
           {node.id === 'k8s-metrics' && (
-            <div className="flex items-center justify-between text-[8px] font-mono text-zinc-500 mt-0.5">
-              <span>Cadence: <strong>15s</strong></span>
-              <span>Filtered: <strong>0 pods</strong></span>
+            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
+              <span className="text-zinc-500">Cadence:</span>
+              <span className="font-bold text-emerald-500">15s cAdvisor</span>
             </div>
           )}
 
-          {/* Forecast Model Preds */}
-          {node.id === 'model-hpa' && (
-            <div className="flex items-baseline justify-between text-[9px] font-mono mt-0.5 font-bold">
-              <span className="text-zinc-500 font-normal">Recommendation:</span>
-              <span className="text-zinc-900 dark:text-zinc-100">{latest.reactive_hpa || 4} pods</span>
-            </div>
-          )}
-          {node.id === 'model-ols' && (
-            <div className="flex items-baseline justify-between text-[9px] font-mono mt-0.5 font-bold">
-              <span className="text-zinc-500 font-normal">Recommendation:</span>
-              <span className="text-zinc-900 dark:text-zinc-100">{latest.linear_pred || 4} pods</span>
-            </div>
-          )}
-          {node.id === 'model-hw' && (
-            <div className="flex items-baseline justify-between text-[9px] font-mono mt-0.5 font-bold">
-              <span className="text-zinc-500 font-normal">Recommendation:</span>
-              <span className="text-zinc-900 dark:text-zinc-100">{latest.holt_winters_pred || 4} pods</span>
-            </div>
-          )}
-          {node.id === 'model-lstm' && (
-            <div className="flex items-baseline justify-between text-[9px] font-mono mt-0.5 font-bold">
-              <span className="text-zinc-500 font-normal">Recommendation:</span>
-              <span className="text-zinc-900 dark:text-zinc-100">{latest.lstm_pred || 4} pods</span>
-            </div>
-          )}
-
-          {node.id === 'max-arbiter' && (
-            <div className="mt-0.5 pt-1 border-t border-zinc-200/80 dark:border-zinc-800/80 text-[8.5px] font-mono">
-              <span className="text-zinc-500 block mb-0.5">MAX Envelope Decision:</span>
-              <strong className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold">
-                <Sparkles className="w-2.5 h-2.5" />
-                {latest.maxVal || 4} Pods via {latest.winningModel || 'LSTM'}
-              </strong>
-            </div>
-          )}
-
-          {node.id === 'scale-actuator' && (
-            <div className="mt-0.5 text-[8.5px] font-mono">
-              <div className="flex items-baseline justify-between">
-                <span className="text-zinc-500">Patched:</span>
-                <strong className="text-zinc-900 dark:text-zinc-100">{latest.actual_pods || 4} pods</strong>
-              </div>
-              <span className="text-[7.5px] text-emerald-600 dark:text-emerald-400 block mt-0.5 font-semibold">
-                Loop Closed ✓ Kube-API
+          {node.isModel && (
+            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
+              <span className="text-zinc-500">Pred:</span>
+              <span
+                className={`font-bold ${
+                  isWinning ? 'text-emerald-500 underline' : 'text-zinc-300 dark:text-zinc-400'
+                }`}
+              >
+                {modelVal} pods
               </span>
+            </div>
+          )}
+
+          {node.isArbiter && (
+            <div className="flex items-center justify-between text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">Winning MAX:</span>
+              <span className="font-extrabold text-emerald-500 text-xs">{maxVal} pods</span>
+            </div>
+          )}
+
+          {node.isActuator && (
+            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
+              <span className="text-zinc-500">Actuating:</span>
+              <span className="font-bold text-emerald-500">PATCH → {maxVal}</span>
+            </div>
+          )}
+
+          {(node.id === 'tsdb-store' || node.id === 'etcd-store') && (
+            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded text-rose-500">
+              <span>Status:</span>
+              <span className="font-bold">SYNCED</span>
             </div>
           )}
         </div>
@@ -649,73 +697,67 @@ function ArchitectureNode({
 }
 
 /* =========================================================================
-   6. Closed Feedback Loop 3D Pipe (Scale Actuator -> Target Pods Cluster)
+   5. Closed Feedback Loop Conduit with Traveling Photons
    ========================================================================= */
-function ClosedFeedbackLoopPipe({ isDark = true }) {
+function ClosedFeedbackLoopPipe({ isDark }) {
   const curve = useMemo(() => {
-    // Arching 3D spline high across the control plane
-    const start = new THREE.Vector3(5.0, 1.8, -3.8);
-    const mid = new THREE.Vector3(0.5, 3.2, -4.2);
-    const end = new THREE.Vector3(-3.8, 0.9, -4.2);
-    return new THREE.QuadraticBezierCurve3(start, mid, end);
+    // Arching 3D bezier from Scale Actuator [6.2, 2.0, -4.8] back to Pod Cluster [-3.8, -0.4, -4.2]
+    return new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(6.2, 2.0, -4.8),
+      new THREE.Vector3(1.2, 3.8, -4.5),
+      new THREE.Vector3(-3.8, -0.4, -4.2)
+    );
   }, []);
 
   const points = useMemo(() => curve.getPoints(50), [curve]);
-
-  // Traveling photon along feedback curve
   const photonRef = useRef();
+
   useFrame(({ clock }) => {
     if (!photonRef.current) return;
     const t = (clock.getElapsedTime() * 0.45) % 1;
     const pos = curve.getPoint(t);
-    photonRef.current.position.copy(pos);
+    photonRef.current.position.set(pos.x, pos.y, pos.z);
   });
 
   return (
     <group>
-      {/* 3D Glowing Dashed Feedback Line */}
       <Line
         points={points}
-        color={isDark ? '#f59e0b' : '#d97706'}
-        lineWidth={3.5}
+        color="#10b981"
+        lineWidth={3.2}
         dashed
         dashScale={2.5}
         dashSize={0.4}
-        gapSize={0.2}
+        gapSize={0.25}
+        transparent
+        opacity={isDark ? 0.9 : 0.75}
       />
 
-      {/* Traveling Closed-Loop Photon */}
+      {/* Traveling Feedback Actuation Photon */}
       <mesh ref={photonRef}>
-        <sphereGeometry args={[0.11, 16, 16]} />
-        <meshBasicMaterial color="#fbbf24" />
+        <sphereGeometry args={[0.16, 16, 16]} />
+        <meshBasicMaterial color="#34d399" />
       </mesh>
-
-      {/* Billboarded Label on top of feedback loop */}
-      <Html position={[0.5, 3.4, -4.2]} center distanceFactor={10.2} className="pointer-events-none select-none">
-        <div className="flex items-center gap-1 bg-amber-500/90 text-white dark:bg-amber-400 dark:text-zinc-950 px-2 py-0.5 rounded-full text-[8px] font-mono font-bold shadow-md whitespace-nowrap">
-          <RotateCcw className="w-2.5 h-2.5 animate-spin" />
-          <span>PHPA Closed-Loop Actuation (scale.patch)</span>
-        </div>
-      </Html>
     </group>
   );
 }
 
 /* =========================================================================
-   7. Continuous 3D Traveling Photons
+   6. Continuous Animated Traveling Photons Across All Inter-Layer Pipes
    ========================================================================= */
 function ArchitecturePhotons({ pipes = ARCH_PIPES, isDark = true }) {
-  const photonRefs = useRef([]);
+  const photonsRef = useRef([]);
 
   useFrame(({ clock }) => {
     const elapsed = clock.getElapsedTime();
-    pipes.forEach((pipe, idx) => {
-      const el = photonRefs.current[idx];
+    pipes.forEach((pipe, i) => {
+      const el = photonsRef.current[i];
       if (!el) return;
-      const progress = ((elapsed * 0.85 + idx * 0.15) % 1);
-      const x = pipe.start[0] + (pipe.end[0] - pipe.start[0]) * progress;
-      const y = pipe.start[1] + (pipe.end[1] - pipe.start[1]) * progress;
-      const z = pipe.start[2] + (pipe.end[2] - pipe.start[2]) * progress;
+      const speed = 0.55 + (i % 4) * 0.15;
+      const t = (elapsed * speed + i * 0.3) % 1;
+      const x = pipe.start[0] + (pipe.end[0] - pipe.start[0]) * t;
+      const y = pipe.start[1] + (pipe.end[1] - pipe.start[1]) * t;
+      const z = pipe.start[2] + (pipe.end[2] - pipe.start[2]) * t;
       el.position.set(x, y, z);
     });
   });
@@ -725,10 +767,12 @@ function ArchitecturePhotons({ pipes = ARCH_PIPES, isDark = true }) {
       {pipes.map((pipe, idx) => (
         <mesh
           key={pipe.id}
-          ref={(ref) => (photonRefs.current[idx] = ref)}
+          ref={(r) => {
+            photonsRef.current[idx] = r;
+          }}
         >
-          <sphereGeometry args={[0.07, 12, 12]} />
-          <meshBasicMaterial color={pipe.color || (isDark ? '#38bdf8' : '#0284c7')} />
+          <sphereGeometry args={[0.09, 12, 12]} />
+          <meshBasicMaterial color={pipe.color} />
         </mesh>
       ))}
     </group>
@@ -736,137 +780,103 @@ function ArchitecturePhotons({ pipes = ARCH_PIPES, isDark = true }) {
 }
 
 /* =========================================================================
-   8. Camera Controller with Presets (Isometric, PHPA Core, Front, Top)
+   7. Camera Controller with Smooth GSAP Presets and Orbit Controls
    ========================================================================= */
-function CameraController({ preset = 'isometric', isOrbiting = false }) {
+function CameraController({ viewPreset = 'isometric', isOrbiting = false }) {
+  const { camera } = useThree();
   const controlsRef = useRef();
-  const targetPos = useRef(new THREE.Vector3(10.0, 9.0, 14.5));
-  const targetLook = useRef(new THREE.Vector3(0.0, 0.2, -1.5));
-  const isTransitioning = useRef(true);
 
   useEffect(() => {
-    if (preset === 'isometric') {
-      targetPos.current.set(10.0, 9.0, 14.5);
-      targetLook.current.set(0.0, 0.2, -1.5);
-      isTransitioning.current = true;
-    } else if (preset === 'core') {
-      // Focuses in on the PHPA Control Plane centerpiece
-      targetPos.current.set(3.5, 4.0, 3.5);
-      targetLook.current.set(1.0, 0.0, -4.2);
-      isTransitioning.current = true;
-    } else if (preset === 'front') {
-      targetPos.current.set(0.0, 2.5, 17.5);
-      targetLook.current.set(0.0, 0.5, 0.0);
-      isTransitioning.current = true;
-    } else if (preset === 'top') {
-      targetPos.current.set(0.0, 20.0, 0.0);
-      targetLook.current.set(0.0, 0.0, -1.5);
-      isTransitioning.current = true;
-    } else if (preset === 'free') {
-      isTransitioning.current = false;
+    if (!camera) return;
+    if (viewPreset === 'isometric') {
+      gsap.to(camera.position, { x: 18, y: 16, z: 22, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0, y: 0, z: -1, duration: 1.1 });
+    } else if (viewPreset === 'core') {
+      gsap.to(camera.position, { x: 8, y: 7, z: -2, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0, y: 0.5, z: -4.5, duration: 1.1 });
+    } else if (viewPreset === 'front') {
+      gsap.to(camera.position, { x: 0, y: 3, z: 28, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0, y: 0, z: -1, duration: 1.1 });
+    } else if (viewPreset === 'top') {
+      gsap.to(camera.position, { x: 0, y: 32, z: 2, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0, y: 0, z: -1, duration: 1.1 });
     }
-  }, [preset]);
-
-  useFrame((state, delta) => {
-    if (isTransitioning.current && preset !== 'free') {
-      state.camera.position.lerp(targetPos.current, Math.min(1, delta * 3.8));
-      if (controlsRef.current) {
-        controlsRef.current.target.lerp(targetLook.current, Math.min(1, delta * 3.8));
-        controlsRef.current.update();
-      }
-      if (state.camera.position.distanceTo(targetPos.current) < 0.08) {
-        isTransitioning.current = false;
-      }
-    }
-  });
+  }, [viewPreset, camera]);
 
   return (
     <OrbitControls
       ref={controlsRef}
-      makeDefault
+      enablePan
+      enableZoom
+      enableRotate
       autoRotate={isOrbiting}
-      autoRotateSpeed={1.0}
-      enableDamping
-      dampingFactor={0.06}
-      minDistance={4}
-      maxDistance={35}
-      maxPolarAngle={Math.PI / 2 + 0.08}
+      autoRotateSpeed={1.8}
+      dampingFactor={0.08}
+      maxPolarAngle={Math.PI / 2 + 0.05}
+      minDistance={6}
+      maxDistance={45}
     />
   );
 }
 
 /* =========================================================================
-   9. Floating 3D Layer Legend HUD
+   8. Floating 3D Legend HUD (5 Tiers)
    ========================================================================= */
-function LayerLegendHUD({ isDark = true }) {
+function LayerLegendHUD({ isDark }) {
   return (
-    <div className="absolute bottom-3 left-3 z-30 pointer-events-auto bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-xl p-2.5 shadow-lg backdrop-blur-md text-[10px] font-mono space-y-1 select-none">
-      <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-        3D Architectural Layers (5 Tiers)
-      </span>
-      {Object.entries(ARCH_LAYERS).map(([layerId, info]) => (
-        <div key={layerId} className="flex items-center gap-2">
-          <span
-            className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-            style={{ backgroundColor: info.color }}
-          />
-          <span className="text-zinc-700 dark:text-zinc-300 font-medium truncate">
-            {info.name}
-          </span>
-          <span className="text-zinc-400 text-[8px] ml-auto">
-            {info.badge}
-          </span>
-        </div>
-      ))}
+    <div
+      className={`absolute bottom-3 left-3 z-20 pointer-events-none p-2.5 rounded-lg border font-mono text-[10px] select-none ${
+        isDark
+          ? 'bg-zinc-950/85 border-zinc-800 text-zinc-300'
+          : 'bg-white/90 border-zinc-300 text-zinc-700'
+      } backdrop-blur-md shadow-lg`}
+    >
+      <div className="font-bold text-[11px] mb-1.5 text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+        <Layers className="w-3.5 h-3.5 text-emerald-500" />
+        <span>Architectural Tiers</span>
+      </div>
+      <div className="space-y-1">
+        {Object.entries(ARCH_LAYERS).map(([tier, meta]) => (
+          <div key={tier} className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
+            <span className="font-medium">{meta.name}</span>
+            <span className="text-[8px] text-zinc-400 ml-auto">{meta.badge}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 /* =========================================================================
-   10. Main 3D Pipeline Canvas Component
+   9. Primary Export: Pipeline3DCanvas Component
    ========================================================================= */
 export default function Pipeline3DCanvas({
   theme,
   viewPreset = 'isometric',
   isOrbiting = false,
-  selectedStage = 2,
+  selectedStage = 0,
   onSelectStage,
   latest = {},
-  isSpiking = false,
 }) {
   const isDark = useAppTheme(theme);
 
+  // Background and Grid colors
   const bgColor = isDark ? '#09090b' : '#f8fafc';
-  const gridPrimary = isDark ? '#1f1f23' : '#e2e8f0';
-  const gridSecondary = isDark ? '#141417' : '#f1f5f9';
+  const gridPrimary = isDark ? '#27272a' : '#cbd5e1';
+  const gridSecondary = isDark ? '#18181b' : '#e2e8f0';
 
-  // Dynamic values
-  const actualPods = Math.min(30, Math.max(2, latest.actual_pods || 4));
-  const idealDemand = latest.ideal_demand || 4;
-  const cpu = latest.cpu_utilization || 50;
-  const reactiveHpa = latest.reactive_hpa || actualPods;
-  const linearPred = latest.linear_pred || actualPods;
-  const hwPred = latest.holt_winters_pred || actualPods;
-  const lstmPred = latest.lstm_pred || actualPods;
-  const maxVal = Math.max(reactiveHpa, linearPred, hwPred, lstmPred);
-
-  let winningModel = 'LSTM';
-  if (maxVal === lstmPred) winningModel = 'LSTM';
-  else if (maxVal === hwPred) winningModel = 'Holt-Winters';
-  else if (maxVal === linearPred) winningModel = 'Linear';
-  else winningModel = 'Reactive HPA';
-
+  // Live values
   const dynamicLatest = {
-    ...latest,
-    actual_pods: actualPods,
-    ideal_demand: idealDemand,
-    cpu_utilization: cpu,
-    reactive_hpa: reactiveHpa,
-    linear_pred: linearPred,
-    holt_winters_pred: hwPred,
-    lstm_pred: lstmPred,
-    maxVal,
-    winningModel,
+    rps: latest.currentRPS ?? 1840,
+    p95: latest.currentP95 ?? 44,
+    cpu: latest.currentCPU ?? 68,
+    actualPods: latest.actualPods ?? 4,
+    idealDemand: latest.idealDemand ?? 5,
+    linearPred: latest.linearPred ?? 5,
+    hwPred: latest.hwPred ?? 6,
+    lstmPred: latest.lstmPred ?? 7,
+    hpaPred: latest.hpaPred ?? Math.ceil((latest.actualPods ?? 4) * ((latest.currentCPU ?? 68) / 60)),
   };
 
   return (
@@ -885,7 +895,7 @@ export default function Pipeline3DCanvas({
           powerPreference: 'high-performance',
           alpha: false,
         }}
-        camera={{ position: [10.0, 9.0, 14.5], fov: 42 }}
+        camera={{ position: [18, 16, 22], fov: 42 }}
       >
         {/* Dynamic theme background */}
         <color attach="background" args={[bgColor]} />
@@ -904,7 +914,7 @@ export default function Pipeline3DCanvas({
         />
 
         {/* Camera and Uninterrupted Orbit Controls */}
-        <CameraController preset={viewPreset} isOrbiting={isOrbiting} />
+        <CameraController viewPreset={viewPreset} isOrbiting={isOrbiting} />
 
         {/* Clean Ground Grid */}
         <gridHelper
@@ -933,9 +943,9 @@ export default function Pipeline3DCanvas({
         {/* Centerpiece: Circular Target Pods Cluster */}
         <CircularTargetPodsCluster
           center={[-3.8, -0.4, -4.2]}
-          actualPods={actualPods}
-          idealDemand={idealDemand}
-          cpu={cpu}
+          actualPods={dynamicLatest.actualPods}
+          idealDemand={dynamicLatest.idealDemand}
+          cpu={dynamicLatest.cpu}
           isSelected={selectedStage === 2}
           isDark={isDark}
           onSelect={onSelectStage}
