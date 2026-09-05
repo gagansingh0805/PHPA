@@ -1748,7 +1748,7 @@ export default function App() {
 
           {/* TAB 6: PIPELINE ARCHITECTURE */}
           {activeTab === 'pipeline' && (
-            <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
+            <div className="surface-deck p-2 sm:p-5 rounded-xl">
               <PipelineViewer
                 latest={latest}
                 isPlaying={isPlaying}

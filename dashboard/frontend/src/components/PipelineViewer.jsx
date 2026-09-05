@@ -52,22 +52,33 @@ export default function PipelineViewer({
   // 1. View Mode: '3d' (Spatial 3D Canvas) vs '2d' (2D Crisp Schematic Architecture)
   const [viewMode, setViewMode] = useState('3d'); // '3d' | '2d'
 
-  const getResponsiveZoom = (base = 1) => {
+  // Dynamic responsive auto-fit zoom calculation ensuring the full diagram fits without being cut on mobile
+  const getResponsiveZoom = (base = 1, mode = viewMode) => {
     if (typeof window !== 'undefined') {
       const w = window.innerWidth;
-      if (w < 480) return 0.34 * base;
-      if (w < 640) return 0.42 * base;
-      if (w < 768) return 0.50 * base;
-      if (w < 1024) return 0.72 * base;
+      // In 3D isometric view (44deg pitch, -18deg yaw), the rotated bounding box is ~1440px wide.
+      // In 2D crisp schematic mode, the flat bounding box is ~1180px wide.
+      const effectiveW = mode === '3d' ? 1440 : 1180;
+      const gutter = w < 640 ? 28 : 64;
+      const availableW = Math.max(240, w - gutter);
+      const fitScale = availableW / effectiveW;
+
+      if (w < 400) return parseFloat((Math.min(mode === '3d' ? 0.22 : 0.26, fitScale) * base).toFixed(3));
+      if (w < 480) return parseFloat((Math.min(mode === '3d' ? 0.26 : 0.31, fitScale) * base).toFixed(3));
+      if (w < 640) return parseFloat((Math.min(mode === '3d' ? 0.36 : 0.42, fitScale) * base).toFixed(3));
+      if (w < 768) return parseFloat((Math.min(mode === '3d' ? 0.46 : 0.54, fitScale) * base).toFixed(3));
+      if (w < 1024) return parseFloat((Math.min(mode === '3d' ? 0.65 : 0.74, fitScale) * base).toFixed(3));
+      if (w < 1280) return parseFloat((Math.min(0.85, fitScale) * base).toFixed(3));
     }
     return base;
   };
 
-  // 2. Natural Mouse Drag-to-Orbit & Camera State
+  // 2. Natural Mouse Drag-to-Orbit, Pan & Camera State
   const [pitch, setPitch] = useState(44); // RotateX: 12deg to 78deg
   const [yaw, setYaw] = useState(-18); // RotateZ: -80deg to 80deg
   const [roll, setRoll] = useState(8); // RotateY
-  const [zoom, setZoom] = useState(() => getResponsiveZoom(1)); // 0.25 to 1.85
+  const [zoom, setZoom] = useState(() => getResponsiveZoom(1, '3d')); // 0.15 to 1.85
+  const [pan, setPan] = useState({ x: 0, y: 0 }); // Free Pan translation (X, Y)
   const [viewPreset, setViewPreset] = useState('isometric');
   const [isOrbiting, setIsOrbiting] = useState(false);
 
@@ -76,8 +87,19 @@ export default function PipelineViewer({
   const isDraggingRef = useRef(false);
   const pitchRef = useRef(pitch);
   const yawRef = useRef(yaw);
+  const panRef = useRef(pan);
   useEffect(() => { pitchRef.current = pitch; }, [pitch]);
   useEffect(() => { yawRef.current = yaw; }, [yaw]);
+  useEffect(() => { panRef.current = pan; }, [pan]);
+
+  // Window resize listener to auto-fit zoom on orientation change or screen resize
+  useEffect(() => {
+    const handleResize = () => {
+      setZoom(getResponsiveZoom(1, viewMode));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [viewMode]);
 
   const [isCursorGrabbing, setIsCursorGrabbing] = useState(false);
 
@@ -129,7 +151,8 @@ export default function PipelineViewer({
   const handlePresetChange = (preset) => {
     setViewPreset(preset);
     setIsOrbiting(false);
-    const rZoom = getResponsiveZoom(1);
+    setPan({ x: 0, y: 0 });
+    const rZoom = getResponsiveZoom(1, '3d');
     if (preset === 'isometric') {
       setPitch(44);
       setYaw(-18);
@@ -139,17 +162,22 @@ export default function PipelineViewer({
       setPitch(12);
       setYaw(0);
       setRoll(0);
-      setZoom(rZoom * 1.05);
+      setZoom(parseFloat((rZoom * 1.05).toFixed(3)));
     } else if (preset === 'top') {
       setPitch(68);
       setYaw(0);
       setRoll(0);
-      setZoom(rZoom * 0.95);
+      setZoom(parseFloat((rZoom * 0.95).toFixed(3)));
     }
   };
 
   const handleResetCamera = () => {
-    handlePresetChange('isometric');
+    setPan({ x: 0, y: 0 });
+    if (viewMode === '2d') {
+      setZoom(getResponsiveZoom(1, '2d'));
+    } else {
+      handlePresetChange('isometric');
+    }
   };
 
   // Subtle auto-orbit
@@ -163,15 +191,28 @@ export default function PipelineViewer({
 
   // Window-level Pointer Drag Handlers (Smooth, reliable, works with mouse and touch)
   const handlePointerDown = (e) => {
-    if (viewMode === '2d') return; // In 2D schematic, no rotation needed
     if (e.target.closest('button, input, a, select, [role="button"]')) return;
-    if (e.pointerType !== 'touch' && e.button !== 0) return; // Left mouse click or touch
+    if (e.pointerType !== 'touch' && e.button !== 0 && e.button !== 1 && e.button !== 2) return; // Mouse or touch
+
+    // If currently in 2D mode, clicking or dragging anywhere on the diagram unlocks into 3D Free Mode!
+    if (viewMode === '2d') {
+      setViewMode('3d');
+      setViewPreset('custom');
+      if (pitch < 20 && yaw === 0) {
+        setPitch(44);
+        setYaw(-18);
+        setRoll(8);
+      }
+      setZoom(getResponsiveZoom(1, '3d'));
+    }
 
     e.preventDefault();
     const startX = e.clientX;
     const startY = e.clientY;
     const startPitch = pitchRef.current;
     const startYaw = yawRef.current;
+    const startPan = panRef.current;
+    const isPanAction = e.shiftKey || e.button === 1 || e.button === 2;
 
     isDraggingRef.current = true;
     setIsCursorGrabbing(true);
@@ -183,12 +224,19 @@ export default function PipelineViewer({
       const dx = moveEv.clientX - startX;
       const dy = moveEv.clientY - startY;
 
-      // Calibrated natural orbit sensitivity
-      const newYaw = Math.max(-80, Math.min(80, startYaw + dx * 0.35));
-      const newPitch = Math.max(12, Math.min(78, startPitch - dy * 0.35));
+      if (isPanAction) {
+        setPan({
+          x: Math.round(startPan.x + dx),
+          y: Math.round(startPan.y + dy),
+        });
+      } else {
+        // Calibrated natural orbit sensitivity
+        const newYaw = Math.max(-80, Math.min(80, startYaw + dx * 0.35));
+        const newPitch = Math.max(12, Math.min(78, startPitch - dy * 0.35));
 
-      setYaw(Math.round(newYaw));
-      setPitch(Math.round(newPitch));
+        setYaw(Math.round(newYaw));
+        setPitch(Math.round(newPitch));
+      }
     };
 
     const handlePointerUp = () => {
@@ -202,6 +250,19 @@ export default function PipelineViewer({
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('pointercancel', handlePointerUp);
+  };
+
+  const handleCanvasClick = (e) => {
+    if (viewMode === '2d') {
+      if (!e.target.closest('button, input, a, select, [role="button"]')) {
+        setViewMode('3d');
+        setViewPreset('custom');
+        setPitch(44);
+        setYaw(-18);
+        setRoll(8);
+        setZoom(getResponsiveZoom(1, '3d'));
+      }
+    }
   };
 
   // Dedicated non-passive wheel listener attached to canvasRef
@@ -895,10 +956,13 @@ export default function PipelineViewer({
 
           {/* Unified Perspective & Mode Controls */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md p-1 text-xs font-mono shadow-sm">
+            <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md p-1 text-xs font-mono shadow-sm max-w-full overflow-x-auto scrollbar-none">
               <button
-                onClick={() => setViewMode('2d')}
-                className={`px-3 py-1 rounded transition-all font-semibold ${
+                onClick={() => {
+                  setViewMode('2d');
+                  setZoom(getResponsiveZoom(1, '2d'));
+                }}
+                className={`px-3 py-1 rounded transition-all font-semibold flex-shrink-0 cursor-pointer ${
                   viewMode === '2d'
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
@@ -908,14 +972,14 @@ export default function PipelineViewer({
                 2D Schematic
               </button>
 
-              <div className="w-[1px] h-4 bg-zinc-300 dark:bg-zinc-700 mx-1.5"></div>
+              <div className="w-[1px] h-4 bg-zinc-300 dark:bg-zinc-700 mx-1.5 flex-shrink-0"></div>
 
               <button
                 onClick={() => {
                   setViewMode('3d');
                   handlePresetChange('isometric');
                 }}
-                className={`px-2.5 py-1 rounded transition-colors ${
+                className={`px-2.5 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
                   viewMode === '3d' && viewPreset === 'isometric'
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
@@ -929,7 +993,7 @@ export default function PipelineViewer({
                   setViewMode('3d');
                   handlePresetChange('front');
                 }}
-                className={`px-2.5 py-1 rounded transition-colors ${
+                className={`px-2.5 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
                   viewMode === '3d' && viewPreset === 'front'
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
@@ -943,7 +1007,7 @@ export default function PipelineViewer({
                   setViewMode('3d');
                   handlePresetChange('top');
                 }}
-                className={`px-2.5 py-1 rounded transition-colors ${
+                className={`px-2.5 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
                   viewMode === '3d' && viewPreset === 'top'
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
@@ -958,25 +1022,28 @@ export default function PipelineViewer({
               {/* Prominent Zoom In / Out Controls */}
               <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md p-1 text-xs font-mono shadow-sm">
                 <button
-                  onClick={() => setZoom((prev) => Math.max(0.45, parseFloat((prev - 0.1).toFixed(2))))}
-                  className="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center"
-                  title="Zoom Out (-10%)"
+                  onClick={() => setZoom((prev) => Math.max(0.15, parseFloat((prev - 0.05).toFixed(2))))}
+                  className="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+                  title="Zoom Out (-5%)"
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
                 </button>
 
                 <button
-                  onClick={() => setZoom(1.0)}
-                  className="px-2 py-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-[11px] font-bold text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white transition-colors min-w-[44px] text-center"
-                  title="Click to reset zoom to 100%"
+                  onClick={() => {
+                    setZoom(getResponsiveZoom(1.0, viewMode));
+                    setPan({ x: 0, y: 0 });
+                  }}
+                  className="px-2 py-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-[11px] font-bold text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white transition-colors min-w-[44px] text-center cursor-pointer"
+                  title="Click to auto-fit diagram to screen"
                 >
                   {Math.round(zoom * 100)}%
                 </button>
 
                 <button
-                  onClick={() => setZoom((prev) => Math.min(1.85, parseFloat((prev + 0.1).toFixed(2))))}
-                  className="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center"
-                  title="Zoom In (+10%)"
+                  onClick={() => setZoom((prev) => Math.min(1.85, parseFloat((prev + 0.05).toFixed(2))))}
+                  className="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+                  title="Zoom In (+5%)"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>
@@ -984,10 +1051,17 @@ export default function PipelineViewer({
 
               <button
                 onClick={() => {
-                  if (viewMode === '2d') setViewMode('3d');
+                  if (viewMode === '2d') {
+                    setViewMode('3d');
+                    setViewPreset('custom');
+                    setPitch(44);
+                    setYaw(-18);
+                    setRoll(8);
+                    setZoom(getResponsiveZoom(1, '3d'));
+                  }
                   setIsOrbiting((prev) => !prev);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-mono font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-mono font-medium transition-all cursor-pointer ${
                   viewMode === '3d' && isOrbiting
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
                     : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700'
@@ -1000,8 +1074,8 @@ export default function PipelineViewer({
 
               <button
                 onClick={handleResetCamera}
-                className="p-1.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
-                title="Reset View"
+                className="p-1.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer"
+                title="Fit to Screen & Reset View"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
@@ -1195,9 +1269,10 @@ export default function PipelineViewer({
       <div
         ref={canvasRef}
         onPointerDown={handlePointerDown}
+        onClick={handleCanvasClick}
         onDoubleClick={handleResetCamera}
-        className={`relative w-full rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-100 dark:bg-zinc-950 overflow-hidden shadow-sm raised-card min-h-[660px] flex items-center justify-center ${
-          viewMode === '3d' ? (isCursorGrabbing ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
+        className={`relative w-full rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-100 dark:bg-zinc-950 overflow-hidden shadow-sm raised-card min-h-[420px] sm:min-h-[540px] md:min-h-[660px] flex items-center justify-center touch-none select-none ${
+          viewMode === '3d' ? (isCursorGrabbing ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-pointer'
         }`}
         style={{
           WebkitFontSmoothing: 'antialiased',
@@ -1209,26 +1284,34 @@ export default function PipelineViewer({
           <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-zinc-400/20 dark:bg-zinc-800/10 rounded-full blur-[120px]" />
         </div>
 
-        {/* Top-Left Instructions HUD */}
-        <div className="absolute top-3 left-4 z-20 pointer-events-none hidden md:flex items-center gap-2 bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-700/80 px-2.5 py-1 rounded-md text-[10px] font-mono text-zinc-600 dark:text-zinc-400 shadow-sm backdrop-blur-md">
-          {viewMode === '3d' ? (
-            <>
-              <span>🖱️ Drag to Orbit</span>
-              <span className="text-zinc-400 dark:text-zinc-600">•</span>
-              <span>Hold Ctrl + Scroll to Zoom</span>
-              <span className="text-zinc-400 dark:text-zinc-600">•</span>
-              <span>Double-click to Reset</span>
-            </>
-          ) : (
-            <>
-              <span className="font-semibold text-zinc-900 dark:text-zinc-100">📐 2D Crisp Flow Mode Active</span>
-              <span className="text-zinc-400 dark:text-zinc-600">•</span>
-              <span>Zero-tilt vector architecture</span>
-              <span className="text-zinc-400 dark:text-zinc-600">•</span>
-              <span>Click any card for deep diagrams</span>
-            </>
-          )}
-        </div>
+        {/* Top-Left Instructions & Mode Status HUD */}
+        {viewMode === '2d' ? (
+          <button
+            onClick={() => {
+              setViewMode('3d');
+              setViewPreset('custom');
+              setPitch(44);
+              setYaw(-18);
+              setRoll(8);
+              setZoom(getResponsiveZoom(1, '3d'));
+            }}
+            className="absolute top-2 left-2 sm:top-3 sm:left-4 z-30 pointer-events-auto flex items-center gap-1.5 bg-white/95 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-mono text-zinc-800 dark:text-zinc-200 shadow-md backdrop-blur-md cursor-pointer transition-all hover:scale-105"
+            title="Click to enter 3D Free Mode"
+          >
+            <Compass className="w-3.5 h-3.5 text-emerald-500 animate-spin" />
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100">2D Locked</span>
+            <span className="text-zinc-400 dark:text-zinc-500">•</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold underline decoration-emerald-500/50">
+              Click for 3D Free Mode
+            </span>
+          </button>
+        ) : (
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-4 z-20 pointer-events-none flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-700/80 px-2 sm:px-2.5 py-1 rounded-md text-[9px] sm:text-[10px] font-mono text-zinc-600 dark:text-zinc-400 shadow-sm backdrop-blur-md">
+            <span>🖐️ 3D Free Mode (Drag to Orbit)</span>
+            <span className="hidden sm:inline text-zinc-400">•</span>
+            <span className="hidden sm:inline">Double-click to Reset</span>
+          </div>
+        )}
 
         {/* Dedicated Tactile Zoom & Tilt Controls (Top-Right) */}
         <div className="absolute top-2 right-2 sm:top-3 sm:right-4 z-30 pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-700/80 rounded-lg p-0.5 sm:p-1 shadow-md backdrop-blur-md text-xs font-mono text-zinc-700 dark:text-zinc-300">
@@ -1236,59 +1319,62 @@ export default function PipelineViewer({
             {Math.round(zoom * 100)}%
           </span>
           <button
-            onClick={() => setZoom((prev) => Math.max(0.25, parseFloat((prev - 0.1).toFixed(2))))}
-            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
-            title="Zoom Out"
+            onClick={() => setZoom((prev) => Math.max(0.15, parseFloat((prev - 0.05).toFixed(2))))}
+            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            title="Zoom Out (-5%)"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setZoom((prev) => Math.min(1.85, parseFloat((prev + 0.1).toFixed(2))))}
-            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
-            title="Zoom In"
+            onClick={() => setZoom((prev) => Math.min(1.85, parseFloat((prev + 0.05).toFixed(2))))}
+            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            title="Zoom In (+5%)"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setZoom(getResponsiveZoom(1.0))}
-            className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-[9px] sm:text-[10px] text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
-            title="Fit Canvas"
+            onClick={() => {
+              setZoom(getResponsiveZoom(1.0, viewMode));
+              setPan({ x: 0, y: 0 });
+            }}
+            className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-[9px] sm:text-[10px] font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            title="Fit Diagram to Screen"
           >
             Fit
           </button>
 
           {viewMode === '3d' && (
-            <>
+            <div className="hidden sm:flex items-center gap-0.5">
               <div className="w-[1px] h-4 bg-zinc-200 dark:bg-zinc-700 mx-0.5" />
               <button
                 onClick={() => setPitch((p) => Math.max(12, p - 6))}
-                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Tilt Up"
               >
                 <ChevronUp className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setPitch((p) => Math.min(78, p + 6))}
-                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Tilt Down"
               >
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setYaw((y) => Math.max(-80, y - 10))}
-                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Turn Left"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setYaw((y) => Math.min(80, y + 10))}
-                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Turn Right"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
-            </>
+            </div>
           )}
         </div>
 
@@ -1299,7 +1385,7 @@ export default function PipelineViewer({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="absolute bottom-3 left-4 z-30 pointer-events-auto max-w-sm"
+              className="absolute bottom-3 left-2 right-2 sm:left-4 sm:right-auto z-30 pointer-events-auto max-w-[calc(100%-16px)] sm:max-w-sm"
             >
               <div className="bg-white/95 dark:bg-zinc-900/95 border border-zinc-300 dark:border-zinc-700 rounded-xl p-3 shadow-xl text-xs space-y-1.5 backdrop-blur-md">
                 <div className="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
@@ -1324,7 +1410,7 @@ export default function PipelineViewer({
 
         {/* Main Diagram Canvas: 3D Transform vs 2D Flat */}
         <div
-          className="w-full h-[640px] flex items-center justify-center transition-transform duration-100 ease-out"
+          className="w-full h-[400px] sm:h-[500px] md:h-[640px] flex items-center justify-center transition-transform duration-100 ease-out"
           style={
             viewMode === '3d'
               ? {
@@ -1340,10 +1426,10 @@ export default function PipelineViewer({
               viewMode === '3d'
                 ? {
                     transformStyle: 'preserve-3d',
-                    transform: `rotateX(${pitch}deg) rotateY(${roll}deg) rotateZ(${yaw}deg) scale(${zoom})`,
+                    transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) rotateX(${pitch}deg) rotateY(${roll}deg) rotateZ(${yaw}deg) scale(${zoom})`,
                   }
                 : {
-                    transform: `scale(${zoom})`,
+                    transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) scale(${zoom})`,
                     transformOrigin: '50% 50%',
                   }
             }
