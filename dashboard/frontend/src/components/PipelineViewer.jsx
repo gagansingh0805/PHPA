@@ -53,35 +53,36 @@ export default function PipelineViewer({
   onSpeedChange,
   onReset,
 }) {
-  // 1. View Mode: '3d' (Unified 3D Spatial Canvas default) vs '2d' (2D Crisp Schematic Architecture)
-  const [viewMode, setViewMode] = useState('3d'); // '3d' | '2d'
+  // 1. View Mode: '2d' (Default Pristine Architectural Schematic) vs '3d' (Spatial 3D Canvas)
+  const [viewMode, setViewMode] = useState('2d'); // '2d' | '3d'
 
-  // Dynamic responsive auto-fit zoom calculation ensuring the full diagram fits without being cut on mobile
+  // Dynamic responsive auto-fit zoom calculation ensuring the entire architecture fits comfortably with generous margins
   const getResponsiveZoom = (base = 1, mode = viewMode) => {
     if (typeof window !== 'undefined') {
       const w = window.innerWidth;
-      // In 3D isometric view (44deg pitch, -18deg yaw), the rotated bounding box is ~1300px wide.
-      // In 2D crisp schematic mode, the flat bounding box is ~1180px wide.
-      const effectiveW = mode === '3d' ? 1300 : 1180;
-      const gutter = w < 640 ? 24 : 64;
-      const availableW = Math.max(240, w - gutter);
+      // The comprehensive expanded diagram board is 1240px wide and 660px high.
+      const effectiveW = 1260;
+      const gutter = w < 640 ? 32 : 120;
+      const availableW = Math.max(260, w - gutter);
       const fitScale = availableW / effectiveW;
 
-      if (w < 400) return parseFloat((Math.min(mode === '3d' ? 0.25 : 0.28, fitScale) * base).toFixed(3));
-      if (w < 480) return parseFloat((Math.min(mode === '3d' ? 0.30 : 0.34, fitScale) * base).toFixed(3));
-      if (w < 640) return parseFloat((Math.min(mode === '3d' ? 0.40 : 0.45, fitScale) * base).toFixed(3));
-      if (w < 768) return parseFloat((Math.min(mode === '3d' ? 0.50 : 0.56, fitScale) * base).toFixed(3));
-      if (w < 1024) return parseFloat((Math.min(mode === '3d' ? 0.68 : 0.76, fitScale) * base).toFixed(3));
-      if (w < 1280) return parseFloat((Math.min(0.85, fitScale) * base).toFixed(3));
+      if (w < 400) return parseFloat((Math.min(0.26, fitScale) * base).toFixed(3));
+      if (w < 480) return parseFloat((Math.min(0.32, fitScale) * base).toFixed(3));
+      if (w < 640) return parseFloat((Math.min(0.42, fitScale) * base).toFixed(3));
+      if (w < 768) return parseFloat((Math.min(0.52, fitScale) * base).toFixed(3));
+      if (w < 1024) return parseFloat((Math.min(0.62, fitScale) * base).toFixed(3));
+      if (w < 1280) return parseFloat((Math.min(0.70, fitScale) * base).toFixed(3));
+      // On desktop displays (>= 1280px), provide generous breathing room (74% scale) so all 10 components fit gracefully!
+      return parseFloat((0.74 * base).toFixed(3));
     }
-    return base;
+    return parseFloat((0.74 * base).toFixed(3));
   };
 
   // 2. Natural Mouse Drag-to-Orbit, Pan & Camera State
   const [pitch, setPitch] = useState(44); // RotateX: 12deg to 78deg
   const [yaw, setYaw] = useState(-18); // RotateZ: -80deg to 80deg
   const [roll, setRoll] = useState(8); // RotateY
-  const [zoom, setZoom] = useState(() => getResponsiveZoom(1, '3d')); // 0.15 to 1.85
+  const [zoom, setZoom] = useState(() => getResponsiveZoom(1, '2d')); // 0.15 to 1.85
   const [pan, setPan] = useState({ x: 0, y: 0 }); // Free Pan translation (X, Y)
   const [viewPreset, setViewPreset] = useState('isometric');
   const [isOrbiting, setIsOrbiting] = useState(false);
@@ -259,7 +260,7 @@ export default function PipelineViewer({
       total: '0.0ms',
       action: 'Client fires HTTP request; TLS handshake initiated at ingress perimeter.',
       cx: 210,
-      cy: 115,
+      cy: 120,
     },
     {
       id: 2,
@@ -270,7 +271,7 @@ export default function PipelineViewer({
       total: '3.8ms',
       action: 'TLS decrypted; Ingress selects least-loaded pod target via active health probes.',
       cx: 415,
-      cy: 115,
+      cy: 120,
     },
     {
       id: 3,
@@ -280,8 +281,8 @@ export default function PipelineViewer({
       delta: '+14.4ms',
       total: '18.2ms',
       action: `Dispatched to pod-0${activePodTarget}; container CPU increments (+1.2%). HTTP 200 OK returned.`,
-      cx: 565,
-      cy: 295,
+      cx: 560,
+      cy: 260,
     },
     {
       id: 4,
@@ -291,19 +292,19 @@ export default function PipelineViewer({
       delta: '+14.2ms',
       total: '32.4ms',
       action: 'Pod CPU/Memory scraped; unready pods filtered; moving window buffer updated.',
-      cx: 680,
-      cy: 450,
+      cx: 675,
+      cy: 410,
     },
     {
       id: 5,
       title: '5. Models Brain',
-      component: 'PHPA Parallel Evaluator',
+      component: 'PHPA Parallel Evaluator & MAX Arbiter',
       route: 'Parallel Model Max Synthesis',
       delta: '+12.7ms',
       total: '45.1ms',
-      action: `Executed 4 models in parallel. Decision: Maximum picked ${winningModel} (${maxVal} replicas).`,
-      cx: 1020,
-      cy: 370,
+      action: `Dispatched across 4 individual forecasting models. MAX Arbiter selected ${winningModel} (${maxVal} replicas).`,
+      cx: 1080,
+      cy: 310,
     },
     {
       id: 6,
@@ -313,8 +314,8 @@ export default function PipelineViewer({
       delta: '+12.9ms',
       total: '58.0ms',
       action: `Deployment scale subresource patched to ${actualPods} pods. Control loop closed!`,
-      cx: 920,
-      cy: 115,
+      cx: 980,
+      cy: 120,
     },
   ];
 
@@ -911,7 +912,7 @@ export default function PipelineViewer({
               </span>
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-              Unified 3D Spatial Architecture with Live Evaluator & Pod Cluster • Click any stage to inspect deep telemetry.
+              Real-Time Autoscaling Architecture • All 4 Forecasting Models, MAX Arbiter & Cluster Actuation in Closed Loop.
             </p>
           </div>
 
@@ -920,10 +921,27 @@ export default function PipelineViewer({
             <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md p-1 text-xs font-mono shadow-sm max-w-full overflow-x-auto scrollbar-none">
               <button
                 onClick={() => {
+                  setViewMode('2d');
+                  setZoom(getResponsiveZoom(1, '2d'));
+                }}
+                className={`px-3 py-1 rounded transition-all flex-shrink-0 cursor-pointer ${
+                  viewMode === '2d'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+                title="2D Crisp Architecture Schematic"
+              >
+                2D Architecture
+              </button>
+
+              <div className="w-[1px] h-4 bg-zinc-300 dark:bg-zinc-700 mx-1.5 flex-shrink-0"></div>
+
+              <button
+                onClick={() => {
                   setViewMode('3d');
                   handlePresetChange('isometric');
                 }}
-                className={`px-3 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
+                className={`px-2.5 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
                   viewMode === '3d' && viewPreset === 'isometric'
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
@@ -959,23 +977,6 @@ export default function PipelineViewer({
                 title="3D Top-Down View (68°)"
               >
                 Top-Down (68°)
-              </button>
-
-              <div className="w-[1px] h-4 bg-zinc-300 dark:bg-zinc-700 mx-1.5 flex-shrink-0"></div>
-
-              <button
-                onClick={() => {
-                  setViewMode('2d');
-                  setZoom(getResponsiveZoom(1, '2d'));
-                }}
-                className={`px-2.5 py-1 rounded transition-all flex-shrink-0 cursor-pointer ${
-                  viewMode === '2d'
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-                title="2D Crisp High-Contrast Schematic"
-              >
-                2D Schematic
               </button>
             </div>
 
@@ -1399,21 +1400,21 @@ export default function PipelineViewer({
           </div>
         ) : (
           <div
-            className="relative w-full h-[400px] sm:h-[500px] md:h-[640px] flex items-center justify-center overflow-hidden transition-transform duration-100 ease-out"
+            className="relative w-full h-[480px] sm:h-[580px] md:h-[700px] flex items-center justify-center overflow-hidden transition-transform duration-100 ease-out"
           >
             <div
               className="absolute transition-transform duration-150 ease-out flex-shrink-0"
               style={{
-                width: '1160px',
-                minWidth: '1160px',
-                maxWidth: '1160px',
-                height: '600px',
-                minHeight: '600px',
-                maxHeight: '600px',
+                width: '1240px',
+                minWidth: '1240px',
+                maxWidth: '1240px',
+                height: '650px',
+                minHeight: '650px',
+                maxHeight: '650px',
                 left: '50%',
                 top: '50%',
-                marginLeft: '-580px',
-                marginTop: '-300px',
+                marginLeft: '-620px',
+                marginTop: '-325px',
                 transformOrigin: '50% 50%',
                 transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) scale(${zoom})`,
               }}
@@ -1451,117 +1452,171 @@ export default function PipelineViewer({
               </defs>
 
               {/* Highway Paths */}
-              {/* Wire 1: Edge to Ingress (210 to 240) */}
-              <path d="M 210 115 L 240 115" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="4 3" />
+              {/* Wire 1: Edge to Ingress (210, 120) to (240, 120) */}
+              <path d="M 210 120 L 240 120" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="4 3" />
               
-              {/* Wire 2: Ingress to Pod Cluster (415 to 450) */}
-              <path d="M 415 115 L 450 115" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              {/* Wire 2: Ingress to Pod Cluster (415, 120) to (445, 120) */}
+              <path d="M 415 120 L 445 120" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
               
-              {/* Wire 3: Pod Cluster bottom port (295) directly to Telemetry top port (390) - Zero Gap! */}
-              <path d="M 565 295 L 565 390" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="5 3" />
+              {/* Wire 3: Pod Cluster bottom (560, 260) down to Telemetry top (560, 340) */}
+              <path d="M 560 260 L 560 340" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="5 3" />
               
-              {/* Wire 4: Telemetry to Models Brain (680 to 710) */}
-              <path d="M 680 450 L 710 450" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
-              
-              {/* Wire 5: Models Brain recommendation up to Scale Actuator */}
-              <path d="M 1020 370 L 1020 180" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="5 3" />
-              
-              {/* Wire 6: Scale Actuator scale patch closing loop into Pod Cluster (920 to 880) */}
-              <path d="M 920 115 L 880 115" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="4 3" />
+              {/* Wire 4: Telemetry (675, 410) into Parallel Model Infeed Bus */}
+              <path d="M 675 410 L 710 410" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              {/* Vertical Distribution Trunk */}
+              <path d="M 710 292.5 L 710 562.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              {/* Model Infeed Branches */}
+              <path d="M 710 292.5 L 745 292.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              <path d="M 710 382.5 L 745 382.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              <path d="M 710 472.5 L 745 472.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              <path d="M 710 562.5 L 745 562.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+
+              {/* Wire 5: Model Prediction Outfeed Branches into MAX Envelope Collector Bus */}
+              <path d="M 915 292.5 L 945 292.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              <path d="M 915 382.5 L 945 382.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              <path d="M 915 472.5 L 945 472.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              <path d="M 915 562.5 L 945 562.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              {/* Vertical Convergence Trunk */}
+              <path d="M 945 292.5 L 945 562.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+              {/* Feeder into MAX Arbiter */}
+              <path d="M 945 427.5 L 975 427.5" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
+
+              {/* Wire 6: MAX Arbiter recommendation straight UP into Scale Actuator (1080, 310) to (1080, 190) */}
+              <path d="M 1080 310 L 1080 190" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="5 3" />
+
+              {/* Wire 7: Scale Actuator scale patch closing loop into Pod Cluster (980, 120) to (825, 120) */}
+              <path d="M 980 120 L 825 120" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="4 3" />
 
               {/* Animated Continuous Photons (Speed & Frequency Dynamically Scaled by probeSpeed & RPS) */}
-              {/* Photon 1: Traveling on Wire 1 (Edge to Ingress, stops at card entrance) */}
+              {/* Photon 1: Edge to Ingress */}
               <circle key={`p1-${p1Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
                 <animate attributeName="cx" values="210; 240" dur={p1Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="115; 115" dur={p1Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="120; 120" dur={p1Dur} repeatCount="indefinite" />
               </circle>
-              {/* High-workload secondary packet stream on Wire 1 */}
               {rps > 200 && (
                 <circle key={`p1b-${p1Dur}`} r="2.5" className="fill-zinc-500 dark:fill-zinc-400" opacity="0.8">
                   <animate attributeName="cx" values="210; 240" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
-                  <animate attributeName="cy" values="115; 115" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                  <animate attributeName="cy" values="120; 120" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
                 </circle>
               )}
 
-              {/* Photon 2: Traveling on Wire 2 (Ingress exit to Pods entrance) */}
+              {/* Photon 2: Ingress to Pods Cluster */}
               <circle key={`p2-${p2Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="415; 450" dur={p2Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="115; 115" dur={p2Dur} repeatCount="indefinite" />
+                <animate attributeName="cx" values="415; 445" dur={p2Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="120; 120" dur={p2Dur} repeatCount="indefinite" />
               </circle>
-              {/* High-workload secondary packet stream on Wire 2 */}
               {rps > 200 && (
                 <circle key={`p2b-${p2Dur}`} r="2.5" className="fill-zinc-500 dark:fill-zinc-400" opacity="0.8">
-                  <animate attributeName="cx" values="415; 450" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
-                  <animate attributeName="cy" values="115; 115" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                  <animate attributeName="cx" values="415; 445" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                  <animate attributeName="cy" values="120; 120" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
                 </circle>
               )}
 
-              {/* Photon 3: Telemetry Scrape (From bottom edge of Pod Cluster 295 down to Telemetry 390) */}
+              {/* Photon 3: Pods Cluster down to k8shorizmetrics */}
               <circle key={`p3-${p3Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="565; 565" dur={p3Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="295; 390" dur={p3Dur} repeatCount="indefinite" />
+                <animate attributeName="cx" values="560; 560" dur={p3Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="260; 340" dur={p3Dur} repeatCount="indefinite" />
               </circle>
 
-              {/* Photon 4: Telemetry to Models Brain (680 to 710) */}
-              <circle key={`p4-${p4Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="680; 710" dur={p4Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="450; 450" dur={p4Dur} repeatCount="indefinite" />
+              {/* Photon 4 Trunk: k8shorizmetrics to Parallel Bus */}
+              <circle key={`p4t-${p4Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
+                <animate attributeName="cx" values="675; 710" dur={p4Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="410; 410" dur={p4Dur} repeatCount="indefinite" />
               </circle>
 
-              {/* Photon 5: Models to Actuator (1020, 370 down to 180) */}
-              <circle key={`p5-${p5Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="1020; 1020" dur={p5Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="370; 180" dur={p5Dur} repeatCount="indefinite" />
+              {/* Photons 4A-4D: Streaming in parallel into ALL 4 Models! */}
+              <circle key={`p4a-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
+                <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="292.5; 292.5" dur={p4Dur} repeatCount="indefinite" />
+              </circle>
+              <circle key={`p4b-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
+                <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="382.5; 382.5" dur={p4Dur} repeatCount="indefinite" />
+              </circle>
+              <circle key={`p4c-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
+                <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="472.5; 472.5" dur={p4Dur} repeatCount="indefinite" />
+              </circle>
+              <circle key={`p4d-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
+                <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="562.5; 562.5" dur={p4Dur} repeatCount="indefinite" />
               </circle>
 
-              {/* Photon 6: Actuator patch into Pod Cluster (920 to 880) */}
-              <circle key={`p6-${p6Dur}`} r="3.5" className="fill-zinc-800 dark:fill-zinc-200">
-                <animate attributeName="cx" values="920; 880" dur={p6Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="115; 115" dur={p6Dur} repeatCount="indefinite" />
+              {/* Photons 5A-5D: Streaming from each Model into MAX Arbiter! */}
+              <circle key={`p5a-${p5Dur}`} r="2.5" className={winningModel === 'Reactive HPA' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
+                <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="292.5; 292.5" dur={p5Dur} repeatCount="indefinite" />
+              </circle>
+              <circle key={`p5b-${p5Dur}`} r="2.5" className={winningModel === 'Linear' || winningModel === 'Linear OLS' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
+                <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="382.5; 382.5" dur={p5Dur} repeatCount="indefinite" />
+              </circle>
+              <circle key={`p5c-${p5Dur}`} r="2.5" className={winningModel === 'Holt-Winters' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
+                <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="472.5; 472.5" dur={p5Dur} repeatCount="indefinite" />
+              </circle>
+              <circle key={`p5d-${p5Dur}`} r="2.5" className={winningModel === 'LSTM' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
+                <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="562.5; 562.5" dur={p5Dur} repeatCount="indefinite" />
+              </circle>
+              <circle key={`p5in-${p5Dur}`} r="3" className="fill-emerald-500">
+                <animate attributeName="cx" values="945; 975" dur={p5Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="427.5; 427.5" dur={p5Dur} repeatCount="indefinite" />
               </circle>
 
-              {/* Interactive Trace Probe: Follows Orthogonal Wires (Zero Diagonals) and Docks at Border Ports (Never Covers Text) */}
+              {/* Photon 6: MAX Arbiter Decision up into Scale Actuator */}
+              <circle key={`p6-${p5Dur}`} r="3" className="fill-emerald-500">
+                <animate attributeName="cx" values="1080; 1080" dur={p5Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="310; 190" dur={p5Dur} repeatCount="indefinite" />
+              </circle>
+
+              {/* Photon 7: Scale Actuator scale patch closing loop into Pod Cluster */}
+              <circle key={`p7-${p6Dur}`} r="3.5" className="fill-zinc-900 dark:fill-zinc-100">
+                <animate attributeName="cx" values="980; 825" dur={p6Dur} repeatCount="indefinite" />
+                <animate attributeName="cy" values="120; 120" dur={p6Dur} repeatCount="indefinite" />
+              </circle>
+
+              {/* Interactive Trace Probe */}
               {probeHop > 0 && (
                 <g>
-                  {/* Active Orthogonal Wire Probe Photon: travels strictly along the wire of the active hop */}
                   {probeHop === 1 && (
                     <circle r="4" className="fill-zinc-950 dark:fill-white">
                       <animate attributeName="cx" values="210; 240" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 2 && (
                     <circle r="4" className="fill-zinc-950 dark:fill-white">
-                      <animate attributeName="cx" values="415; 450" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cx" values="415; 445" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 3 && (
                     <circle r="4" className="fill-zinc-950 dark:fill-white">
-                      <animate attributeName="cx" values="565; 565" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      <animate attributeName="cy" values="295; 390" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cx" values="560; 560" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="260; 340" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 4 && (
                     <circle r="4" className="fill-zinc-950 dark:fill-white">
-                      <animate attributeName="cx" values="680; 710" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      <animate attributeName="cy" values="450; 450" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cx" values="675; 745" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="410; 410" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 5 && (
                     <circle r="4" className="fill-zinc-950 dark:fill-white">
-                      <animate attributeName="cx" values="1020; 1020" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      <animate attributeName="cy" values="370; 180" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cx" values="1080; 1080" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="310; 190" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 6 && (
                     <circle r="4" className="fill-zinc-950 dark:fill-white">
-                      <animate attributeName="cx" values="920; 880" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cx" values="980; 825" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
 
-                  {/* Docking Beacon Socket on the Border Port (Strictly anchored on wire socket, never over text) */}
+                  {/* Docking Beacon Socket */}
                   {currentWaypoint && (
                     <g>
                       <circle
@@ -1677,7 +1732,7 @@ export default function PipelineViewer({
                 setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[450px] top-[25px] w-[430px] h-[270px] cursor-pointer group z-20"
+              className="absolute left-[445px] top-[25px] w-[380px] h-[235px] cursor-pointer group z-20"
               style={{ transform: viewMode === '3d' ? 'translateZ(45px)' : 'none' }}
             >
               <div
@@ -1710,12 +1765,12 @@ export default function PipelineViewer({
 
                 {/* Compact Pod Rack Grid */}
                 <div className="bg-zinc-50 dark:bg-zinc-950 rounded-xl p-2 border border-zinc-200 dark:border-zinc-800/90 flex-1 my-1 overflow-y-auto flex items-center justify-center">
-                  <div className="grid grid-cols-6 gap-1.5 w-full">
+                  <div className="grid grid-cols-4 gap-1.5 w-full">
                     <AnimatePresence>
-                      {Array.from({ length: actualPods }).map((_, idx) => {
+                      {Array.from({ length: Math.min(12, actualPods) }).map((_, idx) => {
                         const isPrewarmed = idx >= reactiveHpa && idx < actualPods;
                         const isTargetedByProbe = probeHop === 3 && idx === activePodTarget - 1;
-                        const podCpu = Math.min(100, Math.round(cpu + (idx % 3) * 4 - 4));
+                        const podCpu = Math.min(100, Math.max(10, Math.round(cpu + (idx % 3) * 4 - 4)));
 
                         return (
                           <motion.div
@@ -1778,7 +1833,7 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                <div className="mt-2 pt-1.5 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+                <div className="mt-1 pt-1 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
                   <span>
                     Avg Pod CPU: <strong className="text-zinc-900 dark:text-zinc-100">{cpu}%</strong> (Target: 60%)
                   </span>
@@ -1796,7 +1851,7 @@ export default function PipelineViewer({
                 setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[450px] top-[390px] w-[230px] cursor-pointer group"
+              className="absolute left-[445px] top-[340px] w-[230px] cursor-pointer group"
               style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
@@ -1808,7 +1863,7 @@ export default function PipelineViewer({
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
-                    <Layers className="w-3.5 h-3.5" />
+                    <Layers className="w-3.5 h-3.5 text-emerald-500" />
                   </div>
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
                     15s Cadence
@@ -1827,117 +1882,212 @@ export default function PipelineViewer({
               </div>
             </div>
 
-            {/* ZONE 5: PHPA MODEL DISPATCHER & MAX DECISION */}
+            {/* ZONE 5: ALL 4 INDIVIDUAL MODEL NODES (Concurrently Evaluated!) */}
+            {/* Model 1: Reactive HPA Baseline */}
             <div
               onClick={() => {
                 setSelectedStage(4);
                 setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[710px] top-[370px] w-[410px] cursor-pointer group"
+              className="absolute left-[745px] top-[255px] w-[170px] cursor-pointer group"
               style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
             >
               <div
-                className={`rounded-2xl p-4 border transition-all raised-card ${
+                className={`rounded-xl p-2.5 border transition-all raised-card ${
+                  winningModel === 'Reactive HPA'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
+                }`}
+              >
+                <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                  <span className="font-bold text-zinc-700 dark:text-zinc-300">Reactive HPA</span>
+                  {winningModel === 'Reactive HPA' ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  ) : (
+                    <span className="text-[8px] text-zinc-400">Baseline</span>
+                  )}
+                </div>
+                <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                  <span>{reactiveHpa}</span>
+                  <span className="text-[9px] font-normal text-zinc-500">pods</span>
+                </div>
+                <span className="text-[8px] font-mono text-zinc-400 block mt-0.5">
+                  ⌈Current × (CPU / 60%)⌉
+                </span>
+              </div>
+            </div>
+
+            {/* Model 2: Linear OLS Regressor */}
+            <div
+              onClick={() => {
+                setSelectedStage(4);
+                setActiveTab('diagram');
+                setIsDrawerOpen(true);
+              }}
+              className="absolute left-[745px] top-[345px] w-[170px] cursor-pointer group"
+              style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
+            >
+              <div
+                className={`rounded-xl p-2.5 border transition-all raised-card ${
+                  winningModel === 'Linear' || winningModel === 'Linear OLS'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
+                }`}
+              >
+                <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                  <span className="font-bold text-zinc-700 dark:text-zinc-300">Linear OLS</span>
+                  {(winningModel === 'Linear' || winningModel === 'Linear OLS') ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  ) : (
+                    <span className="text-[8px] text-zinc-400">Trend</span>
+                  )}
+                </div>
+                <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                  <span>{linearPred}</span>
+                  <span className="text-[9px] font-normal text-zinc-500">pods</span>
+                </div>
+                <span className="text-[8px] font-mono text-zinc-400 block mt-0.5">
+                  1st-Order Gradient dy/dt
+                </span>
+              </div>
+            </div>
+
+            {/* Model 3: Holt-Winters (Triple Exp) */}
+            <div
+              onClick={() => {
+                setSelectedStage(4);
+                setActiveTab('diagram');
+                setIsDrawerOpen(true);
+              }}
+              className="absolute left-[745px] top-[435px] w-[170px] cursor-pointer group"
+              style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
+            >
+              <div
+                className={`rounded-xl p-2.5 border transition-all raised-card ${
+                  winningModel === 'Holt-Winters'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
+                }`}
+              >
+                <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                  <span className="font-bold text-zinc-700 dark:text-zinc-300">Holt-Winters</span>
+                  {winningModel === 'Holt-Winters' ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  ) : (
+                    <span className="text-[8px] text-zinc-400">Seasonal</span>
+                  )}
+                </div>
+                <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                  <span>{hwPred}</span>
+                  <span className="text-[9px] font-normal text-zinc-500">pods</span>
+                </div>
+                <span className="text-[8px] font-mono text-zinc-400 block mt-0.5">
+                  Level + Trend + Seasonality
+                </span>
+              </div>
+            </div>
+
+            {/* Model 4: 2-Layer Stacked LSTM */}
+            <div
+              onClick={() => {
+                setSelectedStage(4);
+                setActiveTab('diagram');
+                setIsDrawerOpen(true);
+              }}
+              className="absolute left-[745px] top-[525px] w-[170px] cursor-pointer group"
+              style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
+            >
+              <div
+                className={`rounded-xl p-2.5 border transition-all raised-card ${
+                  winningModel === 'LSTM'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
+                }`}
+              >
+                <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                  <span className="font-bold text-zinc-900 dark:text-zinc-100">2-Layer LSTM</span>
+                  {winningModel === 'LSTM' ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  ) : (
+                    <span className="text-[8px] text-indigo-500">Deep Net</span>
+                  )}
+                </div>
+                <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                  <span>{lstmPred}</span>
+                  <span className="text-[9px] font-normal text-zinc-500">pods</span>
+                </div>
+                <span className="text-[8px] font-mono text-zinc-400 block mt-0.5">
+                  Recurrent Hidden Cell Memory
+                </span>
+              </div>
+            </div>
+
+            {/* ZONE 5B: MAX ENVELOPE DECISION ARBITER (Individual Component!) */}
+            <div
+              onClick={() => {
+                setSelectedStage(4);
+                setActiveTab('diagram');
+                setIsDrawerOpen(true);
+              }}
+              className="absolute left-[975px] top-[310px] w-[215px] h-[250px] cursor-pointer group z-20"
+              style={{ transform: viewMode === '3d' ? 'translateZ(45px)' : 'none' }}
+            >
+              <div
+                className={`rounded-2xl p-3.5 border transition-all raised-card h-full flex flex-col justify-between ${
                   probeHop === 5
                     ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
                     : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
-                      <Cpu className="w-3.5 h-3.5" />
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/80 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                        <Cpu className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                          MAX Arbiter
+                        </h4>
+                        <span className="text-[9px] font-mono text-zinc-500 block">
+                          Decision Engine
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
-                        5. Parallel Model Evaluator
-                      </h4>
-                      <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
-                        Dispatching 4 Models Concurrently
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-bold">
-                    MAX Envelope
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div
-                    className={`rounded-lg p-2 border text-[11px] transition-all ${
-                      winningModel === 'Reactive HPA'
-                        ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 shadow-sm'
-                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800/80 text-zinc-500 dark:text-zinc-400'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-zinc-500 dark:text-zinc-400">Reactive HPA</span>
-                      {winningModel === 'Reactive HPA' && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100" />}
-                    </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs">
-                      <span>{reactiveHpa}</span>
-                      <span className="text-[10px] font-normal text-zinc-500">pods</span>
-                    </div>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30">
+                      MAX
+                    </span>
                   </div>
 
-                  <div
-                    className={`rounded-lg p-2 border text-[11px] transition-all ${
-                      winningModel === 'Linear'
-                        ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 shadow-sm'
-                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800/80 text-zinc-500 dark:text-zinc-400'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-zinc-500 dark:text-zinc-400">Linear OLS</span>
-                      {winningModel === 'Linear' && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100" />}
+                  <div className="bg-zinc-50 dark:bg-zinc-950 rounded-lg p-2 border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1 my-1">
+                    <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">
+                      <span>Reactive HPA:</span>
+                      <strong className={winningModel === 'Reactive HPA' ? 'text-emerald-600 dark:text-emerald-400' : ''}>{reactiveHpa}</strong>
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs">
-                      <span>{linearPred}</span>
-                      <span className="text-[10px] font-normal text-zinc-500">pods</span>
+                    <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">
+                      <span>Linear OLS:</span>
+                      <strong className={winningModel === 'Linear' || winningModel === 'Linear OLS' ? 'text-emerald-600 dark:text-emerald-400' : ''}>{linearPred}</strong>
                     </div>
-                  </div>
-
-                  <div
-                    className={`rounded-lg p-2 border text-[11px] transition-all ${
-                      winningModel === 'Holt-Winters'
-                        ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 shadow-sm'
-                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800/80 text-zinc-500 dark:text-zinc-400'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-zinc-500 dark:text-zinc-400">Holt-Winters</span>
-                      {winningModel === 'Holt-Winters' && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100" />}
+                    <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">
+                      <span>Holt-Winters:</span>
+                      <strong className={winningModel === 'Holt-Winters' ? 'text-emerald-600 dark:text-emerald-400' : ''}>{hwPred}</strong>
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs">
-                      <span>{hwPred}</span>
-                      <span className="text-[10px] font-normal text-zinc-500">pods</span>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`rounded-lg p-2 border text-[11px] transition-all ${
-                      winningModel === 'LSTM'
-                        ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 shadow-sm'
-                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800/80 text-zinc-500 dark:text-zinc-400'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-zinc-900 dark:text-zinc-100 font-semibold">2-Layer LSTM</span>
-                      {winningModel === 'LSTM' && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 animate-ping" />}
-                    </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs">
-                      <span>{lstmPred}</span>
-                      <span className="text-[10px] font-normal text-zinc-500">pods</span>
+                    <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">
+                      <span>2-Layer LSTM:</span>
+                      <strong className={winningModel === 'LSTM' ? 'text-emerald-600 dark:text-emerald-400' : ''}>{lstmPred}</strong>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono">
-                  <span className="text-zinc-500 dark:text-zinc-400">MAX Output:</span>
-                  <span className="text-zinc-900 dark:text-zinc-100 font-bold">
-                    {maxVal} Replicas via {winningModel}
-                  </span>
+                <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800/80">
+                  <div className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-0.5">
+                    Winning Recommendation:
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                    <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{maxVal} Replicas via {winningModel}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1949,7 +2099,7 @@ export default function PipelineViewer({
                 setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[920px] top-[50px] w-[200px] cursor-pointer group"
+              className="absolute left-[980px] top-[50px] w-[205px] cursor-pointer group"
               style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
@@ -1961,7 +2111,7 @@ export default function PipelineViewer({
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
                   </div>
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
                     ScaleClient
@@ -1974,7 +2124,7 @@ export default function PipelineViewer({
                   <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">Patched:</span>
                   <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{actualPods} pods</span>
                 </div>
-                <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 font-mono">Loop Closed ⚡</div>
+                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-mono">Loop Closed ✓ Kube-API</div>
               </div>
             </div>
           </div>

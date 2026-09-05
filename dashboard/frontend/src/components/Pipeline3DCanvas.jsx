@@ -548,15 +548,7 @@ function StageNode({
         />
       </RoundedBox>
 
-      {/* Ground Anchor Pedestal / Drop Shadow Disc */}
-      <mesh position={[0, -2.62 - node.position[1], 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[node.size[0] * 0.42, 32]} />
-        <meshBasicMaterial
-          color={isDark ? '#000000' : '#475569'}
-          transparent
-          opacity={isDark ? (isActiveHop ? 0.65 : 0.4) : (isActiveHop ? 0.35 : 0.18)}
-        />
-      </mesh>
+      {/* Clean 3D Stage Mesh without dark puddle discs */}
 
       {/* HTML Overlay Label (Billboarded, always crisp & readable in both themes) */}
       <Html
@@ -839,15 +831,7 @@ export default function Pipeline3DCanvas({
           position={[0, -2.65, 0]}
         />
 
-        {/* Soft Ground Contact Shadows */}
-        <ContactShadows
-          position={[0, -2.64, 0]}
-          opacity={isDark ? 0.7 : 0.38}
-          scale={26}
-          blur={2.0}
-          far={8}
-          color={isDark ? '#000000' : '#334155'}
-        />
+        {/* Clean Ground Grid without muddy blob shadows */}
 
         {/* Prominent Highway Connection Lines between Nodes */}
         {PIPELINE_CONNECTIONS.map((conn) => {
