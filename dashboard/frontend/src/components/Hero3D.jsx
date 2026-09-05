@@ -59,6 +59,7 @@ function ClusterCore({ isMobile, isDark }) {
   return (
     <group>
       {/* Solid central nucleus core */}
+      {/* Solid central nucleus core: light grey in light mode, slate grey in dark mode */}
       <mesh ref={coreRef} geometry={coreGeo}>
         <meshStandardMaterial
           color="#9CA3AF"
@@ -66,6 +67,12 @@ function ClusterCore({ isMobile, isDark }) {
           emissiveIntensity={0.02}
           roughness={0.35}
           metalness={0.2}
+          color={isDark ? '#475569' : '#d4d4d8'}
+          emissive={isDark ? '#0f172a' : '#ffffff'}
+          emissiveIntensity={isDark ? 0.08 : 0.25}
+          roughness={isDark ? 0.35 : 0.55}
+          metalness={isDark ? 0.3 : 0.05}
+          flatShading
         />
       </mesh>
 
@@ -396,8 +403,12 @@ export default function Hero3D({
       <section className="relative z-30 max-w-4xl mx-auto px-6 text-center space-y-6 my-auto pointer-events-auto">
         {/* Architectural Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] sm:text-xs font-mono tracking-wider backdrop-blur-md shadow-sm transition-colors">
+        <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] sm:text-xs font-mono tracking-wider backdrop-blur-md shadow-sm transition-colors ${
+          isDark ? 'bg-zinc-900/60 border-zinc-700' : 'bg-white/80 border-zinc-300'
+        }`}>
           <span className={`w-2 h-2 rounded-full animate-ping ${isDark ? 'bg-white' : 'bg-black'}`} />
           <span className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
+          <span className={isDark ? 'text-zinc-300' : 'text-zinc-950 font-medium'}>
             AUTONOMOUS KUBERNETES AUTOSCALER
           </span>
         </div>
@@ -408,6 +419,7 @@ export default function Hero3D({
             isDark
               ? 'text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)]'
               : 'text-zinc-950'
+              : 'text-zinc-950 drop-shadow-[0_2px_10px_rgba(255,255,255,0.95)]'
           }`}
         >
           Predictive Horizontal Pod Autoscaler
@@ -417,6 +429,10 @@ export default function Hero3D({
         <p
           className={`max-w-2xl mx-auto text-sm sm:text-base md:text-lg leading-relaxed font-normal ${
             isDark ? 'text-zinc-300 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)]' : 'text-zinc-600'
+          className={`max-w-2xl mx-auto text-sm sm:text-base md:text-lg leading-relaxed ${
+            isDark
+              ? 'text-zinc-300 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] font-normal'
+              : 'text-zinc-950 font-medium drop-shadow-[0_1px_8px_rgba(255,255,255,0.98)]'
           }`}
         >
           Zero-deficit proactive Kubernetes autoscaling combining 2-Layer Stacked LSTM neural lookahead, Holt-Winters seasonality, and ordinary least squares trend projection.
