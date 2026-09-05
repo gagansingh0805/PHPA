@@ -36,6 +36,9 @@ import {
   Radio,
 } from 'lucide-react';
 
+// Lazy-load the WebGL 3D Canvas so it only initializes when the user enters 3D mode
+const Pipeline3DCanvas = React.lazy(() => import('./Pipeline3DCanvas'));
+
 export default function PipelineViewer({
   latest = {},
   isPlaying = true,
@@ -51,6 +54,8 @@ export default function PipelineViewer({
 }) {
   // 1. View Mode: '3d' (Spatial 3D Canvas) vs '2d' (2D Crisp Schematic Architecture)
   const [viewMode, setViewMode] = useState('3d'); // '3d' | '2d'
+  // 1. View Mode: '2d' (2D Crisp Schematic Architecture default) vs '3d' (Spatial 3D Canvas)
+  const [viewMode, setViewMode] = useState('2d'); // '2d' | '3d'
 
   // Dynamic responsive auto-fit zoom calculation ensuring the full diagram fits without being cut on mobile
   const getResponsiveZoom = (base = 1, mode = viewMode) => {
@@ -190,9 +195,12 @@ export default function PipelineViewer({
   }, [isOrbiting, viewMode]);
 
   // Window-level Pointer Drag Handlers (Smooth, reliable, works with mouse and touch)
+  // 2D Pan Pointer Handlers (Three.js OrbitControls handles 3D mode)
   const handlePointerDown = (e) => {
+    if (viewMode === '3d') return; // Three.js handles 3D gestures
     if (e.target.closest('button, input, a, select, [role="button"]')) return;
     if (e.pointerType !== 'touch' && e.button !== 0 && e.button !== 1 && e.button !== 2) return; // Mouse or touch
+    if (e.pointerType !== 'touch' && e.button !== 0 && e.button !== 1 && e.button !== 2) return;
 
     // If currently in 2D mode, clicking or dragging anywhere on the diagram unlocks into 3D Free Mode!
     if (viewMode === '2d') {
@@ -237,6 +245,10 @@ export default function PipelineViewer({
         setYaw(Math.round(newYaw));
         setPitch(Math.round(newPitch));
       }
+      setPan({
+        x: Math.round(startPan.x + dx),
+        y: Math.round(startPan.y + dy),
+      });
     };
 
     const handlePointerUp = () => {
@@ -263,6 +275,7 @@ export default function PipelineViewer({
         setZoom(getResponsiveZoom(1, '3d'));
       }
     }
+    // In 2D mode, allow clicking nodes without triggering accidental mode shifts
   };
 
   // Dedicated non-passive wheel listener attached to canvasRef
@@ -1294,12 +1307,14 @@ export default function PipelineViewer({
               setYaw(-18);
               setRoll(8);
               setZoom(getResponsiveZoom(1, '3d'));
+              handlePresetChange('free');
             }}
             className="absolute top-2 left-2 sm:top-3 sm:left-4 z-30 pointer-events-auto flex items-center gap-1.5 bg-white/95 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-mono text-zinc-800 dark:text-zinc-200 shadow-md backdrop-blur-md cursor-pointer transition-all hover:scale-105"
             title="Click to enter 3D Free Mode"
           >
             <Compass className="w-3.5 h-3.5 text-emerald-500 animate-spin" />
             <span className="font-semibold text-zinc-900 dark:text-zinc-100">2D Locked</span>
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100">2D Schematic</span>
             <span className="text-zinc-400 dark:text-zinc-500">•</span>
             <span className="text-emerald-600 dark:text-emerald-400 font-bold underline decoration-emerald-500/50">
               Click for 3D Free Mode
@@ -1308,8 +1323,13 @@ export default function PipelineViewer({
         ) : (
           <div className="absolute top-2 left-2 sm:top-3 sm:left-4 z-20 pointer-events-none flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-700/80 px-2 sm:px-2.5 py-1 rounded-md text-[9px] sm:text-[10px] font-mono text-zinc-600 dark:text-zinc-400 shadow-sm backdrop-blur-md">
             <span>🖐️ 3D Free Mode (Drag to Orbit)</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+              3D {viewPreset === 'free' ? 'Free Mode' : viewPreset === 'isometric' ? 'Isometric' : viewPreset === 'front' ? 'Front' : 'Top-Down'}
+            </span>
             <span className="hidden sm:inline text-zinc-400">•</span>
             <span className="hidden sm:inline">Double-click to Reset</span>
+            <span className="hidden sm:inline">Drag to Orbit / Scroll to Zoom</span>
           </div>
         )}
 
@@ -1420,6 +1440,35 @@ export default function PipelineViewer({
               : {}
           }
         >
+        {/* Main Viewport: Real WebGL 3D Canvas OR 2D Crisp Schematic */}
+        {viewMode === '3d' ? (
+          <div className="relative w-full h-[400px] sm:h-[500px] md:h-[640px] rounded-xl overflow-hidden bg-zinc-950">
+            <React.Suspense
+              fallback={
+                <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950 text-zinc-400 font-mono text-xs gap-3">
+                  <div className="w-6 h-6 border-2 border-zinc-700 border-t-zinc-200 rounded-full animate-spin" />
+                  <span>Loading WebGL 3D Pipeline Scene...</span>
+                </div>
+              }
+            >
+              <Pipeline3DCanvas
+                viewPreset={viewPreset}
+                isOrbiting={isOrbiting}
+                isProbePlaying={isProbePlaying}
+                probeHop={probeHop}
+                probeSpeed={probeSpeed}
+                onProbeHopChange={setProbeHop}
+                selectedStage={selectedStage}
+                onSelectStage={(id) => {
+                  setSelectedStage(id);
+                  setIsDrawerOpen(true);
+                }}
+                latest={latest}
+                isSpiking={isSpiking}
+              />
+            </React.Suspense>
+          </div>
+        ) : (
           <div
             className="absolute transition-transform duration-150 ease-out flex-shrink-0"
             style={{
@@ -1443,7 +1492,25 @@ export default function PipelineViewer({
                     transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) scale(${zoom})`,
                   }),
             }}
+            className="relative w-full h-[400px] sm:h-[500px] md:h-[640px] flex items-center justify-center overflow-hidden transition-transform duration-100 ease-out"
           >
+            <div
+              className="absolute transition-transform duration-150 ease-out flex-shrink-0"
+              style={{
+                width: '1160px',
+                minWidth: '1160px',
+                maxWidth: '1160px',
+                height: '600px',
+                minHeight: '600px',
+                maxHeight: '600px',
+                left: '50%',
+                top: '50%',
+                marginLeft: '-580px',
+                marginTop: '-300px',
+                transformOrigin: '50% 50%',
+                transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) scale(${zoom})`,
+              }}
+            >
             {/* Grid Floor */}
             <div
               className="absolute inset-0 rounded-3xl pointer-events-none border border-zinc-300 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-950/60"
@@ -2006,6 +2073,8 @@ export default function PipelineViewer({
           </div>
         </div>
       </div>
+      )}
+    </div>
 
       {/* 4. LIVE PACKET PAYLOAD INSPECTOR CARD */}
       {currentWaypoint && (
