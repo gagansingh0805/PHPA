@@ -1060,43 +1060,45 @@ export default function App() {
               aria-checked={theme === 'dark'}
               onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
               title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-              className="relative inline-flex h-[30px] w-14 items-center justify-between p-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 shadow-inner cursor-pointer select-none flex-shrink-0 transition-colors duration-200 appearance-none outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
-              style={{ borderRadius: '9999px' }}
+              className="relative inline-flex items-center rounded-full p-[2px] cursor-pointer select-none flex-shrink-0 transition-colors duration-200 appearance-none outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 shadow-inner"
+              style={{
+                width: '50px',
+                minWidth: '50px',
+                maxWidth: '50px',
+                height: '28px',
+                borderRadius: '9999px',
+                overflow: 'hidden'
+              }}
             >
               <span className="sr-only">Toggle theme</span>
 
-              {/* Sliding Pill Indicator */}
+              {/* Sliding Circular Thumb Knob */}
               <span
-                aria-hidden="true"
-                className={`absolute top-0.5 bottom-0.5 left-0.5 w-6 h-6 rounded-full bg-white dark:bg-zinc-950 shadow-sm border border-zinc-200/80 dark:border-zinc-700 transition-transform duration-200 ease-out pointer-events-none ${
-                  theme === 'dark' ? 'translate-x-[26px]' : 'translate-x-0'
+                className={`flex items-center justify-center rounded-full shadow-md transition-transform duration-200 ease-out border ${
+                  theme === 'dark'
+                    ? 'translate-x-[22px] bg-zinc-950 text-zinc-100 border-zinc-700'
+                    : 'translate-x-0 bg-white text-amber-500 border-zinc-200/90'
                 }`}
-                style={{ borderRadius: '9999px' }}
-              />
-
-              {/* Sun Slot (Left) */}
-              <span
-                className={`relative z-10 w-6 h-6 flex items-center justify-center transition-colors duration-200 pointer-events-none ${
-                  theme === 'dark' ? 'text-zinc-400 dark:text-zinc-500' : 'text-amber-500'
-                }`}
+                style={{
+                  width: '22px',
+                  minWidth: '22px',
+                  maxWidth: '22px',
+                  height: '22px',
+                  borderRadius: '9999px'
+                }}
               >
-                <Sun className="w-3.5 h-3.5" />
-              </span>
-
-              {/* Moon Slot (Right) */}
-              <span
-                className={`relative z-10 w-6 h-6 flex items-center justify-center transition-colors duration-200 pointer-events-none ${
-                  theme === 'dark' ? 'text-zinc-100' : 'text-zinc-400 dark:text-zinc-500'
-                }`}
-              >
-                <Moon className="w-3.5 h-3.5" />
+                {theme === 'dark' ? (
+                  <Moon className="w-3 h-3 text-zinc-100" />
+                ) : (
+                  <Sun className="w-3 h-3 text-amber-500" />
+                )}
               </span>
             </button>
 
             {/* Launch Interactive Demo Button */}
             <button
               onClick={demoActive ? handleStopDemo : handleStartDemo}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all duration-150 border ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all duration-150 border flex-shrink-0 ${
                 demoActive
                   ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm'
                   : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 hover:opacity-90 shadow-sm'
