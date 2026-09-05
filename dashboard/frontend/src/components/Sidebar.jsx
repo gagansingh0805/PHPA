@@ -14,7 +14,6 @@ import {
   Flame, 
   Clock,
   ChevronRight,
-  X
   X,
   Sparkles
 } from 'lucide-react';
