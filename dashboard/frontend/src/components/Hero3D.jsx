@@ -61,8 +61,8 @@ function ClusterCore({ isMobile, isDark }) {
       {/* Solid central nucleus core */}
       <mesh ref={coreRef} geometry={coreGeo}>
         <meshStandardMaterial
-          color={isDark ? '#1A1A24' : '#d4d4d8'}
-          emissive={isDark ? '#12121A' : '#ffffff'}
+          color={isDark ? '#1A1510' : '#d4d4d8'}
+          emissive={isDark ? '#0F0D0A' : '#ffffff'}
           emissiveIntensity={isDark ? 0.2 : 0.25}
           roughness={isDark ? 0.35 : 0.55}
           metalness={isDark ? 0.5 : 0.05}
@@ -70,40 +70,40 @@ function ClusterCore({ isMobile, isDark }) {
         />
       </mesh>
 
-      {/* Wireframe lattice (soft off-white/warm gray #E8E6DF at 25-40% opacity for etched glass look) */}
+      {/* Wireframe lattice (warm gold-beige #E8D5A8 at 30-45% opacity for gold-etched look) */}
       <mesh ref={wireframeRef} geometry={wireGeo}>
         <meshBasicMaterial
-          color={isDark ? '#E8E6DF' : '#000000'}
+          color={isDark ? '#E8D5A8' : '#000000'}
           wireframe
           transparent
-          opacity={isDark ? 0.32 : 0.25}
+          opacity={isDark ? 0.38 : 0.25}
         />
       </mesh>
 
       {/* Latitudinal electron orbital coordinate rings */}
       <mesh ref={ring1Ref} geometry={ringGeo} rotation={[Math.PI / 4, 0, 0]}>
         <meshBasicMaterial
-          color={isDark ? '#E8E6DF' : '#000000'}
+          color={isDark ? '#E8D5A8' : '#000000'}
           wireframe
           transparent
-          opacity={isDark ? 0.30 : 0.25}
+          opacity={isDark ? 0.36 : 0.25}
         />
       </mesh>
       <mesh ref={ring2Ref} geometry={ringGeo} rotation={[-Math.PI / 3, Math.PI / 6, 0]}>
         <meshBasicMaterial
-          color={isDark ? '#E8E6DF' : '#000000'}
+          color={isDark ? '#E8D5A8' : '#000000'}
           wireframe
           transparent
-          opacity={isDark ? 0.28 : 0.25}
+          opacity={isDark ? 0.33 : 0.25}
         />
       </mesh>
       {!isMobile && (
         <mesh ref={ring3Ref} geometry={ringGeo} rotation={[0, Math.PI / 3, Math.PI / 4]}>
           <meshBasicMaterial
-            color={isDark ? '#E8E6DF' : '#000000'}
+            color={isDark ? '#E8D5A8' : '#000000'}
             wireframe
             transparent
-            opacity={isDark ? 0.25 : 0.25}
+            opacity={isDark ? 0.30 : 0.25}
           />
         </mesh>
       )}
@@ -112,7 +112,7 @@ function ClusterCore({ isMobile, isDark }) {
 }
 
 /* =========================================================================
-   2. Orbiting Electrons Particle Field (Glowing Orbs in Dark / Monochrome Dots in Light)
+   2. Orbiting Electrons Particle Field (Warm Cream/Champagne Orbs in Dark / Monochrome Dots in Light)
    ========================================================================= */
 function PodField({ count = 200, isDark }) {
   const meshRef = useRef();
@@ -143,7 +143,7 @@ function PodField({ count = 200, isDark }) {
     return () => sphereGeo.dispose();
   }, [sphereGeo]);
 
-  // Update instance colors with exact core color & size-based opacity
+  // Update instance colors with warm cream/champagne core & size-based opacity
   useEffect(() => {
     if (!meshRef.current) return;
     const tempColor = new THREE.Color();
@@ -151,8 +151,8 @@ function PodField({ count = 200, isDark }) {
 
     pods.forEach((pod, i) => {
       if (isDark) {
-        // Core: #F8F6F0 scaled by size-based opacity factor (small orbs 40-70%, large orbs 15-30%)
-        tempColor.set('#F8F6F0').multiplyScalar(pod.opacityFactor);
+        // Core: #F5E6C8 scaled by size-based opacity factor (small orbs 40-70%, large orbs 15-30%)
+        tempColor.set('#F5E6C8').multiplyScalar(pod.opacityFactor);
       } else {
         tempColor.set(lightPalette[i % lightPalette.length]);
       }
@@ -185,8 +185,8 @@ function PodField({ count = 200, isDark }) {
   return (
     <instancedMesh ref={meshRef} args={[sphereGeo, null, count]}>
       <meshStandardMaterial
-        color={isDark ? '#F8F6F0' : '#050505'}
-        emissive={isDark ? '#FFFFFF' : '#000000'}
+        color={isDark ? '#F5E6C8' : '#050505'}
+        emissive={isDark ? '#FFEFD1' : '#000000'}
         emissiveIntensity={isDark ? 1.6 : 0.0}
         roughness={isDark ? 0.1 : 0.3}
         metalness={0.0}
@@ -278,11 +278,11 @@ export default function Hero3D({
   return (
     <div
       className={`relative w-screen h-screen min-h-screen overflow-hidden flex flex-col justify-between transition-colors duration-300 ${
-        isDark ? 'text-[#FAFAF7]' : 'text-zinc-950'
+        isDark ? 'text-[#FDF6E8]' : 'text-zinc-950'
       }`}
       style={{
         background: isDark
-          ? 'radial-gradient(ellipse at 50% 50%, #1A1A24 0%, #12121A 60%, #0A0A0F 100%)'
+          ? 'radial-gradient(ellipse at 50% 50%, #1A1510 0%, #14100D 55%, #0F0D0A 100%)'
           : '#ffffff',
       }}
     >
@@ -331,13 +331,13 @@ export default function Hero3D({
         <div className="flex items-center gap-3">
           <PhpaLogo size="sm" />
           <div className="flex items-center gap-2">
-            <span className={`font-mono font-bold text-xs sm:text-sm tracking-tight ${isDark ? 'text-[#FAFAF7]' : 'text-zinc-950'}`}>
+            <span className={`font-mono font-bold text-xs sm:text-sm tracking-tight ${isDark ? 'text-[#FDF6E8]' : 'text-zinc-950'}`}>
               PHPA
             </span>
             <span
               className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
                 isDark
-                  ? 'bg-[#1A1A24]/80 border-[#3A3A44] text-[#A8A6A0]'
+                  ? 'bg-[#1A1510]/80 border-[#4A3F2E] text-[#B8A888]'
                   : 'bg-zinc-100 border-zinc-300 text-zinc-600'
               }`}
             >
@@ -348,7 +348,7 @@ export default function Hero3D({
 
         {/* Top Right Controls: Theme Switcher & GitHub */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Black & White Tactile Theme Switcher */}
+          {/* Black & White / Warm Tactile Theme Switcher */}
           {onToggleTheme && (
             <button
               type="button"
@@ -362,7 +362,7 @@ export default function Hero3D({
               title={`Switch to ${isDark ? 'White / Light' : 'Black / Dark'} mode`}
               className={`relative inline-flex items-center rounded-full p-[2px] cursor-pointer transition-colors duration-200 border shadow-inner ${
                 isDark
-                  ? 'bg-[#1A1A24] border-[#3A3A44]'
+                  ? 'bg-[#1A1510] border-[#4A3F2E]'
                   : 'bg-zinc-200 border-zinc-300'
               }`}
               style={{
@@ -375,7 +375,7 @@ export default function Hero3D({
               <span
                 className={`flex items-center justify-center rounded-full shadow-md transition-transform duration-200 ease-out border ${
                   isDark
-                    ? 'translate-x-[24px] bg-[#FAFAF7] text-[#0A0A0F] border-[#FAFAF7]'
+                    ? 'translate-x-[24px] bg-[#FDF6E8] text-[#1A1510] border-[#FDF6E8]'
                     : 'translate-x-0 bg-black text-white border-black'
                 }`}
                 style={{
@@ -384,7 +384,7 @@ export default function Hero3D({
                 }}
               >
                 {isDark ? (
-                  <Sun className="w-3 h-3 text-[#0A0A0F]" />
+                  <Sun className="w-3 h-3 text-[#1A1510]" />
                 ) : (
                   <Moon className="w-3 h-3 text-white" />
                 )}
@@ -398,7 +398,7 @@ export default function Hero3D({
             rel="noreferrer"
             className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-all duration-150 backdrop-blur-sm ${
               isDark
-                ? 'bg-[#1A1A24]/70 hover:bg-[#252533] border-[#3A3A44] text-[#F8F6F0] hover:text-white'
+                ? 'bg-[#1A1510]/70 hover:bg-[#261F17] border-[#4A3F2E] text-[#F5E6C8] hover:text-[#FDF6E8]'
                 : 'bg-white/80 hover:bg-zinc-100 border-zinc-300 text-zinc-700 hover:text-zinc-950'
             }`}
           >
@@ -412,30 +412,30 @@ export default function Hero3D({
       <section className="relative z-30 max-w-4xl mx-auto px-6 text-center space-y-6 my-auto pointer-events-auto">
         {/* Architectural Badge */}
         <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] sm:text-xs font-mono tracking-wider backdrop-blur-md shadow-sm transition-colors ${
-          isDark ? 'bg-[#1A1A24]/80 border-[#3A3A44]' : 'bg-white/80 border-zinc-300'
+          isDark ? 'bg-[#1A1510]/80 border-[#4A3F2E]' : 'bg-white/80 border-zinc-300'
         }`}>
-          <span className={`w-2 h-2 rounded-full animate-ping ${isDark ? 'bg-[#F8F6F0]' : 'bg-black'}`} />
-          <span className={isDark ? 'text-[#A8A6A0]' : 'text-zinc-950 font-medium'}>
+          <span className={`w-2 h-2 rounded-full animate-ping ${isDark ? 'bg-[#F5E6C8]' : 'bg-black'}`} />
+          <span className={isDark ? 'text-[#B8A888]' : 'text-zinc-950 font-medium'}>
             AUTONOMOUS KUBERNETES AUTOSCALER
           </span>
         </div>
 
-        {/* Title: Headline text #FAFAF7 */}
+        {/* Title: Headline text #FDF6E8 */}
         <h1
           className={`text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] ${
             isDark
-              ? 'text-[#FAFAF7] drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)]'
+              ? 'text-[#FDF6E8] drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)]'
               : 'text-zinc-950 drop-shadow-[0_2px_10px_rgba(255,255,255,0.95)]'
           }`}
         >
           Predictive Horizontal Pod Autoscaler
         </h1>
 
-        {/* Subtitle: Body text #A8A6A0 */}
+        {/* Subtitle: Body text #B8A888 */}
         <p
           className={`max-w-2xl mx-auto text-sm sm:text-base md:text-lg leading-relaxed ${
             isDark
-              ? 'text-[#A8A6A0] drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] font-normal'
+              ? 'text-[#B8A888] drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] font-normal'
               : 'text-zinc-950 font-medium drop-shadow-[0_1px_8px_rgba(255,255,255,0.98)]'
           }`}
         >
@@ -454,7 +454,7 @@ export default function Hero3D({
             }}
             className={`group flex items-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-200 cursor-pointer font-mono tracking-tight shadow-xl hover:scale-105 active:scale-95 ${
               isDark
-                ? 'bg-[#FAFAF7] text-[#0A0A0F] hover:bg-white shadow-[#FAFAF7]/10'
+                ? 'bg-[#FDF6E8] text-[#1A1510] hover:bg-[#fff9ef] shadow-[#FDF6E8]/10'
                 : 'bg-black text-white hover:bg-zinc-800 shadow-black/15'
             }`}
           >
@@ -473,7 +473,7 @@ export default function Hero3D({
               }}
               className={`flex items-center gap-2 px-5 py-3.5 rounded-xl border font-semibold text-xs sm:text-sm transition-all duration-200 backdrop-blur-md cursor-pointer font-mono hover:scale-105 active:scale-95 shadow-sm ${
                 isDark
-                  ? 'bg-[#1A1A24] hover:bg-[#252533] border-[#3A3A44] text-[#F8F6F0] hover:border-[#F8F6F0]'
+                  ? 'bg-[#1A1510] hover:bg-[#261F17] border-[#4A3F2E] text-[#F5E6C8] hover:border-[#E8D5A8]'
                   : 'bg-white/90 hover:bg-zinc-100 border-zinc-300 text-zinc-800 hover:border-black'
               }`}
             >
@@ -493,7 +493,7 @@ export default function Hero3D({
               }}
               className={`flex items-center gap-2 px-4 py-3.5 rounded-xl border font-medium text-xs sm:text-sm transition-all duration-200 backdrop-blur-sm cursor-pointer font-mono ${
                 isDark
-                  ? 'bg-[#1A1A24]/90 hover:bg-[#252533] border-[#3A3A44] text-[#F8F6F0] hover:border-[#F8F6F0]'
+                  ? 'bg-[#1A1510]/90 hover:bg-[#261F17] border-[#4A3F2E] text-[#F5E6C8] hover:border-[#E8D5A8]'
                   : 'bg-zinc-100/60 hover:bg-zinc-200 border-zinc-300 text-zinc-600 hover:text-black'
               }`}
             >
@@ -506,14 +506,14 @@ export default function Hero3D({
 
       {/* Bottom Telemetry & Interaction Footer */}
       <footer className="relative z-30 w-full px-5 sm:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono pointer-events-auto">
-        <div className={`flex items-center gap-2 ${isDark ? 'text-[#A8A6A0]/70' : 'text-zinc-500'}`}>
-          <span className={`w-2 h-2 rounded-full ${isDark ? 'bg-[#F8F6F0]' : 'bg-black'}`} />
+        <div className={`flex items-center gap-2 ${isDark ? 'text-[#B8A888]/70' : 'text-zinc-500'}`}>
+          <span className={`w-2 h-2 rounded-full ${isDark ? 'bg-[#F5E6C8]' : 'bg-black'}`} />
           <span>200 Electron Pods In Orbit</span>
           <span className="opacity-40">•</span>
           <span className="hidden md:inline">Ensemble: LSTM • Holt-Winters • OLS • HPA</span>
         </div>
 
-        <div className={`flex items-center gap-3 ${isDark ? 'text-[#A8A6A0]/70' : 'text-zinc-500'}`}>
+        <div className={`flex items-center gap-3 ${isDark ? 'text-[#B8A888]/70' : 'text-zinc-500'}`}>
           <span>SLO Target: &lt;100ms P95</span>
           <span className="opacity-40">•</span>
           <span>Move cursor to tilt 3D field</span>
