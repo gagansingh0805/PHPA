@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ShieldAlert, Cpu, Sparkles, Server, CheckCircle2, TrendingUp, Layers, ChevronDown, GitBranch } from 'lucide-react';
+import { ArrowRight, ShieldAlert, Cpu, Sparkles, Server, CheckCircle2, TrendingUp, Layers, ChevronDown, GitBranch, Play } from 'lucide-react';
 
 export default function HomeOverview({ onLaunchLab, onNavigateTab }) {
   const [highlightProblem, setHighlightProblem] = useState(false);
@@ -32,53 +32,43 @@ export default function HomeOverview({ onLaunchLab, onNavigateTab }) {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Hero Section */}
-      <section className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-6 sm:p-8 md:p-10 raised-card shadow-sm">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono font-medium mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Autonomous Cloud Systems Research</span>
+      {/* Executive Research Brief Card */}
+      <section className="bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800/90 rounded-xl p-5 sm:p-7 raised-card shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="max-w-3xl space-y-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 text-cyan-700 dark:text-cyan-400 text-xs font-mono font-semibold">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Core Architectural Thesis</span>
+            </div>
+
+            <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight leading-snug">
+              Eliminating Kubernetes Autoscaling Lag with <span className="text-cyan-600 dark:text-cyan-400">Proactive Deep Learning</span>
+            </h2>
+
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              Standard Kubernetes HPAs react strictly after performance degrades. 
+              This research evaluates a multi-model predictive ensemble combining <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">Linear Regression</strong>, <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">Holt-Winters</strong>, and a <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">2-Layer Stacked LSTM</strong> to forecast traffic peaks and pre-warm pods before demand reaches the cluster.
+            </p>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight leading-snug">
-            Eliminating Kubernetes Autoscaling Lag with <span className="text-zinc-500 dark:text-zinc-400">Proactive Deep Learning</span>
-          </h1>
-
-          <p className="mt-3 text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Standard Kubernetes HPAs react strictly after performance degrades. 
-            This research evaluates a multi-model predictive ensemble combining <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">Linear Regression</strong>, <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">Holt-Winters</strong>, and a <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">2-Layer Stacked LSTM</strong> to forecast traffic peaks and pre-warm pods before demand reaches the cluster.
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center gap-3">
+          <div className="flex flex-row md:flex-col gap-2 flex-shrink-0">
             <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={onLaunchLab}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 font-semibold text-xs transition-all shadow-sm cursor-pointer"
+              className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 font-semibold text-xs transition-all shadow-sm cursor-pointer font-mono"
             >
-              <span>Launch Live Simulation Lab</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              onClick={handleHowItWorksClick}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors shadow-sm cursor-pointer"
-              title="Inspect the 3D Autoscaler Architecture Pipeline"
-            >
-              <GitBranch className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
-              <span>How It Works (3D Pipeline)</span>
-              <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>Simulation Lab</span>
             </motion.button>
 
             <button
               type="button"
-              onClick={handleScrollToProblem}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+              onClick={handleHowItWorksClick}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer font-mono"
             >
-              <span>Compare Reactive vs Proactive</span>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+              <GitBranch className="w-3.5 h-3.5" />
+              <span>View Pipeline</span>
             </button>
           </div>
         </div>

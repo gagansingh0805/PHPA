@@ -5,6 +5,7 @@ import { PerspectiveCamera } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Play, Layers, ArrowUpRight, Sparkles, Cpu } from 'lucide-react';
 
 // Register GSAP ScrollTrigger plugin once
 if (typeof window !== 'undefined') {
@@ -239,6 +240,7 @@ export default function Hero3D({
   subtitle = "Zero-deficit Kubernetes autoscaling with multi-model predictive ML and preemptive scheduling.",
   badgeText = "PHPA ARCHITECTURE v1.0",
   onCtaClick,
+  onPipelineClick,
 }) {
   const containerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -370,20 +372,33 @@ export default function Hero3D({
         </p>
 
         {/* Call to Action Buttons */}
-        <div className="pt-2 flex items-center justify-center gap-4 pointer-events-auto">
+        <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4 pointer-events-auto">
           <button
             onClick={onCtaClick}
-            className="px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold text-sm transition-all duration-200 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 cursor-pointer font-mono"
+            className="group flex items-center gap-2.5 px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-zinc-950 font-extrabold text-xs sm:text-sm transition-all duration-300 shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-105 active:scale-95 cursor-pointer font-mono tracking-tight"
           >
-            Explore Telemetry Lab
+            <Play className="w-4 h-4 fill-current transition-transform duration-200 group-hover:scale-125" />
+            <span>Launch Live Simulation Lab</span>
           </button>
+
+          {onPipelineClick && (
+            <button
+              onClick={onPipelineClick}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/80 hover:border-cyan-500/50 text-zinc-200 font-semibold text-xs sm:text-sm transition-all duration-200 backdrop-blur-md cursor-pointer font-mono hover:scale-105 active:scale-95 shadow-lg"
+            >
+              <Layers className="w-4 h-4 text-cyan-400" />
+              <span>3D Pipeline Architecture</span>
+            </button>
+          )}
+
           <a
             href="https://github.com/gagansingh0805/PHPA"
             target="_blank"
             rel="noreferrer"
-            className="px-6 py-3 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-semibold text-sm transition-all duration-200 backdrop-blur-sm cursor-pointer font-mono"
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-zinc-900/40 hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 font-medium text-xs sm:text-sm transition-all duration-200 backdrop-blur-sm cursor-pointer font-mono"
           >
-            GitHub Repo
+            <span>GitHub</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
         </div>
 

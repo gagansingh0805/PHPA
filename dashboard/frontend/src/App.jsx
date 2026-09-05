@@ -1138,7 +1138,10 @@ export default function App() {
                   </div>
                 }
               >
-                <Hero3D onCtaClick={() => setActiveTab('lab')} />
+                <Hero3D
+                  onCtaClick={() => setActiveTab('lab')}
+                  onPipelineClick={() => setActiveTab('pipeline')}
+                />
               </Suspense>
 
               <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
