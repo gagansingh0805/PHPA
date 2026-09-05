@@ -54,72 +54,77 @@ function useAppTheme(propTheme) {
 }
 
 /* =========================================================================
-   2. 5-Layer 3D Architecture Metadata & Spacious Coordinates
+   2. Left-to-Right Campus Architecture Coordinates & Slabs
    ========================================================================= */
 const ARCH_LAYERS = {
-  1: { name: 'Client / Frontend', color: '#38bdf8', badge: 'Tier 1' },
-  2: { name: 'Edge & Ingress', color: '#3b82f6', badge: 'Tier 2' },
-  3: { name: 'Backend Workload', color: '#8b5cf6', badge: 'Tier 3' },
+  1: { name: 'Client Frontend', color: '#38bdf8', badge: 'Tier 1' },
+  2: { name: 'Edge & Ingress Mesh', color: '#3b82f6', badge: 'Tier 2' },
+  3: { name: 'Target Workload Service', color: '#8b5cf6', badge: 'Tier 3' },
   4: { name: 'PHPA Autoscaling Core', color: '#10b981', badge: 'Centerpiece' },
-  5: { name: 'State & Metrics Data', color: '#f43f5e', badge: 'Tier 5' },
+  5: { name: 'State & TSDB Persistence', color: '#f43f5e', badge: 'Tier 5' },
 };
 
-/* Architectural Platform Slabs (Grounding each tier with breathing room) */
+/* Architectural Grounding Slabs for each tier */
 const TIER_PLATFORMS = [
+  // Tier 1: Client Skydeck (Far Left Wing, Elevated)
   {
     id: 'plat-1',
     layer: 1,
-    position: [0.0, 3.2, 7.5],
-    size: [18.5, 0.2, 3.6],
+    position: [-11.0, 3.2, 3.5],
+    size: [9.5, 0.2, 6.0],
     color: '#38bdf8',
-    label: 'TIER 1 • CLIENT FRONTEND',
+    label: 'TIER 1 • CLIENT SKYDECK',
   },
+  // Tier 2: Ingress & Edge Deck (Far Left Wing, Lowered)
   {
     id: 'plat-2',
     layer: 2,
-    position: [0.0, 1.2, 3.2],
-    size: [18.5, 0.2, 3.6],
+    position: [-11.0, 0.8, -3.5],
+    size: [9.5, 0.2, 6.0],
     color: '#3b82f6',
     label: 'TIER 2 • EDGE & INGRESS MESH',
   },
+  // Tier 3: Workload Bridge (Center Bridge)
   {
     id: 'plat-3',
     layer: 3,
-    position: [0.0, -0.6, -1.0],
-    size: [14.0, 0.2, 3.4],
+    position: [0.0, 0.4, 0.0],
+    size: [7.2, 0.2, 5.5],
     color: '#8b5cf6',
-    label: 'TIER 3 • TARGET APPLICATION WORKLOAD',
+    label: 'TIER 3 • TARGET WORKLOAD SERVICE',
   },
+  // Tier 4: PHPA Autoscaling Grand Stage (Right Wing Centerpiece)
   {
     id: 'plat-4',
     layer: 4,
-    position: [0.8, -1.8, -6.8],
-    size: [27.5, 0.25, 7.2],
+    position: [12.0, -0.4, 0.0],
+    size: [16.5, 0.25, 14.5],
     color: '#10b981',
-    label: 'TIER 4 • PHPA PREDICTIVE CONTROL PLANE (CENTERPIECE)',
+    label: 'TIER 4 • PHPA PREDICTIVE AUTOSCALING CORE',
   },
+  // Tier 5: Foundation Persistence Sub-Level (Bottom Terrace)
   {
     id: 'plat-5',
     layer: 5,
-    position: [0.0, -4.8, -2.0],
-    size: [16.5, 0.2, 3.4],
+    position: [0.0, -4.2, 0.0],
+    size: [16.5, 0.2, 5.2],
     color: '#f43f5e',
     label: 'TIER 5 • STATE & METRICS TSDB PERSISTENCE',
   },
 ];
 
-/* All Nodes across 5 distinct vertical terraces with generous horizontal spacing */
+/* 3D Hardware Nodes with Left-to-Right Flow Coordinates */
 const ARCH_NODES = [
-  // --- LAYER 1: CLIENT / FRONTEND (Elevated Top Terrace: Y=+4.0, Z=+7.5) ---
+  // --- ZONE 1: TIER 1 CLIENTS (Skydeck: Y=+4.0) ---
   {
     id: 'web-app',
     stageId: 0,
     layer: 1,
     title: 'Web App Client',
     subtitle: 'React / Next.js SPA',
-    position: [-6.0, 4.0, 7.5],
-    size: [2.8, 1.2, 0.35],
-    htmlWidth: 180,
+    position: [-13.5, 4.0, 4.5],
+    size: [2.5, 1.15, 0.35],
+    htmlWidth: 175,
     icon: Globe,
     color: '#38bdf8',
   },
@@ -129,9 +134,9 @@ const ARCH_NODES = [
     layer: 1,
     title: 'Mobile App Client',
     subtitle: 'iOS & Android Native',
-    position: [0.0, 4.0, 7.5],
-    size: [2.8, 1.2, 0.35],
-    htmlWidth: 180,
+    position: [-11.0, 4.0, 2.0],
+    size: [2.5, 1.15, 0.35],
+    htmlWidth: 175,
     icon: Smartphone,
     color: '#38bdf8',
   },
@@ -140,24 +145,24 @@ const ARCH_NODES = [
     stageId: 0,
     layer: 1,
     title: 'API Consumer',
-    subtitle: 'Partner SDK / Webhooks',
-    position: [6.0, 4.0, 7.5],
-    size: [2.8, 1.2, 0.35],
-    htmlWidth: 180,
+    subtitle: 'Partner SDK / Webhook',
+    position: [-8.5, 4.0, 4.5],
+    size: [2.5, 1.15, 0.35],
+    htmlWidth: 175,
     icon: Terminal,
     color: '#38bdf8',
   },
 
-  // --- LAYER 2: EDGE / INGRESS (Terrace 2: Y=+2.0, Z=+3.2) ---
+  // --- ZONE 1: TIER 2 EDGE / INGRESS (Terrace: Y=+1.6) ---
   {
     id: 'cdn-waf',
     stageId: 1,
     layer: 2,
     title: 'CDN / Cloud WAF',
     subtitle: 'Edge Shield & Caching',
-    position: [-6.0, 2.0, 3.2],
-    size: [2.8, 1.3, 0.35],
-    htmlWidth: 185,
+    position: [-13.5, 1.6, -4.5],
+    size: [2.5, 1.2, 0.35],
+    htmlWidth: 175,
     icon: Shield,
     color: '#3b82f6',
   },
@@ -167,9 +172,9 @@ const ARCH_NODES = [
     layer: 2,
     title: 'Traffic Ingestion',
     subtitle: 'HTTP/gRPC Stream',
-    position: [0.0, 2.0, 3.2],
-    size: [3.0, 1.4, 0.35],
-    htmlWidth: 195,
+    position: [-11.0, 1.6, -2.0],
+    size: [2.7, 1.3, 0.35],
+    htmlWidth: 185,
     icon: Activity,
     color: '#38bdf8',
     isPrimary: true,
@@ -180,45 +185,45 @@ const ARCH_NODES = [
     layer: 2,
     title: 'Ingress Router',
     subtitle: 'Envoy Service Mesh',
-    position: [6.0, 2.0, 3.2],
-    size: [3.0, 1.4, 0.35],
-    htmlWidth: 195,
+    position: [-8.5, 1.6, -4.5],
+    size: [2.7, 1.3, 0.35],
+    htmlWidth: 185,
     icon: Network,
     color: '#3b82f6',
     isPrimary: true,
   },
 
-  // --- LAYER 3: GENERIC BACKEND WORKLOAD (Terrace 3: Y=+0.2, Z=-1.0) ---
+  // --- ZONE 2: TIER 3 WORKLOAD (Center Bridge: Y=+1.2) ---
   {
     id: 'backend-workload',
     stageId: 2,
     layer: 3,
     title: 'Sample Web Workload',
     subtitle: 'Target Application Service',
-    position: [0.0, 0.2, -1.0],
-    size: [5.0, 1.4, 0.4],
-    htmlWidth: 255,
+    position: [0.0, 1.2, 0.0],
+    size: [4.8, 1.3, 2.0],
+    htmlWidth: 245,
     icon: Box,
     color: '#8b5cf6',
   },
 
-  // --- LAYER 4: PHPA PREDICTIVE AUTOSCALING CORE (Terrace 4: Y=-0.6 to +2.8, Z=-6.8) ---
+  // --- ZONE 3: TIER 4 PHPA AUTOSCALING CORE (Right Stage: Y=+0.6 to +2.6) ---
   // k8s Horizon Metrics Collector Scraper
   {
     id: 'k8s-metrics',
     stageId: 3,
     layer: 4,
     title: 'k8shorizmetrics',
-    subtitle: 'cAdvisor Daemon Scrape',
-    position: [-2.2, -0.6, -6.8],
-    size: [2.8, 1.4, 0.35],
-    htmlWidth: 195,
+    subtitle: 'cAdvisor Scraper',
+    position: [7.0, 0.6, 3.2],
+    size: [2.6, 1.35, 0.35],
+    htmlWidth: 185,
     icon: Layers,
     color: '#10b981',
     isCollector: true,
   },
 
-  // 4 Parallel Forecasting Models arranged in a clean, spacious 2x2 grid
+  // 4 Parallel Forecasting Models (2x2 Model Lab)
   {
     id: 'model-hpa',
     stageId: 4,
@@ -226,9 +231,9 @@ const ARCH_NODES = [
     modelKey: 'hpa',
     title: 'Reactive HPA',
     subtitle: '⌈Cur × (CPU/60%)⌉',
-    position: [2.4, 0.6, -8.0],
-    size: [2.7, 1.05, 0.3],
-    htmlWidth: 180,
+    position: [11.5, 0.6, 3.2],
+    size: [2.5, 1.05, 0.3],
+    htmlWidth: 175,
     icon: Zap,
     color: '#10b981',
     isModel: true,
@@ -240,9 +245,9 @@ const ARCH_NODES = [
     modelKey: 'ols',
     title: 'Linear OLS Trend',
     subtitle: 'dy/dt Regression Slope',
-    position: [2.4, 0.6, -5.6],
-    size: [2.7, 1.05, 0.3],
-    htmlWidth: 180,
+    position: [11.5, 0.6, -0.5],
+    size: [2.5, 1.05, 0.3],
+    htmlWidth: 175,
     icon: Cpu,
     color: '#10b981',
     isModel: true,
@@ -254,9 +259,9 @@ const ARCH_NODES = [
     modelKey: 'hw',
     title: 'Holt-Winters',
     subtitle: 'Triple Exp. Smoothing',
-    position: [6.0, 0.6, -8.0],
-    size: [2.7, 1.05, 0.3],
-    htmlWidth: 180,
+    position: [14.0, 0.6, 3.2],
+    size: [2.5, 1.05, 0.3],
+    htmlWidth: 175,
     icon: Sparkles,
     color: '#10b981',
     isModel: true,
@@ -267,25 +272,25 @@ const ARCH_NODES = [
     layer: 4,
     modelKey: 'lstm',
     title: '2-Layer LSTM',
-    subtitle: 'Deep Sequence Predictor',
-    position: [6.0, 0.6, -5.6],
-    size: [2.7, 1.05, 0.3],
-    htmlWidth: 180,
+    subtitle: 'Deep Sequence Model',
+    position: [14.0, 0.6, -0.5],
+    size: [2.5, 1.05, 0.3],
+    htmlWidth: 175,
     icon: Cpu,
     color: '#10b981',
     isModel: true,
   },
 
-  // Decision Arbiter & Actuator Nodes
+  // Arbiter & Scale Actuator
   {
     id: 'max-arbiter',
     stageId: 4,
     layer: 4,
     title: 'MAX Arbiter',
     subtitle: 'Envelope Selector',
-    position: [9.8, 0.6, -6.8],
-    size: [2.8, 1.8, 0.35],
-    htmlWidth: 200,
+    position: [17.0, 0.6, 1.2],
+    size: [2.6, 1.7, 0.35],
+    htmlWidth: 190,
     icon: Shield,
     color: '#10b981',
     isArbiter: true,
@@ -296,24 +301,24 @@ const ARCH_NODES = [
     layer: 4,
     title: 'Scale Actuator',
     subtitle: 'Kube-API /scale PATCH',
-    position: [9.8, 2.8, -6.8],
-    size: [2.8, 1.3, 0.35],
-    htmlWidth: 200,
+    position: [17.0, 2.6, -2.5],
+    size: [2.6, 1.3, 0.35],
+    htmlWidth: 190,
     icon: RotateCcw,
     color: '#10b981',
     isActuator: true,
   },
 
-  // --- LAYER 5: STATE & PERSISTENCE DATA LAYER (Bottom Terrace: Y=-4.0, Z=-2.0) ---
+  // --- ZONE 4: TIER 5 PERSISTENCE SUB-LEVEL (Foundation: Y=-3.4) ---
   {
     id: 'tsdb-store',
     stageId: 3,
     layer: 5,
     title: 'Metrics TSDB Store',
     subtitle: 'Prometheus Time-Series',
-    position: [-4.5, -4.0, -2.0],
-    size: [3.2, 1.4, 0.35],
-    htmlWidth: 210,
+    position: [-4.5, -3.4, 0.0],
+    size: [3.0, 1.3, 0.35],
+    htmlWidth: 200,
     icon: Database,
     color: '#f43f5e',
   },
@@ -323,63 +328,64 @@ const ARCH_NODES = [
     layer: 5,
     title: 'Config & etcd State',
     subtitle: 'Cluster Desired State',
-    position: [4.5, -4.0, -2.0],
-    size: [3.2, 1.4, 0.35],
-    htmlWidth: 210,
+    position: [4.5, -3.4, 0.0],
+    size: [3.0, 1.3, 0.35],
+    htmlWidth: 200,
     icon: HardDrive,
     color: '#f43f5e',
   },
 ];
 
-/* Directional inter-layer conduits with continuous photon streams */
+/* Clean Left-to-Right directional conduits with zero crisscross */
 const ARCH_PIPES = [
-  // Layer 1 -> Layer 2
-  { id: 'p-web-traffic', start: [-6.0, 3.4, 7.5], end: [-0.8, 2.7, 3.2], color: '#38bdf8' },
-  { id: 'p-mob-traffic', start: [0.0, 3.4, 7.5], end: [0.0, 2.7, 3.2], color: '#38bdf8' },
-  { id: 'p-api-waf', start: [6.0, 3.4, 7.5], end: [6.0, 2.7, 3.2], color: '#38bdf8' },
-  { id: 'p-waf-traffic', start: [-4.6, 2.0, 3.2], end: [-1.5, 2.0, 3.2], color: '#3b82f6' },
+  // Zone 1: Tier 1 Skydeck -> Tier 2 Ingress Deck
+  { id: 'p-web-traffic', start: [-13.5, 3.4, 4.5], end: [-11.0, 2.3, -2.0], color: '#38bdf8' },
+  { id: 'p-mob-traffic', start: [-11.0, 3.4, 2.0], end: [-11.0, 2.3, -2.0], color: '#38bdf8' },
+  { id: 'p-api-waf', start: [-8.5, 3.4, 4.5], end: [-13.5, 2.2, -4.5], color: '#38bdf8' },
+  { id: 'p-waf-traffic', start: [-12.2, 1.6, -4.5], end: [-11.0, 1.6, -2.7], color: '#3b82f6' },
 
-  // Layer 2 -> Layer 3
-  { id: 'p-traffic-router', start: [1.5, 2.0, 3.2], end: [4.5, 2.0, 3.2], color: '#3b82f6' },
-  { id: 'p-router-workload', start: [6.0, 1.3, 3.2], end: [2.5, 0.8, -1.0], color: '#8b5cf6' },
+  // Tier 2 Ingress Router -> Zone 2 Workload Bridge
+  { id: 'p-traffic-router', start: [-9.7, 1.6, -2.0], end: [-8.5, 1.6, -3.8], color: '#3b82f6' },
+  { id: 'p-router-workload', start: [-7.2, 1.6, -4.5], end: [-2.4, 1.2, 0.0], color: '#8b5cf6' },
 
-  // Layer 3 -> Layer 4 (Workload -> Pod Cluster & Metrics)
-  { id: 'p-workload-pods', start: [-2.5, 0.0, -1.0], end: [-5.6, 0.0, -6.8], color: '#a855f7' },
-  { id: 'p-pods-metrics', start: [-5.6, -0.6, -6.8], end: [-3.6, -0.6, -6.8], color: '#10b981' },
+  // Zone 2 Workload Bridge -> Zone 3 PHPA Core (Pods Cluster & Scraper)
+  { id: 'p-workload-pods', start: [2.4, 1.2, 0.0], end: [4.6, 0.6, -3.5], color: '#a855f7' },
+  { id: 'p-workload-metrics', start: [2.4, 1.2, 0.0], end: [5.7, 0.6, 3.2], color: '#10b981' },
+  { id: 'p-pods-metrics', start: [7.0, 0.6, -1.1], end: [7.0, 0.6, 2.5], color: '#10b981' },
 
-  // Metrics -> 4 Parallel Models (2x2 grid)
-  { id: 'p-met-hpa', start: [-0.8, -0.5, -6.8], end: [1.1, 0.6, -8.0], color: '#10b981' },
-  { id: 'p-met-ols', start: [-0.8, -0.6, -6.8], end: [1.1, 0.6, -5.6], color: '#10b981' },
-  { id: 'p-met-hw', start: [-0.8, -0.5, -6.8], end: [4.7, 0.6, -8.0], color: '#10b981' },
-  { id: 'p-met-lstm', start: [-0.8, -0.6, -6.8], end: [4.7, 0.6, -5.6], color: '#10b981' },
+  // Scraper -> 4 Models (2x2 Lab)
+  { id: 'p-met-hpa', start: [8.3, 0.6, 3.2], end: [10.2, 0.6, 3.2], color: '#10b981' },
+  { id: 'p-met-ols', start: [8.3, 0.6, 2.8], end: [10.2, 0.6, -0.5], color: '#10b981' },
+  { id: 'p-met-hw', start: [8.3, 0.6, 3.2], end: [12.7, 0.6, 3.2], color: '#10b981' },
+  { id: 'p-met-lstm', start: [8.3, 0.6, 2.8], end: [12.7, 0.6, -0.5], color: '#10b981' },
 
-  // Models -> MAX Arbiter
-  { id: 'p-hpa-arb', start: [3.7, 0.6, -8.0], end: [8.4, 0.6, -6.8], color: '#10b981' },
-  { id: 'p-ols-arb', start: [3.7, 0.6, -5.6], end: [8.4, 0.6, -6.8], color: '#10b981' },
-  { id: 'p-hw-arb', start: [7.3, 0.6, -8.0], end: [8.4, 0.6, -6.8], color: '#10b981' },
-  { id: 'p-lstm-arb', start: [7.3, 0.6, -5.6], end: [8.4, 0.6, -6.8], color: '#10b981' },
+  // 4 Models -> MAX Arbiter
+  { id: 'p-hpa-arb', start: [12.8, 0.6, 3.2], end: [15.7, 0.6, 1.5], color: '#10b981' },
+  { id: 'p-ols-arb', start: [12.8, 0.6, -0.5], end: [15.7, 0.6, 1.0], color: '#10b981' },
+  { id: 'p-hw-arb', start: [15.3, 0.6, 3.2], end: [15.7, 0.6, 1.5], color: '#10b981' },
+  { id: 'p-lstm-arb', start: [15.3, 0.6, -0.5], end: [15.7, 0.6, 1.0], color: '#10b981' },
 
   // Arbiter -> Actuator
-  { id: 'p-arb-act', start: [9.8, 1.5, -6.8], end: [9.8, 2.15, -6.8], color: '#10b981' },
+  { id: 'p-arb-act', start: [17.0, 1.5, 1.2], end: [17.0, 2.0, -2.5], color: '#10b981' },
 
-  // Scraper -> TSDB Store / Actuator -> etcd Store
-  { id: 'p-scrape-tsdb', start: [-2.2, -1.3, -6.8], end: [-4.5, -3.3, -2.0], color: '#f43f5e' },
-  { id: 'p-act-etcd', start: [9.8, 2.15, -6.8], end: [4.5, -3.3, -2.0], color: '#f43f5e' },
+  // Downward Conduits into Persistence Foundation
+  { id: 'p-scrape-tsdb', start: [7.0, 0.0, 3.2], end: [-4.5, -2.7, 0.0], color: '#f43f5e' },
+  { id: 'p-act-etcd', start: [17.0, 2.0, -2.5], end: [4.5, -2.7, 0.0], color: '#f43f5e' },
 ];
 
 /* =========================================================================
-   3. Platform Slab Component (Grounds each architectural tier)
+   3. Platform Slab Component
    ========================================================================= */
 function PlatformSlab({ platform, isDark }) {
   return (
     <group position={platform.position}>
       <RoundedBox args={platform.size} radius={0.08} smoothness={4}>
         <meshStandardMaterial
-          color={isDark ? '#0b0f19' : '#f8fafc'}
+          color={isDark ? '#080c16' : '#f8fafc'}
           roughness={0.4}
           metalness={0.15}
           transparent
-          opacity={isDark ? 0.75 : 0.9}
+          opacity={isDark ? 0.8 : 0.92}
         />
         <Edges
           color={platform.color}
@@ -389,13 +395,13 @@ function PlatformSlab({ platform, isDark }) {
         />
       </RoundedBox>
 
-      {/* Subtle tier perimeter accent light */}
+      {/* Subtle tier perimeter accent stripe */}
       <mesh
-        position={[-platform.size[0] / 2 + 2.0, platform.size[1] / 2 + 0.01, platform.size[2] / 2 - 0.4]}
+        position={[-platform.size[0] / 2 + 1.8, platform.size[1] / 2 + 0.01, platform.size[2] / 2 - 0.35]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <planeGeometry args={[3.6, 0.35]} />
-        <meshBasicMaterial color={platform.color} transparent opacity={0.18} />
+        <planeGeometry args={[3.4, 0.3]} />
+        <meshBasicMaterial color={platform.color} transparent opacity={0.2} />
       </mesh>
     </group>
   );
@@ -405,7 +411,7 @@ function PlatformSlab({ platform, isDark }) {
    4. Circular Target Pods Cluster (Spacious 3D radial arrangement)
    ========================================================================= */
 function CircularTargetPodsCluster({
-  center = [-8.2, -0.6, -6.8],
+  center = [7.0, 0.6, -3.5],
   actualPods = 4,
   idealDemand = 5,
   cpu = 72,
@@ -414,8 +420,7 @@ function CircularTargetPodsCluster({
   onSelect,
 }) {
   const [hoveredPod, setHoveredPod] = useState(null);
-  // Wide ring radius gives ample breathing space for each pod
-  const ringRadius = 2.6;
+  const ringRadius = 2.4;
   const totalPodsCount = Math.max(actualPods, 6);
 
   // Generate pod positions in a 3D circle around center
@@ -459,7 +464,7 @@ function CircularTargetPodsCluster({
         }}
         className="cursor-pointer"
       >
-        <RoundedBox args={[2.2, 1.2, 0.35]} radius={0.06} smoothness={4}>
+        <RoundedBox args={[2.1, 1.15, 0.35]} radius={0.06} smoothness={4}>
           <meshStandardMaterial
             color={isSelected ? (isDark ? '#064e3b' : '#d1fae5') : isDark ? '#0f172a' : '#ffffff'}
             metalness={0.2}
@@ -474,14 +479,14 @@ function CircularTargetPodsCluster({
         <Html
           position={[0, 0, 0.2]}
           center
-          distanceFactor={14.5}
+          distanceFactor={18.0}
           transform
-          style={{ width: '160px', pointerEvents: 'none' }}
+          style={{ width: '155px', pointerEvents: 'none' }}
         >
           <div
             className={`p-2 rounded border text-center font-mono select-none ${
               isDark
-                ? 'bg-zinc-950/85 border-emerald-500/40 text-zinc-200'
+                ? 'bg-zinc-950/80 border-emerald-500/40 text-zinc-200'
                 : 'bg-white/90 border-emerald-500/50 text-zinc-800'
             } shadow-md backdrop-blur-md`}
           >
@@ -489,7 +494,7 @@ function CircularTargetPodsCluster({
               <Server className="w-3.5 h-3.5" />
               <span>Target Cluster</span>
             </div>
-            <div className="mt-1.5 flex items-center justify-center gap-2.5 text-[11px]">
+            <div className="mt-1 flex items-center justify-center gap-2.5 text-[11px]">
               <div>
                 <span className="text-[9px] block text-zinc-400">Avg CPU</span>
                 <span className="font-bold text-amber-500">{cpu}%</span>
@@ -518,8 +523,8 @@ function CircularTargetPodsCluster({
           }}
         >
           {/* Miniature pod pedestal base */}
-          <mesh position={[0, -0.4, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[0.35, 24]} />
+          <mesh position={[0, -0.38, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[0.32, 24]} />
             <meshBasicMaterial
               color={pod.isActive ? (pod.cpu > 70 ? '#f59e0b' : '#10b981') : '#71717a'}
               transparent
@@ -527,7 +532,7 @@ function CircularTargetPodsCluster({
             />
           </mesh>
 
-          <RoundedBox args={[0.65, 0.75, 0.3]} radius={0.05} smoothness={4}>
+          <RoundedBox args={[0.6, 0.7, 0.28]} radius={0.05} smoothness={4}>
             <meshStandardMaterial
               color={
                 pod.isActive
@@ -555,14 +560,14 @@ function CircularTargetPodsCluster({
           </RoundedBox>
 
           <Html
-            position={[0, 0, 0.18]}
+            position={[0, 0, 0.16]}
             center
-            distanceFactor={14.5}
+            distanceFactor={18.0}
             transform
-            style={{ width: '70px', pointerEvents: 'none' }}
+            style={{ width: '65px', pointerEvents: 'none' }}
           >
             <div
-              className={`p-1 rounded text-center font-mono select-none text-[9px] ${
+              className={`p-1 rounded text-center font-mono select-none text-[8px] ${
                 pod.isActive
                   ? isDark
                     ? 'bg-zinc-900/85 text-zinc-200 border border-emerald-500/40'
@@ -585,7 +590,7 @@ function CircularTargetPodsCluster({
                 <span className="font-bold">pod-{pod.index}</span>
               </div>
               <div
-                className={`font-semibold text-[8px] ${
+                className={`font-semibold ${
                   pod.cpu > 70 ? 'text-amber-500' : 'text-emerald-500'
                 }`}
               >
@@ -684,18 +689,18 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
         </mesh>
       )}
 
-      {/* HTML Interface Label on the Front Face */}
+      {/* Compact Micro-HUD Tag */}
       <Html
         position={[0, 0, node.size[2] * 0.5 + 0.02]}
         center
-        distanceFactor={14.5}
+        distanceFactor={18.0}
         transform
         style={{ width: `${node.htmlWidth}px`, pointerEvents: 'none' }}
       >
         <div
-          className={`p-2 rounded font-mono select-none transition-all duration-150 ${
+          className={`p-1.5 rounded font-mono select-none transition-all duration-150 ${
             isDark
-              ? 'bg-zinc-950/85 text-zinc-100 border border-zinc-800/80 shadow-md'
+              ? 'bg-zinc-950/80 text-zinc-100 border border-zinc-800/80 shadow-md'
               : 'bg-white/90 text-zinc-900 border border-zinc-200/90 shadow-sm'
           } backdrop-blur-md`}
         >
@@ -704,50 +709,50 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
               <span style={{ color: node.color }} className="flex-shrink-0">
                 <Icon className="w-3.5 h-3.5" />
               </span>
-              <span className="text-[11px] font-bold truncate">{node.title}</span>
+              <span className="text-[10px] font-bold truncate">{node.title}</span>
             </div>
             {isWinning && (
-              <span className="text-[8px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-500 font-bold border border-emerald-500/40 animate-pulse">
+              <span className="text-[7px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-500 font-bold border border-emerald-500/40 animate-pulse">
                 WINNER
               </span>
             )}
           </div>
 
-          <div className="text-[9px] text-zinc-400 dark:text-zinc-500 truncate mb-1">
+          <div className="text-[8px] text-zinc-400 dark:text-zinc-500 truncate mb-1">
             {node.subtitle}
           </div>
 
           {/* Node-specific dynamic telemetry widgets */}
           {node.id === 'traffic-ingestion' && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
+            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
               <span className="text-zinc-500">Rate:</span>
               <span className="font-bold text-sky-500">{rps} RPS</span>
             </div>
           )}
 
           {node.id === 'ingress-router' && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
+            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
               <span className="text-zinc-500">P95 Lat:</span>
               <span className="font-bold text-blue-500">{p95}ms</span>
             </div>
           )}
 
           {node.id === 'backend-workload' && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
+            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
               <span className="text-zinc-500">Replica Target:</span>
               <span className="font-bold text-purple-500">{actualPods} active pods</span>
             </div>
           )}
 
           {node.id === 'k8s-metrics' && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
+            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
               <span className="text-zinc-500">Cadence:</span>
               <span className="font-bold text-emerald-500">15s cAdvisor</span>
             </div>
           )}
 
           {node.isModel && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
+            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
               <span className="text-zinc-500">Pred:</span>
               <span
                 className={`font-bold ${
@@ -760,21 +765,21 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
           )}
 
           {node.isArbiter && (
-            <div className="flex items-center justify-between text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">
+            <div className="flex items-center justify-between text-[9px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30">
               <span className="text-emerald-600 dark:text-emerald-400 font-bold">Winning MAX:</span>
-              <span className="font-extrabold text-emerald-500 text-xs">{maxVal} pods</span>
+              <span className="font-extrabold text-emerald-500 text-[10px]">{maxVal} pods</span>
             </div>
           )}
 
           {node.isActuator && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
+            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded">
               <span className="text-zinc-500">Actuating:</span>
               <span className="font-bold text-emerald-500">PATCH → {maxVal}</span>
             </div>
           )}
 
           {(node.id === 'tsdb-store' || node.id === 'etcd-store') && (
-            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded text-rose-500">
+            <div className="flex items-center justify-between text-[8px] bg-zinc-100 dark:bg-zinc-900/80 px-1.5 py-0.5 rounded text-rose-500">
               <span>Status:</span>
               <span className="font-bold">SYNCED</span>
             </div>
@@ -790,11 +795,11 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
    ========================================================================= */
 function ClosedFeedbackLoopPipe({ isDark }) {
   const curve = useMemo(() => {
-    // Arching 3D bezier from Scale Actuator [9.8, 2.8, -6.8] back to Pod Cluster [-8.2, 0.2, -6.8]
+    // Arching 3D bezier from Scale Actuator [17.0, 2.6, -2.5] back to Pod Cluster [7.0, 1.2, -3.5]
     return new THREE.QuadraticBezierCurve3(
-      new THREE.Vector3(9.8, 2.8, -6.8),
-      new THREE.Vector3(0.0, 6.8, -6.8),
-      new THREE.Vector3(-8.2, 0.2, -6.8)
+      new THREE.Vector3(17.0, 2.6, -2.5),
+      new THREE.Vector3(12.0, 5.8, -3.5),
+      new THREE.Vector3(7.0, 1.2, -3.5)
     );
   }, []);
 
@@ -878,21 +883,21 @@ function CameraController({ viewPreset = 'isometric', isOrbiting = false }) {
   useEffect(() => {
     if (!camera) return;
     if (viewPreset === 'isometric') {
-      // Spacious isometric establishing shot
-      gsap.to(camera.position, { x: 26, y: 22, z: 28, duration: 1.1, ease: 'power2.inOut' });
-      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.5, y: 0.0, z: -1.0, duration: 1.1 });
+      // Grand Left-to-Right Campus Isometric Overview
+      gsap.to(camera.position, { x: 24, y: 24, z: 28, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 3.0, y: 0.0, z: 0.0, duration: 1.1 });
     } else if (viewPreset === 'core') {
-      // Zoom into PHPA Predictive Core Stage
-      gsap.to(camera.position, { x: 4, y: 9, z: -1, duration: 1.1, ease: 'power2.inOut' });
-      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.5, y: 0.5, z: -6.8, duration: 1.1 });
+      // Direct focus on Tier 4 PHPA Predictive Core Platform
+      gsap.to(camera.position, { x: 14, y: 10, z: 8, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 12.0, y: 0.5, z: 0.0, duration: 1.1 });
     } else if (viewPreset === 'front') {
-      // Direct front terrace view
-      gsap.to(camera.position, { x: 0, y: 9, z: 32, duration: 1.1, ease: 'power2.inOut' });
-      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0, y: 0, z: 0, duration: 1.1 });
+      // Direct frontal terrace view
+      gsap.to(camera.position, { x: 2, y: 10, z: 32, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 2.0, y: 0.0, z: 0.0, duration: 1.1 });
     } else if (viewPreset === 'top') {
-      // Clean overhead architectural map
-      gsap.to(camera.position, { x: 0, y: 40, z: -1, duration: 1.1, ease: 'power2.inOut' });
-      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0, y: 0, z: -1, duration: 1.1 });
+      // Clean overhead architectural campus blueprint
+      gsap.to(camera.position, { x: 3, y: 38, z: 0, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 3.0, y: 0.0, z: 0.0, duration: 1.1 });
     }
   }, [viewPreset, camera]);
 
@@ -907,7 +912,7 @@ function CameraController({ viewPreset = 'isometric', isOrbiting = false }) {
       dampingFactor={0.08}
       maxPolarAngle={Math.PI / 2 + 0.05}
       minDistance={6}
-      maxDistance={65}
+      maxDistance={70}
     />
   );
 }
@@ -988,7 +993,7 @@ export default function Pipeline3DCanvas({
           powerPreference: 'high-performance',
           alpha: false,
         }}
-        camera={{ position: [26, 22, 28], fov: 42 }}
+        camera={{ position: [24, 24, 28], fov: 42 }}
       >
         {/* Dynamic theme background */}
         <color attach="background" args={[bgColor]} />
@@ -1011,8 +1016,8 @@ export default function Pipeline3DCanvas({
 
         {/* Clean Ground Grid */}
         <gridHelper
-          args={[50, 50, gridPrimary, gridSecondary]}
-          position={[0, -5.4, 0]}
+          args={[60, 60, gridPrimary, gridSecondary]}
+          position={[0, -5.0, 0]}
         />
 
         {/* Architectural Tier Grounding Slabs */}
@@ -1040,7 +1045,7 @@ export default function Pipeline3DCanvas({
 
         {/* Centerpiece: Circular Target Pods Cluster */}
         <CircularTargetPodsCluster
-          center={[-8.2, -0.6, -6.8]}
+          center={[7.0, 0.6, -3.5]}
           actualPods={dynamicLatest.actualPods}
           idealDemand={dynamicLatest.idealDemand}
           cpu={dynamicLatest.cpu}
