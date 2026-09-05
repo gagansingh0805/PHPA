@@ -9,6 +9,7 @@ import PhpaLogo from './PhpaLogo';
    1. Central "Electron Cluster" Mesh (Declarative R3F Materials)
    ========================================================================= */
 function ClusterCore({ isMobile, isDark }) {
+  const coreRef = useRef();
   const wireframeRef = useRef();
   const ring1Ref = useRef();
   const ring2Ref = useRef();
@@ -16,47 +17,78 @@ function ClusterCore({ isMobile, isDark }) {
 
   // Geometries are created ONCE and never re-allocated
   const { wireGeo, ringGeo } = useMemo(() => {
+  const { coreGeo, wireGeo, ringGeo } = useMemo(() => {
     return {
       wireGeo: new THREE.IcosahedronGeometry(2.1, 1),
       ringGeo: new THREE.TorusGeometry(2.8, 0.01, 16, 120),
+      coreGeo: new THREE.IcosahedronGeometry(1.35, 0),
+      wireGeo: new THREE.IcosahedronGeometry(1.95, 1),
+      ringGeo: new THREE.TorusGeometry(2.6, 0.012, 16, 120),
     };
   }, []);
 
   useEffect(() => {
     return () => {
+      coreGeo.dispose();
       wireGeo.dispose();
       ringGeo.dispose();
     };
   }, [wireGeo, ringGeo]);
+  }, [coreGeo, wireGeo, ringGeo]);
 
   useFrame((_, delta) => {
+    if (coreRef.current) {
+      coreRef.current.rotation.x += delta * 0.2;
+      coreRef.current.rotation.y += delta * 0.28;
+    }
     if (wireframeRef.current) {
       wireframeRef.current.rotation.x -= delta * 0.12;
       wireframeRef.current.rotation.y -= delta * 0.18;
+      wireframeRef.current.rotation.x -= delta * 0.15;
+      wireframeRef.current.rotation.y -= delta * 0.2;
     }
     if (ring1Ref.current) {
       ring1Ref.current.rotation.x += delta * 0.08;
       ring1Ref.current.rotation.z += delta * 0.12;
+      ring1Ref.current.rotation.x += delta * 0.1;
+      ring1Ref.current.rotation.z += delta * 0.14;
     }
     if (ring2Ref.current) {
       ring2Ref.current.rotation.y += delta * 0.1;
       ring2Ref.current.rotation.x -= delta * 0.06;
+      ring2Ref.current.rotation.y += delta * 0.12;
+      ring2Ref.current.rotation.x -= delta * 0.08;
     }
     if (ring3Ref.current) {
       ring3Ref.current.rotation.z += delta * 0.07;
       ring3Ref.current.rotation.y -= delta * 0.09;
+      ring3Ref.current.rotation.z += delta * 0.09;
+      ring3Ref.current.rotation.y -= delta * 0.11;
     }
   });
 
   return (
     <group>
       {/* Delicate Wireframe lattice (no solid nucleus blocking text) */}
+      {/* Solid central nucleus core */}
+      <mesh ref={coreRef} geometry={coreGeo}>
+        <meshStandardMaterial
+          color={isDark ? '#111217' : '#e4e4e7'}
+          emissive={isDark ? '#1e2029' : '#09090b'}
+          emissiveIntensity={isDark ? 0.35 : 0.02}
+          roughness={isDark ? 0.25 : 0.35}
+          metalness={isDark ? 0.4 : 0.2}
+        />
+      </mesh>
+
+      {/* Wireframe lattice */}
       <mesh ref={wireframeRef} geometry={wireGeo}>
         <meshBasicMaterial
           color={isDark ? '#ffffff' : '#000000'}
           wireframe
           transparent
           opacity={isDark ? 0.22 : 0.18}
+          opacity={isDark ? 0.35 : 0.25}
         />
       </mesh>
 
@@ -67,6 +99,7 @@ function ClusterCore({ isMobile, isDark }) {
           wireframe
           transparent
           opacity={isDark ? 0.28 : 0.22}
+          opacity={isDark ? 0.35 : 0.25}
         />
       </mesh>
       <mesh ref={ring2Ref} geometry={ringGeo} rotation={[-Math.PI / 3, Math.PI / 6, 0]}>
@@ -75,6 +108,7 @@ function ClusterCore({ isMobile, isDark }) {
           wireframe
           transparent
           opacity={isDark ? 0.28 : 0.22}
+          opacity={isDark ? 0.35 : 0.25}
         />
       </mesh>
       {!isMobile && (
@@ -84,6 +118,7 @@ function ClusterCore({ isMobile, isDark }) {
             wireframe
             transparent
             opacity={isDark ? 0.28 : 0.22}
+            opacity={isDark ? 0.35 : 0.25}
           />
         </mesh>
       )}
@@ -93,6 +128,7 @@ function ClusterCore({ isMobile, isDark }) {
 
 /* =========================================================================
    2. Orbiting Electrons Particle Field (Black & White / Grayscale)
+   2. Orbiting Electrons Particle Field (Pure White in Dark / Pure Black in Light)
    ========================================================================= */
 function PodField({ count = 200, isDark }) {
   const meshRef = useRef();
@@ -104,6 +140,9 @@ function PodField({ count = 200, isDark }) {
     // Whole black background -> Crisp, glistening white dots
     const darkPalette = ['#ffffff', '#ffffff', '#ffffff', '#f8fafc', '#f1f5f9'];
     // Whole white background -> Crisp, jet black dots
+    // Whole black background -> Pure bright glowing white dots
+    const darkPalette = ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'];
+    // Whole white background -> Pure jet black dots
     const lightPalette = ['#000000', '#000000', '#09090b', '#18181b', '#27272a'];
     const palette = isDark ? darkPalette : lightPalette;
 
@@ -163,6 +202,10 @@ function PodField({ count = 200, isDark }) {
         color={isDark ? '#ffffff' : '#050505'}
         roughness={isDark ? 0.2 : 0.3}
         metalness={isDark ? 0.8 : 0.15}
+        emissive={isDark ? '#ffffff' : '#000000'}
+        emissiveIntensity={isDark ? 0.95 : 0.0}
+        roughness={0.15}
+        metalness={0.0}
       />
     </instancedMesh>
   );
