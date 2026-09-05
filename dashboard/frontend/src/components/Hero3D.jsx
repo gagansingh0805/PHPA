@@ -61,11 +61,11 @@ function ClusterCore({ isMobile, isDark }) {
       {/* Solid central nucleus core */}
       <mesh ref={coreRef} geometry={coreGeo}>
         <meshStandardMaterial
-          color={isDark ? '#1A1510' : '#9ca3af'}
-          emissive={isDark ? '#0F0D0A' : '#71717a'}
-          emissiveIntensity={isDark ? 0.2 : 0.08}
-          roughness={isDark ? 0.35 : 0.55}
-          metalness={isDark ? 0.5 : 0.05}
+          color={isDark ? '#1A1510' : '#71717a'}
+          emissive={isDark ? '#0F0D0A' : '#000000'}
+          emissiveIntensity={isDark ? 0.2 : 0.0}
+          roughness={isDark ? 0.35 : 0.45}
+          metalness={isDark ? 0.5 : 0.12}
           flatShading
         />
       </mesh>
