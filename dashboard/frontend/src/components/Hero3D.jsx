@@ -16,12 +16,9 @@ function ClusterCore({ isMobile, isDark }) {
   const ring3Ref = useRef();
 
   // Geometries are created ONCE and never re-allocated
-  const { coreGeo, coreEdgesGeo, wireGeo, ringGeo } = useMemo(() => {
-    const core = new THREE.IcosahedronGeometry(1.35, 0);
-    const edges = new THREE.EdgesGeometry(core);
+  const { coreGeo, wireGeo, ringGeo } = useMemo(() => {
     return {
-      coreGeo: core,
-      coreEdgesGeo: edges,
+      coreGeo: new THREE.IcosahedronGeometry(1.35, 0),
       wireGeo: new THREE.IcosahedronGeometry(1.95, 1),
       ringGeo: new THREE.TorusGeometry(2.6, 0.012, 16, 120),
     };
@@ -30,11 +27,10 @@ function ClusterCore({ isMobile, isDark }) {
   useEffect(() => {
     return () => {
       coreGeo.dispose();
-      coreEdgesGeo.dispose();
       wireGeo.dispose();
       ringGeo.dispose();
     };
-  }, [coreGeo, coreEdgesGeo, wireGeo, ringGeo]);
+  }, [coreGeo, wireGeo, ringGeo]);
 
   useFrame((_, delta) => {
     if (coreRef.current) {
@@ -61,26 +57,16 @@ function ClusterCore({ isMobile, isDark }) {
 
   return (
     <group>
-      {/* Solid central nucleus core with distinct faceted shading and white edge definition */}
-      <group ref={coreRef}>
-        <mesh geometry={coreGeo}>
-          <meshStandardMaterial
-            color={isDark ? '#2e3340' : '#e4e4e7'}
-            emissive={isDark ? '#1a1d26' : '#09090b'}
-            emissiveIntensity={isDark ? 0.35 : 0.02}
-            roughness={0.2}
-            metalness={0.3}
-            flatShading
-          />
-        </mesh>
-        <lineSegments geometry={coreEdgesGeo}>
-          <lineBasicMaterial
-            color={isDark ? '#ffffff' : '#18181b'}
-            transparent
-            opacity={isDark ? 0.65 : 0.35}
-          />
-        </lineSegments>
-      </group>
+      {/* Solid central nucleus core (same #e4e4e7 color as white theme) */}
+      <mesh ref={coreRef} geometry={coreGeo}>
+        <meshStandardMaterial
+          color="#e4e4e7"
+          emissive="#09090b"
+          emissiveIntensity={0.02}
+          roughness={0.35}
+          metalness={0.2}
+        />
+      </mesh>
 
       {/* Wireframe lattice */}
       <mesh ref={wireframeRef} geometry={wireGeo}>
@@ -407,7 +393,7 @@ export default function Hero3D({
         <h1
           className={`text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] ${
             isDark
-              ? 'text-white'
+              ? 'text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)]'
               : 'text-zinc-950'
           }`}
         >
@@ -417,7 +403,7 @@ export default function Hero3D({
         {/* Subtitle */}
         <p
           className={`max-w-2xl mx-auto text-sm sm:text-base md:text-lg leading-relaxed font-normal ${
-            isDark ? 'text-zinc-300' : 'text-zinc-600'
+            isDark ? 'text-zinc-300 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)]' : 'text-zinc-600'
           }`}
         >
           Zero-deficit proactive Kubernetes autoscaling combining 2-Layer Stacked LSTM neural lookahead, Holt-Winters seasonality, and ordinary least squares trend projection.
