@@ -163,6 +163,11 @@ export default function PipelineViewer({
       setYaw(-18);
       setRoll(8);
       setZoom(rZoom);
+    } else if (preset === 'core') {
+      setPitch(28);
+      setYaw(-25);
+      setRoll(4);
+      setZoom(parseFloat((rZoom * 1.25).toFixed(3)));
     } else if (preset === 'front') {
       setPitch(12);
       setYaw(0);
@@ -953,6 +958,20 @@ export default function PipelineViewer({
               <button
                 onClick={() => {
                   setViewMode('3d');
+                  handlePresetChange('core');
+                }}
+                className={`px-2.5 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
+                  viewMode === '3d' && viewPreset === 'core'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+                title="PHPA Core Control Plane Focus"
+              >
+                PHPA Core
+              </button>
+              <button
+                onClick={() => {
+                  setViewMode('3d');
                   handlePresetChange('front');
                 }}
                 className={`px-2.5 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
@@ -1267,7 +1286,7 @@ export default function PipelineViewer({
           <div className="absolute top-2 left-2 sm:top-3 sm:left-4 z-20 pointer-events-none flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-700/80 px-2 sm:px-2.5 py-1 rounded-md text-[9px] sm:text-[10px] font-mono text-zinc-600 dark:text-zinc-400 shadow-sm backdrop-blur-md">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-              3D {viewPreset === 'isometric' ? 'Isometric (44°)' : viewPreset === 'front' ? 'Front (12°)' : viewPreset === 'top' ? 'Top-Down (68°)' : 'Interactive'}
+              3D {viewPreset === 'isometric' ? 'Isometric (44°)' : viewPreset === 'core' ? 'PHPA Core Focus' : viewPreset === 'front' ? 'Front (12°)' : viewPreset === 'top' ? 'Top-Down (68°)' : 'Interactive'}
             </span>
             <span className="hidden sm:inline text-zinc-400">•</span>
             <span className="hidden sm:inline">Drag to Orbit / Scroll to Zoom / Click Nodes to Inspect</span>
