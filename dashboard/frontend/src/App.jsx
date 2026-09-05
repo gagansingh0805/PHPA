@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
+import HomeOverview from './components/HomeOverview';
 import LSTMAttribution from './components/LSTMAttribution';
 import ModelDeepDive from './components/ModelDeepDive';
 import PipelineViewer from './components/PipelineViewer';
@@ -12,7 +14,11 @@ import ModelScorecard from './components/ModelScorecard';
 import LiveEventLog from './components/LiveEventLog';
 import OperationalGuardrails from './components/OperationalGuardrails';
 import DemoPresenter from './components/DemoPresenter';
+import TiltCard3D from './components/TiltCard3D';
 import Term from './components/Term';
+import PhpaLogo from './components/PhpaLogo';
+import ErrorBoundary from './components/ErrorBoundary';
+import DemoSpotlightOverlay from './components/DemoSpotlightOverlay';
 import { 
   Sparkles, 
   Activity, 
@@ -26,20 +32,40 @@ import {
   ArrowDownRight, 
   Layers, 
   Sliders, 
-  Play, 
+  Play,
+  Pause, 
   RotateCcw, 
   AlertTriangle, 
   ShieldAlert, 
   CheckCircle2, 
   BarChart2,
-  Menu
+  Menu,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('lab'); // 'lab', 'home', 'models', 'pipeline'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'lab', 'home', 'models', 'pipeline'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [trafficMode, setTrafficMode] = useState('auto'); // 'auto' | 'manual'
   const [manualRps, setManualRps] = useState(125);
+
+  // Theme Engine: 'dark' (Minimal Dark) vs 'light' (Minimal Light)
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('phpa_theme') || 'dark';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('phpa_theme', theme);
+    const root = document.documentElement;
+    if (theme === 'light') {
+      root.classList.remove('dark');
+      root.classList.add('light');
+    } else {
+      root.classList.remove('light');
+      root.classList.add('dark');
+    }
+  }, [theme]);
 
   // Dynamic, user-configurable operational guardrails
   const [guardrails, setGuardrails] = useState({
@@ -469,13 +495,16 @@ export default function App() {
       }
 
       if (newEntries.length === 0) return prev;
-      return [...prev.slice(-40), ...newEntries];
+      return [...prev.slice(-200), ...newEntries];
     });
   };
 
   const handleTogglePlay = () => {
-    setIsPlaying((prev) => !prev);
-    fetch('/api/control/play', { method: 'POST' }).catch(() => {});
+    setIsPlaying((prev) => {
+      const willPlay = !prev;
+      fetch(`/api/control/${willPlay ? 'play' : 'pause'}`, { method: 'POST' }).catch(() => {});
+      return willPlay;
+    });
   };
 
   const handleSpeedChange = (newSpeed) => {
@@ -511,7 +540,7 @@ export default function App() {
     }));
 
     setLogs((prev) => [
-      ...prev.slice(-40),
+      ...prev.slice(-200),
       {
         time: timeLabel,
         level: 'SURGE',
@@ -676,7 +705,7 @@ export default function App() {
     }));
 
     setLogs((prev) => [
-      ...prev.slice(-40),
+      ...prev.slice(-200),
       {
         time: timeLabel,
         level: 'LSTM',
@@ -766,7 +795,7 @@ export default function App() {
 
       const timeLabel = latest.sim_time ? latest.sim_time.split(', ')[1] : '00:00:00';
       setLogs((logsPrev) => [
-        ...logsPrev.slice(-40),
+        ...logsPrev.slice(-200),
         {
           time: timeLabel,
           level: 'SCALE',
@@ -805,6 +834,8 @@ export default function App() {
       tagColor: 'text-emerald-300 bg-emerald-500/20 border-emerald-500/40',
       duration: 10,
       tab: 'lab',
+      target: 'Top KPI Telemetry Deck',
+      whatToNotice: 'Notice the highlighted KPI cards: 4-7 baseline replicas service steady 125 RPS with 0 deficit ticks and a 32ms P95 latency.',
       narrative: 'Cluster operates in steady state at 125 RPS. 4 baseline replicas comfortably service incoming traffic at 60% target CPU with zero latency degradation (P95: 32ms).',
     },
     {
@@ -814,6 +845,8 @@ export default function App() {
       tagColor: 'text-rose-300 bg-rose-500/20 border-rose-500/40',
       duration: 12,
       tab: 'lab',
+      target: 'Live Traffic Throttle & Surge Banner',
+      whatToNotice: 'Notice the highlighted Traffic Throttle: 5x spike injects 520 RPS. Reactive HPA suffers a 45s Prometheus scrape lag before reacting.',
       narrative: 'Incoming traffic suddenly surges 400% to 520 RPS! Standard Kubernetes HPA suffers a 45s Prometheus moving-average scrape delay, leading to cold-start queue starvation.',
     },
     {
@@ -823,6 +856,8 @@ export default function App() {
       tagColor: 'text-purple-300 bg-purple-500/20 border-purple-500/40',
       duration: 14,
       tab: 'lab',
+      target: 'Replicas & Forecasting Chart (Purple Curve)',
+      whatToNotice: 'Notice the purple LSTM curve: It detects surge curvature early and scales up to 22 pods BEFORE user queues saturate.',
       narrative: 'The 2-Layer Stacked LSTM detects non-linear surge curvature 45s ahead of CPU metrics, pre-warming 22 pods into existence BEFORE queues saturate. Zero SLA breaches!',
     },
     {
@@ -832,7 +867,9 @@ export default function App() {
       tagColor: 'text-cyan-300 bg-cyan-500/20 border-cyan-500/40',
       duration: 14,
       tab: 'benchmark',
-      narrative: 'Reviewing empirical research results: Stacked LSTM prevented 6 deficit ticks and eliminated the 1400ms cold-start spike suffered by vanilla HPA, saving $0.052 in idle compute.',
+      target: 'Empirical Benchmark Scorecard',
+      whatToNotice: 'Notice the Model Scorecard: Stacked LSTM prevented 6 deficit periods and cut idle cloud spend by 23-50% compared to reactive HPA.',
+      narrative: 'Reviewing empirical research results: Stacked LSTM prevented 6 deficit ticks and eliminated the 1400ms cold-start spike suffered by vanilla HPA, saving compute spend.',
     },
     {
       step: 4,
@@ -841,6 +878,8 @@ export default function App() {
       tagColor: 'text-amber-300 bg-amber-500/20 border-amber-500/40',
       duration: 12,
       tab: 'guardrails',
+      target: 'Live Replica Allocation Spectrum & Cooldown Window',
+      whatToNotice: 'Notice the boundary spectrum bar: Active allocation is clamped strictly within the 2-30 safe band while 60s cooldown prevents pod flapping thrashing.',
       narrative: 'Traffic normalizes to 125 RPS. The 60s stabilization cooldown prevents rapid pod thrashing (flapping), safely decommissioning idle pods while strictly enforcing operational guardrails.',
     }
   ];
@@ -894,43 +933,70 @@ export default function App() {
     }
   };
 
-  // Demo auto-advancement timer
+  // Demo auto-advancement countdown timer
   useEffect(() => {
     if (!demoActive || demoPaused) return;
 
     const timer = setInterval(() => {
-      setDemoTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (demoStep < demoStages.length - 1) {
-            const nextIdx = demoStep + 1;
-            setDemoStep(nextIdx);
-            executeDemoStage(nextIdx);
-            return demoStages[nextIdx].duration;
-          } else {
-            handleStopDemo();
-            return 0;
-          }
-        }
-        return prev - 1;
-      });
+      setDemoTimeLeft((prev) => Math.max(0, prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [demoActive, demoPaused, demoStep]);
+  }, [demoActive, demoPaused]);
 
-  // Keyboard navigation for demo
+  // Handle stage transition when countdown completes
   useEffect(() => {
-    if (!demoActive) return;
+    if (!demoActive || demoPaused) return;
+    if (demoTimeLeft === 0) {
+      if (demoStep < demoStages.length - 1) {
+        const nextIdx = demoStep + 1;
+        setDemoStep(nextIdx);
+        executeDemoStage(nextIdx);
+      } else {
+        handleStopDemo();
+      }
+    }
+  }, [demoTimeLeft, demoActive, demoPaused, demoStep]);
+
+  // Global keyboard shortcuts + demo-specific navigation
+  useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't intercept when typing in input/textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (demoActive) {
+        // Demo-specific shortcuts
+        if (e.code === 'ArrowRight') { handleNextDemoStep(); return; }
+        if (e.code === 'ArrowLeft') { handlePrevDemoStep(); return; }
+        if (e.code === 'Escape') { handleStopDemo(); return; }
+      }
+
+      // Global shortcuts (work always)
       if (e.code === 'Space') {
         e.preventDefault();
-        setDemoPaused((p) => !p);
-      } else if (e.code === 'ArrowRight') {
-        handleNextDemoStep();
-      } else if (e.code === 'ArrowLeft') {
-        handlePrevDemoStep();
-      } else if (e.code === 'Escape') {
-        handleStopDemo();
+        if (demoActive) {
+          setDemoPaused((p) => !p);
+        } else {
+          handleTogglePlay();
+        }
+      } else if (e.code === 'KeyS' && !e.metaKey && !e.ctrlKey) {
+        handleInjectSpike();
+      } else if (e.code === 'KeyR' && !e.metaKey && !e.ctrlKey) {
+        handleReset();
+      } else if (e.code === 'Digit1') {
+        setActiveTab('overview');
+      } else if (e.code === 'Digit2') {
+        setActiveTab('lab');
+      } else if (e.code === 'Digit3') {
+        setActiveTab('benchmark');
+      } else if (e.code === 'Digit4') {
+        setActiveTab('logs');
+      } else if (e.code === 'Digit5') {
+        setActiveTab('guardrails');
+      } else if (e.code === 'Digit6') {
+        setActiveTab('models');
+      } else if (e.code === 'Digit7') {
+        setActiveTab('pipeline');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -938,7 +1004,7 @@ export default function App() {
   }, [demoActive, demoStep]);
 
   return (
-    <div className="flex h-screen bg-zinc-950 text-zinc-100 font-sans overflow-hidden">
+    <div className={`flex h-screen font-sans overflow-hidden relative ${theme === 'light' ? 'bg-[#edf0f5] text-zinc-900' : 'bg-[#09090b] text-zinc-100'}`}>
       {/* 1. Left Sidebar Navigation & Integrated Simulation Controller (Desktop + Mobile Drawer) */}
       <Sidebar
         activeTab={activeTab}
@@ -958,18 +1024,21 @@ export default function App() {
       {/* 2. Main Content Workspace */}
       <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0">
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-zinc-800/80 px-3 sm:px-6 flex items-center justify-between bg-zinc-950/90 backdrop-blur-md sticky top-0 z-20 flex-shrink-0">
+        <header className="h-14 border-b border-zinc-200 dark:border-zinc-800/80 px-3 sm:px-6 flex items-center justify-between bg-white/95 dark:bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40 flex-shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Hamburger menu button for mobile */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex-shrink-0"
+              className="lg:hidden p-2 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex-shrink-0"
               aria-label="Open navigation menu"
             >
               <Menu className="w-4 h-4" />
             </button>
 
-            <h2 className="text-xs sm:text-sm font-bold text-white tracking-wide truncate">
+            <PhpaLogo size="sm" className="hidden sm:flex" />
+
+            <h2 className="text-xs sm:text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
+              {activeTab === 'overview' && <>Research Overview</>}
               {activeTab === 'lab' && <><span className="hidden sm:inline">Autoscaling </span>Telemetry Lab</>}
               {activeTab === 'benchmark' && <><span className="hidden sm:inline">Multi-Model </span>Benchmarks</>}
               {activeTab === 'logs' && <><span className="hidden sm:inline">Autoscaling </span>Decision Stream</>}
@@ -978,110 +1047,185 @@ export default function App() {
               {activeTab === 'pipeline' && <><span className="hidden sm:inline">Architecture </span>Pipeline</>}
             </h2>
 
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 flex-shrink-0">
-              <span className="hidden sm:inline">Active </span>Pods: <strong className="text-cyan-400">{latest.actual_pods}</strong>
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 flex-shrink-0">
+              <span className="hidden sm:inline">Active </span>Pods: <strong className="font-semibold text-zinc-900 dark:text-zinc-100">{latest.actual_pods}</strong>
             </span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Minimalist 2-Way Theme Toggle: Light / Dark */}
+            <button
+              onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors shadow-sm"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="hidden sm:inline">Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-zinc-600" />
+                  <span className="hidden sm:inline">Dark</span>
+                </>
+              )}
+            </button>
+
             {/* Launch Interactive Demo Button */}
             <button
               onClick={demoActive ? handleStopDemo : handleStartDemo}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold transition-all shadow-md ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all duration-150 border ${
                 demoActive
-                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30 border border-rose-400/50 animate-pulse'
-                  : 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white shadow-purple-600/25 border border-purple-400/30 hover:scale-105 active:scale-95'
+                  ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 shadow-sm'
+                  : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 hover:opacity-90 shadow-sm'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="hidden sm:inline">{demoActive ? 'Stop Demo' : 'Run Showcase Demo'}</span>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{demoActive ? 'Stop Demo' : 'Showcase Demo'}</span>
               <span className="sm:hidden">{demoActive ? 'Stop' : 'Demo'}</span>
             </button>
 
             {latest.is_spiking && (
-              <span className="flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] sm:text-xs font-bold animate-pulse">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-[10px] sm:text-xs font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                 <span className="hidden sm:inline">SURGE ACTIVE (5x)</span>
                 <span className="sm:hidden">5x SURGE</span>
               </span>
             )}
 
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
-              ENGINE SYNCHRONIZED
-            </div>
-            {/* Mobile-only pulsing sync dot */}
-            <div className="sm:hidden flex items-center justify-center p-1 rounded-full bg-emerald-500/10 border border-emerald-500/30" title="Engine Synchronized">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-xs font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              SYNCED
             </div>
           </div>
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 p-3 sm:p-4 lg:p-6 space-y-4 max-w-[1650px] w-full mx-auto">
+        <main className={`flex-1 p-3 sm:p-4 lg:p-6 pb-16 lg:pb-0 space-y-4 max-w-[1650px] w-full mx-auto transition-all duration-300 ${demoActive ? 'xl:pr-[410px]' : ''}`}>
+          <ErrorBoundary key={activeTab} onReset={() => setActiveTab('overview')}>
+            {/* TAB 0: RESEARCH OVERVIEW */}
+          {activeTab === 'overview' && (
+            <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
+              <HomeOverview onLaunchLab={() => setActiveTab('lab')} />
+            </div>
+          )}
+
           {/* TAB 1: TELEMETRY LAB */}
           {activeTab === 'lab' && (
             <div className="space-y-4 animate-fadeIn">
-              {/* Top 4 Bento KPI Cards */}
-              <MetricCards
-                actualPods={latest.actual_pods}
-                idealDemand={latest.ideal_demand}
-                p95Latency={latest.p95_latency_ms}
-                slaBreaches={latest.sla_breaches}
-                totalPodHours={latest.total_pod_hours}
-              />
-
-              {/* Analytical Summary Banner */}
-              <div className="bento-card rounded-xl p-3 border border-purple-500/30 bg-gradient-to-r from-purple-950/30 via-zinc-900/90 to-zinc-900/90 flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs relative overflow-hidden">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 flex-shrink-0">
-                    <Sparkles className="w-4 h-4" />
+              {/* Top 4 Bento KPI Cards Deck */}
+              <div
+                id="demo-target-step-0"
+                className={`surface-deck p-3.5 sm:p-4 rounded-xl space-y-3 transition-all duration-300 ${
+                demoActive && demoStep === 0
+                  ? 'relative z-40 ring-2 ring-emerald-500 ring-offset-2 ring-offset-zinc-900 shadow-2xl bg-white/95 dark:bg-zinc-900/95'
+                  : ''
+              }`}>
+                {demoActive && demoStep === 0 && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-mono font-bold shadow-lg w-fit animate-bounce mb-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span>NOTICE: Steady-State Equilibrium (4-7 pods, 0 deficits, 32ms latency)</span>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 font-bold text-white text-[12px]">
-                      <span>Autonomous Autoscaler Research Summary</span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold">
-                        Efficiency Optimized
+                )}
+                <MetricCards
+                  actualPods={latest.actual_pods}
+                  idealDemand={latest.ideal_demand}
+                  p95Latency={latest.p95_latency_ms}
+                  slaBreaches={latest.sla_breaches}
+                  totalPodHours={latest.total_pod_hours}
+                />
+
+                {/* Analytical Summary Banner */}
+                  <div className="raised-card rounded-lg p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300 flex-shrink-0">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 font-semibold text-zinc-900 dark:text-zinc-100 text-[12px]">
+                          <span>Autonomous Autoscaler Research Summary</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-medium">
+                            Efficiency Optimized
+                          </span>
+                        </div>
+                        <p className="text-zinc-600 dark:text-zinc-400 text-[11px] mt-0.5 leading-relaxed">
+                          Across this workload trace, the <strong className="text-zinc-900 dark:text-zinc-200 font-semibold"><Term id="lstm">2-Layer Stacked LSTM</Term></strong> has reduced compute spend by{' '}
+                          <strong className="text-zinc-900 dark:text-zinc-100 font-mono font-semibold tabular-nums">
+                            {latest.models_metrics?.lstm?.saved_pct ? `${latest.models_metrics.lstm.saved_pct.toFixed(1)}%` : '23.4%'} ({latest.models_metrics?.lstm?.saved_dollars ? latest.models_metrics.lstm.saved_dollars.toFixed(3) : '0.052'} saved)
+                          </strong>{' '}
+                          while sustaining <strong className="text-zinc-900 dark:text-zinc-100 font-mono font-semibold">0 <Term id="underprovision">deficits</Term></strong> compared to the <Term id="hpa">reactive baseline</Term>.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] font-mono self-end md:self-auto flex-shrink-0">
+                      <span className="px-2 py-1 rounded bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        Decision: <span className="text-zinc-900 dark:text-zinc-200 font-medium">MAX(Models)</span>
+                      </span>
+                      <span className="px-2 py-1 rounded bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-800 text-emerald-600 dark:text-emerald-400 font-medium">
+                        SLA: 100%
                       </span>
                     </div>
-                    <p className="text-zinc-300 text-[11px] mt-0.5 leading-relaxed">
-                      Across this workload trace, the <strong className="text-purple-300 font-semibold"><Term id="lstm">2-Layer LSTM</Term></strong> has reduced compute spend by{' '}
-                      <strong className="text-emerald-400 font-mono font-semibold">
-                        {latest.models_metrics?.lstm?.saved_pct ? `${latest.models_metrics.lstm.saved_pct.toFixed(1)}%` : '23.4%'} (${latest.models_metrics?.lstm?.saved_dollars ? latest.models_metrics.lstm.saved_dollars.toFixed(3) : '0.052'} saved)
-                      </strong>{' '}
-                      while sustaining <strong className="text-white font-mono font-semibold">0 <Term id="underprovision">under-provisioning deficits</Term></strong> compared to the <Term id="hpa">reactive baseline</Term>.
-                    </p>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono self-end md:self-auto flex-shrink-0">
-                  <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
-                    Decision: <span className="text-purple-300 font-bold">MAX(Models)</span>
-                  </span>
-                  <span className="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
-                    SLA Compliance: <span className="font-bold">100%</span>
-                  </span>
-                </div>
               </div>
 
               {/* 2-Column Balanced Telemetry Deck */}
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-                {/* LEFT COLUMN: 7 Columns (Replicas Chart stacked with Workload Chart sharing time axis) */}
-                <div className="xl:col-span-7 space-y-4">
-                  <ReplicasChart data={history} />
-                  <WorkloadChart data={history} />
-                </div>
+              <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+                  {/* LEFT COLUMN: 7 Columns (Replicas Chart stacked with Workload Chart sharing time axis) */}
+                  <div className="xl:col-span-7 space-y-4">
+                    <div
+                      id="demo-target-step-2"
+                      className={`transition-all duration-300 ${
+                      demoActive && demoStep === 2
+                        ? 'relative z-40 ring-2 ring-purple-500 ring-offset-2 ring-offset-zinc-900 shadow-2xl rounded-lg'
+                        : ''
+                    }`}>
+                      {demoActive && demoStep === 2 && (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-600 text-white text-[11px] font-mono font-bold shadow-lg w-fit animate-bounce mb-1.5">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                          </span>
+                          <span>NOTICE: Purple LSTM Curve Pre-warms 22 Pods Ahead of Queue Spike</span>
+                        </div>
+                      )}
+                      <ReplicasChart data={history} />
+                    </div>
+                    <WorkloadChart data={history} />
+                  </div>
 
                 {/* RIGHT COLUMN: 5 Columns (Traffic Throttle + Pod Cluster + Live Decision Arbiter) */}
                 <div className="xl:col-span-5 space-y-4">
-                  <TrafficThrottle
-                    trafficMode={trafficMode}
-                    setTrafficMode={setTrafficMode}
-                    manualRps={manualRps}
-                    setManualRps={setManualRps}
-                    onRpsChange={(rps) => handleSetTraffic(rps, 'manual')}
-                    onModeChange={(mode) => handleSetTraffic(manualRps, mode)}
-                    currentRps={latest.rps}
-                  />
+                  <div
+                    id="demo-target-step-1"
+                    className={`transition-all duration-300 ${
+                    demoActive && demoStep === 1
+                      ? 'relative z-40 ring-2 ring-rose-500 ring-offset-2 ring-offset-zinc-900 shadow-2xl rounded-lg'
+                      : ''
+                  }`}>
+                    {demoActive && demoStep === 1 && (
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-600 text-white text-[11px] font-mono font-bold shadow-lg w-fit animate-bounce mb-1.5">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                        </span>
+                        <span>NOTICE: 5x Traffic Surge Injected (520 RPS Spike)</span>
+                      </div>
+                    )}
+                    <TrafficThrottle
+                      trafficMode={trafficMode}
+                      setTrafficMode={setTrafficMode}
+                      manualRps={manualRps}
+                      setManualRps={setManualRps}
+                      onRpsChange={(rps) => handleSetTraffic(rps, 'manual')}
+                      onModeChange={(mode) => handleSetTraffic(manualRps, mode)}
+                      currentRps={latest.rps}
+                    />
+                  </div>
 
                   <PodCluster
                     actualPods={latest.actual_pods}
@@ -1090,80 +1234,97 @@ export default function App() {
                   />
 
                   {/* Real-Time Decision Arbiter Widget */}
-                  <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+                  <div className="raised-card rounded-lg p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
                       <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-md bg-purple-500/10 flex items-center justify-center text-purple-400">
+                        <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
                           <Layers className="w-3.5 h-3.5" />
                         </div>
-                        <span className="font-bold text-xs text-white uppercase tracking-wider">Live Scaling Arbiter</span>
+                        <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Live Scaling Arbiter</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-mono font-medium">
+                      <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-medium">
                         MAX Upper Bound
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-zinc-400 leading-relaxed mb-3">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
                       Current recommendations from all 4 algorithms. The cluster actuates the upper bound to ensure SLA compliance:
                     </p>
 
                     <div className="grid grid-cols-2 gap-2 mb-3 text-xs font-mono">
                       {/* LSTM */}
-                      <div className={`p-2.5 rounded-lg border transition-all ${
+                      <div className={`p-2.5 rounded-md border transition-all ${
                         (latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4)
-                          ? 'bg-purple-950/30 border-purple-500/50 text-purple-200 shadow-sm'
-                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
+                          ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                          : 'bg-zinc-50 dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400'
                       }`}>
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-sans font-semibold text-purple-300">Stacked LSTM</span>
+                          <span className={`text-[10px] font-sans font-semibold ${
+                            (latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4)
+                              ? 'text-zinc-200 dark:text-zinc-200'
+                              : 'text-zinc-700 dark:text-zinc-300'
+                          }`}>Stacked LSTM</span>
                           {(latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4) && (
-                            <span className="text-[8px] px-1 rounded bg-purple-500/30 text-purple-200 font-bold">GOVERNING</span>
+                            <span className="text-[8px] px-1 py-0.2 rounded bg-white/20 dark:bg-zinc-700 text-white dark:text-zinc-100 font-bold">GOVERNING</span>
                           )}
                         </div>
-                        <div className="text-lg font-bold text-white mt-1">{latest.lstm_pred ?? 4} <span className="text-[10px] font-normal text-zinc-400">pods</span></div>
-                        <div className="text-[9px] text-zinc-500 font-sans mt-0.5">45s lookahead</div>
+                        <div className={`text-lg font-bold mt-1 tabular-nums ${
+                          (latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4)
+                            ? 'text-white dark:text-zinc-100'
+                            : 'text-zinc-900 dark:text-zinc-100'
+                        }`}>{latest.lstm_pred ?? 4} <span className="text-[10px] font-normal opacity-70">pods</span></div>
+                        <div className="text-[9px] opacity-60 font-sans mt-0.5">45s lookahead</div>
                       </div>
 
                       {/* Holt-Winters */}
-                      <div className={`p-2.5 rounded-lg border transition-all ${
+                      <div className={`p-2.5 rounded-md border transition-all ${
                         (latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4)
-                          ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-200 shadow-sm'
-                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
+                          ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                          : 'bg-zinc-50 dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400'
                       }`}>
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-sans font-semibold text-emerald-300">Holt-Winters</span>
+                          <span className={`text-[10px] font-sans font-semibold ${
+                            (latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4)
+                              ? 'text-zinc-200 dark:text-zinc-200'
+                              : 'text-zinc-700 dark:text-zinc-300'
+                          }`}>Holt-Winters</span>
                           {(latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4) && (
-                            <span className="text-[8px] px-1 rounded bg-emerald-500/30 text-emerald-200 font-bold">GOVERNING</span>
+                            <span className="text-[8px] px-1 py-0.2 rounded bg-white/20 dark:bg-zinc-700 text-white dark:text-zinc-100 font-bold">GOVERNING</span>
                           )}
                         </div>
-                        <div className="text-lg font-bold text-white mt-1">{latest.holt_winters_pred ?? 4} <span className="text-[10px] font-normal text-zinc-400">pods</span></div>
-                        <div className="text-[9px] text-zinc-500 font-sans mt-0.5">Diurnal 24h</div>
+                        <div className={`text-lg font-bold mt-1 tabular-nums ${
+                          (latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4)
+                            ? 'text-white dark:text-zinc-100'
+                            : 'text-zinc-900 dark:text-zinc-100'
+                        }`}>{latest.holt_winters_pred ?? 4} <span className="text-[10px] font-normal opacity-70">pods</span></div>
+                        <div className="text-[9px] opacity-60 font-sans mt-0.5">Diurnal 24h</div>
                       </div>
 
                       {/* Linear */}
-                      <div className="p-2.5 rounded-lg border bg-zinc-900/60 border-zinc-800 text-zinc-400">
-                        <div className="text-[10px] font-sans font-semibold text-blue-300">Linear OLS</div>
-                        <div className="text-lg font-bold text-white mt-1">{latest.linear_pred ?? 4} <span className="text-[10px] font-normal text-zinc-400">pods</span></div>
+                      <div className="p-2.5 rounded-md border bg-zinc-50 dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <div className="text-[10px] font-sans font-semibold text-zinc-700 dark:text-zinc-300">Linear OLS</div>
+                        <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mt-1 tabular-nums">{latest.linear_pred ?? 4} <span className="text-[10px] font-normal text-zinc-500">pods</span></div>
                         <div className="text-[9px] text-zinc-500 font-sans mt-0.5">Slope velocity</div>
                       </div>
 
                       {/* Reactive HPA */}
-                      <div className="p-2.5 rounded-lg border bg-zinc-900/60 border-zinc-800 text-zinc-400">
-                        <div className="text-[10px] font-sans font-semibold text-amber-300">Reactive HPA</div>
-                        <div className="text-lg font-bold text-white mt-1">{latest.reactive_hpa ?? 4} <span className="text-[10px] font-normal text-zinc-400">pods</span></div>
+                      <div className="p-2.5 rounded-md border bg-zinc-50 dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <div className="text-[10px] font-sans font-semibold text-zinc-700 dark:text-zinc-300">Reactive HPA</div>
+                        <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mt-1 tabular-nums">{latest.reactive_hpa ?? 4} <span className="text-[10px] font-normal text-zinc-500">pods</span></div>
                         <div className="text-[9px] text-zinc-500 font-sans mt-0.5">K8s baseline</div>
                       </div>
                     </div>
 
                     {/* Decision Summary Pill */}
-                    <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs font-mono">
-                      <span className="text-zinc-400 text-[11px]">Enforced Replicas:</span>
-                      <span className="text-emerald-400 font-bold">
+                    <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono">
+                      <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">Enforced Replicas:</span>
+                      <span className="text-zinc-900 dark:text-zinc-100 font-bold tabular-nums">
                         max(...) = {latest.actual_pods ?? 4} Pods
                       </span>
                     </div>
                   </div>
                 </div>
+              </div>
               </div>
             </div>
           )}
@@ -1171,98 +1332,117 @@ export default function App() {
           {/* TAB 2: MODEL BENCHMARKING (Dedicated Comprehensive Evaluation) */}
           {activeTab === 'benchmark' && (
             <div className="space-y-4 animate-fadeIn">
-              {/* Benchmark Scope & Context Banner */}
-              <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 flex flex-col md:flex-row md:items-center justify-between gap-3 relative overflow-hidden">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <BarChart2 className="w-4 h-4 text-purple-400" />
-                    <h3 className="text-sm font-bold text-white tracking-wide">
-                      Empirical Multi-Model Performance & Efficiency Benchmark
-                    </h3>
+              <div className="surface-deck p-3.5 sm:p-5 rounded-xl space-y-4">
+                {/* Benchmark Scope & Context Banner */}
+                <div className="raised-card rounded-lg p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 relative">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <BarChart2 className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                      <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-wide">
+                        Empirical Multi-Model Performance &amp; Efficiency Benchmark
+                      </h3>
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-3xl">
+                      Comparative scientific evaluation of Reactive HPA, Linear Regression, Holt-Winters, and Stacked LSTM across compute spend ($/pod-hr), cold-start latency, and under-provisioning deficits under continuous diurnal workload replay.
+                    </p>
                   </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed max-w-3xl">
-                    Comparative scientific evaluation of Reactive HPA, Linear Regression, Holt-Winters, and Stacked LSTM across compute spend ($/pod-hr), cold-start latency, and under-provisioning deficits under continuous diurnal workload replay.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono flex-shrink-0 self-start md:self-auto">
-                  <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
-                    Rate: <strong className="text-white">$0.040/pod-hr</strong>
-                  </span>
-                  <span className="px-2 py-1 rounded bg-purple-950/40 border border-purple-500/30 text-purple-300">
-                    Cadence: <strong className="text-white">15s Scrapes</strong>
-                  </span>
-                  <span className="px-2 py-1 rounded bg-emerald-950/40 border border-emerald-500/30 text-emerald-300">
-                    SLO Boundary: <strong className="text-white">&lt;100ms P95</strong>
-                  </span>
-                </div>
-              </div>
-
-              {/* 1. Full-Width Model Scorecard (Cards, Matrix Table, Comparison Bars) */}
-              <ModelScorecard latest={latest} />
-
-              {/* 2. Neural Advantage Attribution & Starvation Prevention */}
-              <LSTMAttribution latest={latest} history={history} />
-
-              {/* 3. The Core Latency Problem: Reactive Cold Start vs Proactive Scaling */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Card A: The Reactive Problem */}
-                <div className="bento-card rounded-xl p-5 border border-rose-500/20 bg-gradient-to-b from-rose-950/10 to-zinc-950/80 relative overflow-hidden">
-                  <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider mb-2">
-                    <ShieldAlert className="w-4 h-4" />
-                    Standard Kubernetes HPA (Reactive Lag)
-                  </div>
-                  <h4 className="text-sm font-bold text-white mb-1">45s-60s Cold-Start Latency Degradation</h4>
-                  <p className="text-xs text-zinc-400 mb-3 leading-relaxed">
-                    Vanilla HPA relies on Prometheus averages that lag behind incoming bursts, creating a window of queue starvation while pods boot:
-                  </p>
-
-                  <div className="space-y-2 text-xs font-mono bg-zinc-950/80 p-3 rounded-lg border border-rose-500/20">
-                    <div className="flex items-center justify-between text-rose-300">
-                      <span>t = 0s</span>
-                      <span>Sudden Flash Crowd (+500 RPS)</span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-400">
-                      <span>t = 15s</span>
-                      <span>HPA detects CPU breach (&gt;60%)</span>
-                    </div>
-                    <div className="flex items-center justify-between text-zinc-400">
-                      <span>t = 30s</span>
-                      <span>Container runtime schedules pods</span>
-                    </div>
-                    <div className="flex items-center justify-between text-rose-400 font-bold">
-                      <span>t = 50s</span>
-                      <span>Pods ready (P95 Spike: 1400ms!)</span>
-                    </div>
+                  <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono flex-shrink-0 self-start md:self-auto">
+                    <span className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
+                      Rate: <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">$0.040/pod-hr</strong>
+                    </span>
+                    <span className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
+                      Cadence: <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">15s Scrapes</strong>
+                    </span>
+                    <span className="px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
+                      SLO Boundary: <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">&lt;100ms P95</strong>
+                    </span>
                   </div>
                 </div>
 
-                {/* Card B: The Proactive Solution */}
-                <div className="bento-card rounded-xl p-5 border border-emerald-500/20 bg-gradient-to-b from-emerald-950/10 to-zinc-950/80 relative overflow-hidden">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider mb-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    PHPA Stacked LSTM (Proactive Pre-warming)
-                  </div>
-                  <h4 className="text-sm font-bold text-white mb-1">Preemptive Scale-Up Ahead of Demand</h4>
-                  <p className="text-xs text-zinc-400 mb-3 leading-relaxed">
-                    Deep recurrent cells extrapolate traffic curvature from sliding PromQL vectors, ordering pods into existence before traffic arrives:
-                  </p>
+                {/* 1. Full-Width Model Scorecard (Cards, Matrix Table, Comparison Bars) */}
+                <div
+                  id="demo-target-step-3"
+                  className={`transition-all duration-300 ${
+                  demoActive && demoStep === 3
+                    ? 'relative z-40 ring-2 ring-cyan-500 ring-offset-2 ring-offset-zinc-900 shadow-2xl rounded-xl p-1 bg-white/95 dark:bg-zinc-900/95'
+                    : ''
+                }`}>
+                  {demoActive && demoStep === 3 && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-600 text-white text-[11px] font-mono font-bold shadow-lg w-fit animate-bounce mb-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                      </span>
+                      <span>NOTICE: Multi-Model Benchmark Ledger - 0 Deficits Sustained</span>
+                    </div>
+                  )}
+                  <ModelScorecard latest={latest} />
+                </div>
 
-                  <div className="space-y-2 text-xs font-mono bg-zinc-950/80 p-3 rounded-lg border border-emerald-500/20">
-                    <div className="flex items-center justify-between text-purple-300">
-                      <span>t = -20s</span>
-                      <span>LSTM detects surge acceleration</span>
+                {/* 2. Neural Advantage Attribution & Starvation Prevention */}
+                <LSTMAttribution latest={latest} history={history} />
+
+                {/* 3. The Core Latency Problem: Reactive Cold Start vs Proactive Scaling */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Card A: The Reactive Problem */}
+                  <div className="raised-card rounded-lg p-5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                    <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-semibold text-xs uppercase tracking-wider mb-2">
+                      <ShieldAlert className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      Standard Kubernetes HPA (Reactive Lag)
                     </div>
-                    <div className="flex items-center justify-between text-cyan-300">
-                      <span>t = -15s</span>
-                      <span>PHPA pre-warms cluster to 22 pods</span>
+                    <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1">45s-60s Cold-Start Latency Degradation</h4>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3 leading-relaxed">
+                      Vanilla HPA relies on Prometheus averages that lag behind incoming bursts, creating a window of queue starvation while pods boot:
+                    </p>
+
+                    <div className="space-y-2 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 p-3 rounded-md border border-zinc-200 dark:border-zinc-800">
+                      <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300 font-semibold">
+                        <span>t = 0s</span>
+                        <span>Sudden Flash Crowd (+500 RPS)</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
+                        <span>t = 15s</span>
+                        <span>HPA detects CPU breach (&gt;60%)</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
+                        <span>t = 30s</span>
+                        <span>Container runtime schedules pods</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-900 dark:text-zinc-100 font-bold">
+                        <span>t = 50s</span>
+                        <span>Pods ready (P95 Spike: 1400ms!)</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-emerald-300 font-bold">
-                      <span>t = 0s</span>
-                      <span>Flash Crowd hits: Replicas READY!</span>
+                  </div>
+
+                  {/* Card B: The Proactive Solution */}
+                  <div className="raised-card rounded-lg p-5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                    <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-semibold text-xs uppercase tracking-wider mb-2">
+                      <CheckCircle2 className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      PHPA Stacked LSTM (Proactive Pre-warming)
                     </div>
-                    <div className="flex items-center justify-between text-emerald-400 font-bold">
-                      <span>Result</span>
-                      <span>Zero SLA breaches (P95 &lt; 35ms)</span>
+                    <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1">Preemptive Scale-Up Ahead of Demand</h4>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-3 leading-relaxed">
+                      Deep recurrent cells extrapolate traffic curvature from sliding PromQL vectors, ordering pods into existence before traffic arrives:
+                    </p>
+
+                    <div className="space-y-2 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 p-3 rounded-md border border-zinc-200 dark:border-zinc-800">
+                      <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300 font-semibold">
+                        <span>t = -20s</span>
+                        <span>LSTM detects surge acceleration</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
+                        <span>t = -15s</span>
+                        <span>PHPA pre-warms cluster to 22 pods</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-900 dark:text-zinc-100 font-bold">
+                        <span>t = 0s</span>
+                        <span>Flash Crowd hits: Replicas READY!</span>
+                      </div>
+                      <div className="flex items-center justify-between text-zinc-900 dark:text-zinc-100 font-bold">
+                        <span>Result</span>
+                        <span>Zero SLA breaches (P95 &lt; 35ms)</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1273,276 +1453,268 @@ export default function App() {
           {/* TAB 3: DECISION LOG STREAM (Dedicated Operations Deck) */}
           {activeTab === 'logs' && (
             <div className="space-y-4 animate-fadeIn">
-              {/* 1. Top Telemetry Bento Row (4 Key Stat Cards) */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {/* Stat 1: Total Events Logged */}
-                <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
-                  <div className="flex items-center justify-between text-zinc-400 mb-1">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">Total Decisions Logged</span>
-                    <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
-                      <Activity className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-extrabold text-white font-mono">{logs.length}</span>
-                    <span className="text-[11px] text-zinc-400">events in buffer</span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
-                    Prometheus scrape: <span className="text-zinc-200 font-semibold">15s cadence</span>
-                  </div>
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
-                </div>
-
-                {/* Stat 2: Proactive LSTM Interventions */}
-                <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
-                  <div className="flex items-center justify-between text-zinc-400 mb-1">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">LSTM Interventions</span>
-                    <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
-                      <BrainCircuit className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-extrabold text-cyan-400 font-mono">
-                      {logs.filter(l => l.level === 'LSTM' || l.category === 'insight').length}
-                    </span>
-                    <span className="text-[11px] text-zinc-400">preemptions</span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                    Lookahead lead: <span className="text-zinc-200 font-semibold">+3 steps (45s)</span>
-                  </div>
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
-                </div>
-
-                {/* Stat 3: Current Replicas vs Demand */}
-                <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
-                  <div className="flex items-center justify-between text-zinc-400 mb-1">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">Actuation vs Demand</span>
-                    <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                      <Server className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-extrabold text-white font-mono">{latest.actual_pods ?? 4}</span>
-                    <span className="text-[11px] text-zinc-400">/ {latest.ideal_demand ?? 4} ideal pods</span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                    Cluster Load: <span className="text-zinc-200 font-semibold">{latest.rps ?? 125} RPS ({latest.cpu_utilization ?? 60}% CPU)</span>
-                  </div>
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
-                </div>
-
-                {/* Stat 4: SLA Compliance & Response Latency */}
-                <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
-                  <div className="flex items-center justify-between text-zinc-400 mb-1">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">SLA Compliance (P95)</span>
-                    <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className={`text-2xl font-extrabold font-mono ${latest.p95_latency_ms > 100 ? 'text-rose-400' : 'text-white'}`}>
-                      {latest.p95_latency_ms ?? 32.5}
-                    </span>
-                    <span className="text-[11px] text-zinc-400">ms P95</span>
-                  </div>
-                  <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
-                    <span className={`w-1.5 h-1.5 rounded-full ${latest.sla_breaches === 0 ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
-                    SLO: <span className="text-zinc-200">&lt;100ms</span> • <span className="text-emerald-400 font-semibold">{latest.sla_breaches === 0 ? 'Zero Breaches' : `${latest.sla_breaches} breaches`}</span>
-                  </div>
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-                </div>
-              </div>
-
-              {/* 2. Full-Height 2-Column Command Deck */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                {/* Main Stream Column (8 Cols) */}
-                <div className="lg:col-span-8 flex flex-col">
-                  <LiveEventLog logs={logs} onClear={() => setLogs([])} />
-                </div>
-
-                {/* Right Auxiliary Operations Deck (4 Cols) */}
-                <div className="lg:col-span-4 space-y-4">
-                  {/* Card A: Real-Time Decision Synthesis Inspector */}
-                  <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-md bg-purple-500/10 flex items-center justify-center text-purple-400">
-                          <Layers className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="font-semibold text-xs text-zinc-200 uppercase tracking-wider">Decision Synthesis</span>
+              <div className="surface-deck p-3.5 sm:p-5 rounded-xl space-y-4">
+                {/* 1. Top Telemetry Bento Row (4 Key Stat Cards) */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* Stat 1: Total Events Logged */}
+                  <div className="raised-card rounded-lg p-3.5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                    <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1.5">
+                      <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider">Total Decisions Logged</span>
+                      <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
+                        <Activity className="w-3.5 h-3.5" />
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-mono font-medium">
-                        MAX Upper Bound
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums">{logs.length}</span>
+                      <span className="text-[11px] text-zinc-500 dark:text-zinc-400">events in buffer</span>
+                    </div>
+                    <div className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500 animate-pulse"></span>
+                      Prometheus scrape: <span className="text-zinc-800 dark:text-zinc-200 font-medium">15s cadence</span>
+                    </div>
+                  </div>
+
+                  {/* Stat 2: Proactive LSTM Interventions */}
+                  <div className="raised-card rounded-lg p-3.5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                    <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1.5">
+                      <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider">LSTM Interventions</span>
+                      <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
+                        <BrainCircuit className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums">
+                        {logs.filter(l => l.level === 'LSTM' || l.category === 'insight').length}
                       </span>
+                      <span className="text-[11px] text-zinc-500 dark:text-zinc-400">preemptions</span>
+                    </div>
+                    <div className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      Lookahead lead: <span className="text-zinc-800 dark:text-zinc-200 font-medium">+3 steps (45s)</span>
+                    </div>
+                  </div>
+
+                  {/* Stat 3: Current Replicas vs Demand */}
+                  <div className="raised-card rounded-lg p-3.5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                    <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1.5">
+                      <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider">Actuation vs Demand</span>
+                      <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
+                        <Server className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums">{latest.actual_pods ?? 4}</span>
+                      <span className="text-[11px] text-zinc-500 dark:text-zinc-400">/ {latest.ideal_demand ?? 4} ideal pods</span>
+                    </div>
+                    <div className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500"></span>
+                      Cluster Load: <span className="text-zinc-800 dark:text-zinc-200 font-medium">{latest.rps ?? 125} RPS ({latest.cpu_utilization ?? 60}%)</span>
+                    </div>
+                  </div>
+
+                  {/* Stat 4: SLA Compliance & Response Latency */}
+                  <div className="raised-card rounded-lg p-3.5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                    <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1.5">
+                      <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider">SLA Compliance (P95)</span>
+                      <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className={`text-2xl font-bold font-mono tabular-nums ${latest.p95_latency_ms > 100 ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                        {latest.p95_latency_ms ?? 32.5}
+                      </span>
+                      <span className="text-[11px] text-zinc-500 dark:text-zinc-400">ms P95</span>
+                    </div>
+                    <div className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-mono">
+                      <span className={`w-1.5 h-1.5 rounded-full ${latest.sla_breaches === 0 ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+                      SLO: <span className="text-zinc-800 dark:text-zinc-200">&lt;100ms</span> • <span className="text-zinc-900 dark:text-zinc-100 font-medium">{latest.sla_breaches === 0 ? 'Zero Breaches' : `${latest.sla_breaches} breaches`}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Full-Height 2-Column Command Deck */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                  {/* Main Stream Column (8 Cols) */}
+                  <div className="lg:col-span-8 flex flex-col">
+                    <LiveEventLog logs={logs} onClear={() => setLogs([])} />
+                  </div>
+
+                  {/* Right Auxiliary Operations Deck (4 Cols) */}
+                  <div className="lg:col-span-4 space-y-4">
+                    {/* Card A: Real-Time Decision Synthesis Inspector */}
+                    <div className="raised-card rounded-lg p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                      <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
+                            <Layers className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Decision Synthesis</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-medium">
+                          MAX Upper Bound
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
+                        PHPA evaluates all 4 algorithms concurrently every 15s cycle and actuates the upper bound to prevent reactive starvation:
+                      </p>
+
+                      {/* Model breakdown bars */}
+                      <div className="space-y-2 mb-3">
+                        {[
+                          {
+                            name: 'Stacked LSTM',
+                            pods: latest.lstm_pred ?? 4,
+                            desc: 'Proactive non-linear neural lookahead',
+                            active: (latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4)
+                          },
+                          {
+                            name: 'Holt-Winters',
+                            pods: latest.holt_winters_pred ?? 4,
+                            desc: 'Triple exponential diurnal follower',
+                            active: (latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4)
+                          },
+                          {
+                            name: 'Linear Regression',
+                            pods: latest.linear_pred ?? 4,
+                            desc: 'First-order slope trend projector',
+                            active: false
+                          },
+                          {
+                            name: 'Reactive HPA',
+                            pods: latest.reactive_hpa ?? 4,
+                            desc: 'Kubernetes standard reactive threshold',
+                            active: false
+                          },
+                        ].map((m, i) => (
+                          <div
+                            key={i}
+                            className={`p-2 rounded-md border flex items-center justify-between transition-all ${
+                              m.active
+                                ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                                : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 text-zinc-600 dark:text-zinc-400'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className={`font-semibold text-xs ${m.active ? 'text-white dark:text-zinc-100' : 'text-zinc-800 dark:text-zinc-200'}`}>{m.name}</span>
+                                {m.active && (
+                                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-white/20 dark:bg-zinc-700 text-white dark:text-zinc-100 font-bold">
+                                    GOVERNING
+                                  </span>
+                                )}
+                              </div>
+                              <div className={`text-[10px] ${m.active ? 'text-zinc-300 dark:text-zinc-300' : 'text-zinc-500'}`}>{m.desc}</div>
+                            </div>
+                            <div className="text-right">
+                              <span className={`font-mono text-base font-bold ${m.active ? 'text-white dark:text-zinc-100' : 'text-zinc-900 dark:text-zinc-100'}`}>{m.pods}</span>
+                              <span className={`text-[10px] ml-1 ${m.active ? 'text-zinc-300 dark:text-zinc-300' : 'text-zinc-500'}`}>pods</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Synthesis result banner */}
+                      <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono">
+                        <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">Actuated Cluster Replicas:</span>
+                        <span className="text-zinc-900 dark:text-zinc-100 font-bold text-sm">
+                          max(...) = {latest.actual_pods ?? 4} Pods
+                        </span>
+                      </div>
                     </div>
 
-                    <p className="text-[11px] text-zinc-400 leading-relaxed mb-3">
-                      PHPA evaluates all 4 algorithms concurrently every 15s cycle and actuates the upper bound to prevent reactive starvation:
-                    </p>
+                    {/* Card B: Interactive Event Sandbox */}
+                    <div className="raised-card rounded-lg p-4 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                      <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
+                            <Zap className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Event Generator Sandbox</span>
+                        </div>
+                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">Live Injections</span>
+                      </div>
 
-                    {/* Model breakdown bars */}
-                    <div className="space-y-2 mb-3">
-                      {[
-                        {
-                          name: 'Stacked LSTM',
-                          pods: latest.lstm_pred ?? 4,
-                          desc: 'Proactive non-linear neural lookahead',
-                          color: 'border-purple-500/50 bg-purple-950/20 text-purple-300',
-                          active: (latest.lstm_pred ?? 4) >= Math.max(latest.reactive_hpa ?? 4, latest.linear_pred ?? 4, latest.holt_winters_pred ?? 4)
-                        },
-                        {
-                          name: 'Holt-Winters',
-                          pods: latest.holt_winters_pred ?? 4,
-                          desc: 'Triple exponential diurnal follower',
-                          color: 'border-cyan-500/50 bg-cyan-950/20 text-cyan-300',
-                          active: (latest.holt_winters_pred ?? 4) > (latest.lstm_pred ?? 4)
-                        },
-                        {
-                          name: 'Linear Regression',
-                          pods: latest.linear_pred ?? 4,
-                          desc: 'First-order slope trend projector',
-                          color: 'border-blue-500/50 bg-blue-950/20 text-blue-300',
-                          active: false
-                        },
-                        {
-                          name: 'Reactive HPA',
-                          pods: latest.reactive_hpa ?? 4,
-                          desc: 'Kubernetes standard reactive threshold',
-                          color: 'border-amber-500/50 bg-amber-950/20 text-amber-300',
-                          active: false
-                        },
-                      ].map((m, i) => (
-                        <div
-                          key={i}
-                          className={`p-2 rounded-lg border flex items-center justify-between transition-all ${
-                            m.active
-                              ? `${m.color} ring-1 ring-purple-500/40 shadow-sm`
-                              : 'border-zinc-800/80 bg-zinc-900/40 text-zinc-400'
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
+                        Trigger synthetic traffic anomalies or manually scale workload to observe live decisions in the stream:
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        <button
+                          onClick={handleInjectSpike}
+                          className={`p-2.5 rounded-md border transition-all flex flex-col items-center text-center ${
+                            buttonFeedback === 'spike'
+                              ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                              : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-850 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-800 dark:text-zinc-200'
                           }`}
                         >
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-xs text-zinc-200">{m.name}</span>
-                              {m.active && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-purple-500/30 text-purple-200 font-bold">
-                                  GOVERNING
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[10px] text-zinc-500">{m.desc}</div>
+                          <div className="flex items-center gap-1 font-semibold text-xs">
+                            <Zap className="w-3.5 h-3.5" />
+                            <span>{buttonFeedback === 'spike' ? 'Surge Injected!' : '5x Flash Surge'}</span>
                           </div>
-                          <div className="text-right">
-                            <span className="font-mono text-base font-bold text-white">{m.pods}</span>
-                            <span className="text-[10px] text-zinc-400 ml-1">pods</span>
+                          <span className="text-[10px] opacity-70 mt-0.5 font-mono">+500 RPS spike</span>
+                        </button>
+
+                        <button
+                          onClick={handleTriggerLstmEvent}
+                          className={`p-2.5 rounded-md border transition-all flex flex-col items-center text-center ${
+                            buttonFeedback === 'lstm'
+                              ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                              : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-850 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 font-semibold text-xs">
+                            <BrainCircuit className="w-3.5 h-3.5" />
+                            <span>{buttonFeedback === 'lstm' ? 'Preemption Active!' : 'Trigger LSTM'}</span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                          <span className="text-[10px] opacity-70 mt-0.5 font-mono">Proactive cycle</span>
+                        </button>
 
-                    {/* Synthesis result banner */}
-                    <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between text-xs font-mono">
-                      <span className="text-zinc-400 text-[11px]">Actuated Cluster Replicas:</span>
-                      <span className="text-emerald-400 font-bold text-sm">
-                        max(...) = {latest.actual_pods ?? 4} Pods
-                      </span>
-                    </div>
-                  </div>
+                        <button
+                          onClick={() => handleAdjustRps(50)}
+                          className={`p-2.5 rounded-md border transition-all flex flex-col items-center text-center ${
+                            buttonFeedback === 'plus'
+                              ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                              : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-850 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 font-semibold text-xs">
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                            <span>{buttonFeedback === 'plus' ? '+50 Applied!' : '+50 RPS Load'}</span>
+                          </div>
+                          <span className="text-[10px] opacity-70 mt-0.5 font-mono">Scale-up trigger</span>
+                        </button>
 
-                  {/* Card B: Interactive Event Sandbox */}
-                  <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-                    <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-400">
-                          <Zap className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="font-semibold text-xs text-zinc-200 uppercase tracking-wider">Event Generator Sandbox</span>
+                        <button
+                          onClick={() => handleAdjustRps(-50)}
+                          className={`p-2.5 rounded-md border transition-all flex flex-col items-center text-center ${
+                            buttonFeedback === 'minus'
+                              ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                              : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-850 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1 font-semibold text-xs">
+                            <ArrowDownRight className="w-3.5 h-3.5" />
+                            <span>{buttonFeedback === 'minus' ? '-50 Applied!' : '-50 RPS Load'}</span>
+                          </div>
+                          <span className="text-[10px] opacity-70 mt-0.5 font-mono">Cost optimization</span>
+                        </button>
                       </div>
-                      <span className="text-[10px] text-zinc-500 font-mono">Live Injections</span>
-                    </div>
-
-                    <p className="text-[11px] text-zinc-400 leading-relaxed mb-3">
-                      Trigger synthetic traffic anomalies or manually scale workload to observe live decisions in the stream:
-                    </p>
-
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <button
-                        onClick={handleInjectSpike}
-                        className={`p-2.5 rounded-lg border transition-all flex flex-col items-center text-center group ${
-                          buttonFeedback === 'spike'
-                            ? 'bg-rose-500/30 border-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-                            : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 hover:border-rose-500/50 text-rose-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1 font-semibold text-xs text-rose-200">
-                          <Zap className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-rose-400" />
-                          <span>{buttonFeedback === 'spike' ? 'Surge Injected!' : '5x Flash Surge'}</span>
-                        </div>
-                        <span className="text-[10px] text-rose-400/80 mt-0.5 font-mono">+500 RPS spike</span>
-                      </button>
 
                       <button
-                        onClick={handleTriggerLstmEvent}
-                        className={`p-2.5 rounded-lg border transition-all flex flex-col items-center text-center group ${
-                          buttonFeedback === 'lstm'
-                            ? 'bg-purple-500/30 border-purple-400 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
-                            : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 hover:border-purple-500/50 text-purple-300'
+                        onClick={handleReset}
+                        className={`w-full py-2 rounded-md border flex items-center justify-center gap-1.5 text-xs transition-colors font-mono ${
+                          buttonFeedback === 'reset'
+                            ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                            : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-850 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
                         }`}
                       >
-                        <div className="flex items-center gap-1 font-semibold text-xs text-purple-200">
-                          <BrainCircuit className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-purple-400" />
-                          <span>{buttonFeedback === 'lstm' ? 'Preemption Active!' : 'Trigger LSTM'}</span>
-                        </div>
-                        <span className="text-[10px] text-purple-400/80 mt-0.5 font-mono">Proactive cycle</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleAdjustRps(50)}
-                        className={`p-2.5 rounded-lg border transition-all flex flex-col items-center text-center group ${
-                          buttonFeedback === 'plus'
-                            ? 'bg-cyan-500/30 border-cyan-400 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-                            : 'bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/30 hover:border-cyan-500/50 text-cyan-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1 font-semibold text-xs text-cyan-200">
-                          <ArrowUpRight className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-cyan-400" />
-                          <span>{buttonFeedback === 'plus' ? '+50 Applied!' : '+50 RPS Load'}</span>
-                        </div>
-                        <span className="text-[10px] text-cyan-400/80 mt-0.5 font-mono">Scale-up trigger</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleAdjustRps(-50)}
-                        className={`p-2.5 rounded-lg border transition-all flex flex-col items-center text-center group ${
-                          buttonFeedback === 'minus'
-                            ? 'bg-emerald-500/30 border-emerald-400 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1 font-semibold text-xs text-emerald-200">
-                          <ArrowDownRight className="w-3.5 h-3.5 group-hover:scale-110 transition-transform text-emerald-400" />
-                          <span>{buttonFeedback === 'minus' ? '-50 Applied!' : '-50 RPS Load'}</span>
-                        </div>
-                        <span className="text-[10px] text-emerald-400/80 mt-0.5 font-mono">Cost optimization</span>
+                        <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
+                        <span>{buttonFeedback === 'reset' ? 'Baseline Reset to 4 Pods!' : 'Reset Cluster to Baseline (4 Replicas)'}</span>
                       </button>
                     </div>
-
-                    <button
-                      onClick={handleReset}
-                      className={`w-full py-1.5 rounded-lg border flex items-center justify-center gap-1.5 text-xs transition-colors font-mono ${
-                        buttonFeedback === 'reset'
-                          ? 'bg-zinc-800 border-zinc-600 text-white shadow-sm'
-                          : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
-                      }`}
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>{buttonFeedback === 'reset' ? 'Baseline Reset to 4 Pods!' : 'Reset Cluster to Baseline (4 Replicas)'}</span>
-                    </button>
                   </div>
-
-
                 </div>
               </div>
             </div>
@@ -1550,48 +1722,109 @@ export default function App() {
 
           {/* TAB 4: OPERATIONAL GUARDRAILS & SAFETY POLICIES */}
           {activeTab === 'guardrails' && (
-            <OperationalGuardrails
-              guardrails={guardrails}
-              onUpdateGuardrail={handleUpdateGuardrail}
-              onApplyProfile={handleApplyProfile}
-              latest={latest}
-              onInjectSpike={handleInjectSpike}
-              onTriggerLstmEvent={handleTriggerLstmEvent}
-              onAdjustRps={handleAdjustRps}
-              onSetTraffic={handleSetTraffic}
-              onReset={handleReset}
-              buttonFeedback={buttonFeedback}
-            />
+            <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
+              <OperationalGuardrails
+                guardrails={guardrails}
+                onUpdateGuardrail={handleUpdateGuardrail}
+                onApplyProfile={handleApplyProfile}
+                latest={latest}
+                onInjectSpike={handleInjectSpike}
+                onTriggerLstmEvent={handleTriggerLstmEvent}
+                onAdjustRps={handleAdjustRps}
+                onSetTraffic={handleSetTraffic}
+                onReset={handleReset}
+                buttonFeedback={buttonFeedback}
+                isSpotlighted={demoActive && demoStep === 4}
+              />
+            </div>
           )}
 
           {/* TAB 5: MATHEMATICAL MODELS */}
-          {activeTab === 'models' && <ModelDeepDive />}
+          {activeTab === 'models' && (
+            <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
+              <ModelDeepDive />
+            </div>
+          )}
 
           {/* TAB 6: PIPELINE ARCHITECTURE */}
           {activeTab === 'pipeline' && (
-            <PipelineViewer
-              latest={latest}
-              isPlaying={isPlaying}
-              speedFactor={speedFactor}
-              trafficMode={trafficMode}
-              manualRps={manualRps}
-              setManualRps={setManualRps}
-              setTrafficMode={setTrafficMode}
-              onInjectSpike={handleInjectSpike}
-              onTogglePlay={handleTogglePlay}
-              onSpeedChange={handleSpeedChange}
-              onReset={handleReset}
-            />
+            <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
+              <PipelineViewer
+                latest={latest}
+                isPlaying={isPlaying}
+                speedFactor={speedFactor}
+                trafficMode={trafficMode}
+                manualRps={manualRps}
+                setManualRps={setManualRps}
+                setTrafficMode={setTrafficMode}
+                onInjectSpike={handleInjectSpike}
+                onTogglePlay={handleTogglePlay}
+                onSpeedChange={handleSpeedChange}
+                onReset={handleReset}
+              />
+            </div>
           )}
+          </ErrorBoundary>
 
           {/* Clean Footer */}
-          <footer className="text-center text-xs text-zinc-500 pt-8 pb-4 border-t border-zinc-900 mt-8">
+          <footer className="text-center text-xs text-zinc-500 dark:text-zinc-400 pt-8 pb-4 border-t border-zinc-200 dark:border-zinc-800 mt-8">
             Predictive Horizontal Pod Autoscaler (PHPA) Research Testbed • Proactive Scaling with LSTM, Holt-Winters, and Linear Regression
           </footer>
         </main>
+
+        {/* Persistent Mobile Simulation Controls */}
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-3 py-2 safe-area-bottom">
+          <button
+            onClick={handleTogglePlay}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
+              isPlaying
+                ? 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200'
+                : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+            }`}
+          >
+            {isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+            <span>{isPlaying ? 'Pause' : 'Play'}</span>
+          </button>
+
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 rounded-md border border-zinc-200 dark:border-zinc-800 p-0.5 text-[10px] font-mono">
+            {[1, 10, 60].map((spd) => (
+              <button
+                key={spd}
+                onClick={() => handleSpeedChange(spd)}
+                className={`px-2 py-0.5 rounded transition-all ${
+                  speedFactor === spd
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-medium shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400'
+                }`}
+              >
+                {spd}x
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleInjectSpike}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
+              latest.is_spiking
+                ? 'bg-red-600 text-white border-red-700'
+                : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-red-600'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>{latest.is_spiking ? '5x Active' : 'Surge'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Floating Interactive Showcase Demo Presenter */}
+      {/* Dynamic Focused Spotlight with Cutout over Active Showcase Element */}
+      <DemoSpotlightOverlay
+        active={demoActive}
+        step={demoStep}
+        targetId={`demo-target-step-${demoStep}`}
+        stageName={demoStages[demoStep]?.tag || ''}
+      />
+
+      {/* Right-Side Interactive Showcase Demo Presenter */}
       {demoActive && (
         <DemoPresenter
           step={demoStep}
@@ -1604,6 +1837,7 @@ export default function App() {
           onExit={handleStopDemo}
           progress={((demoStages[demoStep].duration - demoTimeLeft) / demoStages[demoStep].duration) * 100}
           secondsRemaining={demoTimeLeft}
+          latest={latest}
         />
       )}
     </div>

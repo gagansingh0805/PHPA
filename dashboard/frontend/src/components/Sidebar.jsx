@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { 
+  Home,
   LayoutDashboard, 
   BarChart2, 
   Terminal, 
@@ -12,12 +12,12 @@ import {
   Pause, 
   RotateCcw, 
   Flame, 
-  Activity, 
   Clock,
   ChevronRight,
   X
 } from 'lucide-react';
 import Term from './Term';
+import PhpaLogo from './PhpaLogo';
 
 export default function Sidebar({
   activeTab,
@@ -34,35 +34,32 @@ export default function Sidebar({
   onMobileClose
 }) {
   const navItems = [
+    { id: 'overview', label: 'Research Overview', desc: 'Architecture & problem context', icon: Home },
     { id: 'lab', label: 'Telemetry Lab', desc: 'Real-time charts & pod cluster', icon: LayoutDashboard },
     { id: 'benchmark', label: 'Model Benchmarking', desc: 'Side-by-side cost & accuracy', icon: BarChart2 },
-    { id: 'logs', label: 'Decision Log Feed', desc: 'Live autoscaler event stream', icon: Terminal },
     { id: 'guardrails', label: 'Operational Guardrails', desc: 'Safety limits & chaos sandbox', icon: ShieldCheck },
-    { id: 'models', label: 'Mathematical Theory', desc: 'Formulations & equations', icon: BookOpen },
     { id: 'pipeline', label: 'Pipeline Architecture', desc: 'Kubernetes CRD & controller', icon: GitBranch },
+    { id: 'logs', label: 'Decision Log Feed', desc: 'Live autoscaler event stream', icon: Terminal },
+    { id: 'models', label: 'Mathematical Theory', desc: 'Formulations & equations', icon: BookOpen },
   ];
 
   const renderSidebarContent = (isMobile = false) => (
     <div className="flex flex-col justify-between h-full">
       {/* Top Branding & Nav */}
       <div>
-        <div className="p-4 border-b border-zinc-800/80 flex items-center justify-between">
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 p-[1px] shadow-md shadow-purple-500/20 flex-shrink-0">
-              <div className="w-full h-full bg-zinc-950 rounded-[7px] flex items-center justify-center">
-                <Zap className="w-4 h-4 text-cyan-400" />
-              </div>
-            </div>
+            <PhpaLogo size="md" />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h1 className="text-sm font-bold text-white tracking-tight truncate">
+                <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
                   Predictive <Term id="hpa">HPA</Term>
                 </h1>
-                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                   v0.13.2
                 </span>
               </div>
-              <p className="text-[10px] text-zinc-400 truncate">Autoscaling Research Testbed</p>
+              <p className="text-[11px] text-zinc-500 truncate">Telemetry &amp; Research</p>
             </div>
           </div>
 
@@ -70,7 +67,7 @@ export default function Sidebar({
           {isMobile && (
             <button
               onClick={onMobileClose}
-              className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+              className="p-1.5 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
               aria-label="Close navigation"
             >
               <X className="w-4 h-4" />
@@ -90,22 +87,43 @@ export default function Sidebar({
                   setActiveTab(item.id);
                   if (isMobile && onMobileClose) onMobileClose();
                 }}
-                className={`w-full flex items-center justify-between p-2.5 rounded-lg text-left transition-all ${
+                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all duration-150 focus:outline-none focus:ring-0 ${
                   isActive
-                    ? 'bg-purple-600/15 border border-purple-500/30 text-white shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60 border border-transparent'
+                    ? 'bg-zinc-100 dark:bg-zinc-850 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-700/70 shadow-xs font-medium'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 border border-transparent'
                 }`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-purple-400' : 'text-zinc-500'}`} />
-                  <div className="truncate">
-                    <div className={`text-xs font-semibold ${isActive ? 'text-white' : 'text-zinc-300'}`}>
-                      {item.label}
-                    </div>
-                    <div className="text-[9px] text-zinc-500 truncate">{item.desc}</div>
+                {/* Active Indicator Bar on Left */}
+                {isActive && (
+                  <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 bg-zinc-900 dark:bg-zinc-100 rounded-full" />
+                )}
+                <Icon
+                  className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                    isActive
+                      ? 'text-zinc-900 dark:text-zinc-100 ml-1'
+                      : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <div
+                    className={`text-xs tracking-tight ${
+                      isActive
+                        ? 'font-semibold text-zinc-900 dark:text-white'
+                        : 'font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100'
+                    }`}
+                  >
+                    {item.label}
+                  </div>
+                  <div
+                    className={`text-[10.5px] truncate leading-tight mt-0.5 ${
+                      isActive
+                        ? 'text-zinc-500 dark:text-zinc-400'
+                        : 'text-zinc-400 dark:text-zinc-500'
+                    }`}
+                  >
+                    {item.desc}
                   </div>
                 </div>
-                {isActive && <ChevronRight className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />}
               </button>
             );
           })}
@@ -113,16 +131,16 @@ export default function Sidebar({
       </div>
 
       {/* Bottom Integrated Simulation Controller */}
-      <div className="p-3 border-t border-zinc-800/80 bg-zinc-900/40 space-y-2.5">
+      <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60 space-y-2.5">
         {/* Simulation Clock & State */}
-        <div className="flex items-center justify-between text-[10px] font-mono">
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <Clock className="w-3 h-3 text-zinc-500" />
+        <div className="flex items-center justify-between text-[11px] font-mono">
+          <div className="flex items-center gap-1.5 text-zinc-500">
+            <Clock className="w-3 h-3" />
             <span className="truncate">{simTime || 'Day 1, 00:00:00'}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
-            <span className={isPlaying ? 'text-emerald-400 font-semibold' : 'text-amber-400'}>
+            <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? 'bg-emerald-500' : 'bg-zinc-400'}`}></span>
+            <span className={`text-[10px] font-medium ${isPlaying ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-500'}`}>
               {isPlaying ? 'RUNNING' : 'PAUSED'}
             </span>
           </div>
@@ -132,10 +150,10 @@ export default function Sidebar({
         <div className="flex items-center gap-1.5">
           <button
             onClick={onTogglePlay}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium border transition-all shadow-sm focus:outline-none focus:ring-0 ${
               isPlaying
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
-                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
+                ? 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                : 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 hover:opacity-90'
             }`}
           >
             {isPlaying ? (
@@ -154,23 +172,23 @@ export default function Sidebar({
           <button
             onClick={onReset}
             title="Reset simulation to t=0"
-            className="p-1.5 rounded-lg bg-zinc-800/80 border border-zinc-700/70 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+            className="p-1.5 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm focus:outline-none focus:ring-0"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Speed Selector */}
-        <div className="flex items-center justify-between bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-[10px] font-mono">
+        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-1 rounded-md border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono shadow-sm">
           <span className="text-zinc-500 px-1 font-sans">Speed:</span>
           {[1, 10, 60].map((spd) => (
             <button
               key={spd}
               onClick={() => onSpeedChange(spd)}
-              className={`px-2 py-0.5 rounded transition-all ${
+              className={`px-2 py-0.5 rounded transition-all focus:outline-none focus:ring-0 ${
                 speedFactor === spd
-                  ? 'bg-purple-600 text-white font-bold shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-medium shadow-sm'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
               }`}
             >
               {spd}x
@@ -181,14 +199,14 @@ export default function Sidebar({
         {/* Flash Crowd Surge Trigger */}
         <button
           onClick={onInjectSpike}
-          className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+          className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium border transition-all shadow-sm focus:outline-none focus:ring-0 ${
             isSpiking
-              ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 animate-pulse'
-              : 'bg-gradient-to-r from-rose-950/50 via-rose-900/30 to-zinc-900 border border-rose-500/40 text-rose-300 hover:border-rose-400 hover:text-white'
+              ? 'bg-red-600 text-white border-red-700'
+              : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-300 dark:hover:border-red-900/60 hover:text-red-600 dark:hover:text-red-400'
           }`}
         >
-          <Flame className="w-3.5 h-3.5 text-rose-400" />
-          <span>{isSpiking ? 'SURGE ACTIVE (5x)' : 'Inject 5x Flash Crowd'}</span>
+          <Flame className="w-3.5 h-3.5 text-red-500" />
+          <span>{isSpiking ? 'Surge Active (5x)' : 'Inject 5x Surge'}</span>
         </button>
       </div>
     </div>
@@ -197,7 +215,7 @@ export default function Sidebar({
   return (
     <>
       {/* 1. Desktop Persistent Sidebar */}
-      <aside className="w-64 bg-zinc-950 border-r border-zinc-800/80 hidden lg:flex flex-col justify-between h-screen sticky top-0 flex-shrink-0 select-none z-30">
+      <aside className="w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800/80 hidden lg:flex flex-col justify-between h-screen sticky top-0 flex-shrink-0 select-none z-30">
         {renderSidebarContent(false)}
       </aside>
 
@@ -207,10 +225,10 @@ export default function Sidebar({
           {/* Backdrop */}
           <div
             onClick={onMobileClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 animate-fadeIn"
           />
           {/* Drawer Panel */}
-          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-zinc-950 border-r border-zinc-800/90 z-50 flex flex-col justify-between h-full select-none shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-out">
+          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 z-50 flex flex-col justify-between h-full select-none shadow-xl overflow-y-auto transform transition-transform duration-200 ease-out">
             {renderSidebarContent(true)}
           </div>
         </div>

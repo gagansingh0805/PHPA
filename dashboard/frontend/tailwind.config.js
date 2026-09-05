@@ -14,6 +14,7 @@ export default {
         hw: "#10b981",          // Emerald
         lstm: "#a855f7",        // Purple
         spike: "#ef4444",       // Red
+        'zinc-850': '#1e1e24',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],

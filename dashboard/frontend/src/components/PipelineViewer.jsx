@@ -479,24 +479,24 @@ export default function PipelineViewer({
       case 0: // Client Edge Ingestion
         return (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#0b0b12] border border-cyan-500/30 space-y-3">
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-cyan-400 font-bold font-mono text-xs">
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold font-mono text-xs">
                   <Activity className="w-4 h-4" />
                   <span>REAL-TIME TRAFFIC ARRIVAL & INGRESS WAVE DIAGRAM</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                   {rps} RPS Live
                 </span>
               </div>
 
               {/* Animated Wave SVG */}
-              <div className="relative h-28 w-full bg-[#07070b] rounded-lg border border-zinc-800 overflow-hidden flex items-center justify-center">
+              <div className="relative h-28 w-full bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden flex items-center justify-center">
                 <svg className="w-full h-full" viewBox="0 0 500 100" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="waveGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.5" />
-                      <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.02" />
+                      <stop offset="0%" stopColor="#71717a" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#71717a" stopOpacity="0.02" />
                     </linearGradient>
                   </defs>
                   {/* Diurnal Waveform Area */}
@@ -508,36 +508,36 @@ export default function PipelineViewer({
                   <path
                     d={`M 0 60 Q 125 ${isSpiking ? 10 : 30}, 250 55 T 500 ${isSpiking ? 15 : 60}`}
                     fill="none"
-                    stroke="#06b6d4"
-                    strokeWidth="2.5"
+                    stroke="#52525b"
+                    strokeWidth="2"
                   />
                   {/* Scanning Cursor */}
-                  <line x1="250" y1="0" x2="250" y2="100" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="3 3" />
-                  <circle cx="250" cy={isSpiking ? 32 : 55} r="4" fill="#fbbf24" className="animate-ping" />
+                  <line x1="250" y1="0" x2="250" y2="100" className="stroke-zinc-900 dark:stroke-zinc-100" strokeWidth="1.5" strokeDasharray="3 3" />
+                  <circle cx="250" cy={isSpiking ? 32 : 55} r="4" className="fill-zinc-900 dark:fill-zinc-100 animate-ping" />
                 </svg>
-                <div className="absolute top-2 right-2 text-[10px] font-mono text-zinc-400 bg-black/60 px-2 py-0.5 rounded border border-zinc-800">
+                <div className="absolute top-2 right-2 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 bg-zinc-100/90 dark:bg-zinc-800/90 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
                   {isSpiking ? '💥 Poisson Flash Crowd Surge Active' : '🌊 Diurnal Base Sine Wave + Noise'}
                 </div>
               </div>
 
               {/* Architectural Block Diagram */}
               <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <div className="text-zinc-500 text-[10px]">1. Client Pool</div>
-                  <div className="text-white font-bold mt-1">Web & API Clients</div>
-                  <div className="text-cyan-400 text-[10px] mt-0.5">{Math.round(rps * 1.8)} Connections</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <div className="text-zinc-500 dark:text-zinc-400 text-[10px]">1. Client Pool</div>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold mt-1">Web & API Clients</div>
+                  <div className="text-zinc-600 dark:text-zinc-400 text-[10px] mt-0.5">{Math.round(rps * 1.8)} Connections</div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-cyan-500/40 shadow-sm">
-                  <div className="text-cyan-400 text-[10px] flex items-center justify-center gap-1">
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 shadow-xs">
+                  <div className="text-zinc-700 dark:text-zinc-300 text-[10px] flex items-center justify-center gap-1">
                     <span>2. TLS Edge Gateway</span>
                   </div>
-                  <div className="text-white font-bold mt-1">ALB / NodePort</div>
-                  <div className="text-emerald-400 text-[10px] mt-0.5">TLS 1.3 (~1.2ms)</div>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold mt-1">ALB / NodePort</div>
+                  <div className="text-emerald-600 dark:text-emerald-400 text-[10px] mt-0.5">TLS 1.3 (~1.2ms)</div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <div className="text-zinc-500 text-[10px]">3. Target Stream</div>
-                  <div className="text-white font-bold mt-1">Envoy Reverse Proxy</div>
-                  <div className="text-purple-400 text-[10px] mt-0.5">HTTP/2.0 Stream</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <div className="text-zinc-500 dark:text-zinc-400 text-[10px]">3. Target Stream</div>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold mt-1">Envoy Reverse Proxy</div>
+                  <div className="text-zinc-600 dark:text-zinc-400 text-[10px] mt-0.5">HTTP/2.0 Stream</div>
                 </div>
               </div>
             </div>
@@ -547,35 +547,35 @@ export default function PipelineViewer({
       case 1: // Ingress Router & Envoy
         return (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#0b0b12] border border-blue-500/30 space-y-3">
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-blue-400 font-bold font-mono text-xs">
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold font-mono text-xs">
                   <Network className="w-4 h-4" />
                   <span>ENVOY REVERSE PROXY & WEIGHTED ROUTING DIAGRAM</span>
                 </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${p95 > 100 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'}`}>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${p95 > 100 ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700'}`}>
                   P95: {p95}ms (SLA: 100ms)
                 </span>
               </div>
 
               {/* Envoy Router Dispatch Topology */}
-              <div className="bg-[#07070b] p-3 rounded-lg border border-zinc-800">
+              <div className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center justify-between text-xs font-mono mb-2">
-                  <span className="text-zinc-400">Incoming Ingress Stream</span>
-                  <span className="text-blue-400">Weighted Round-Robin Multiplexing</span>
+                  <span className="text-zinc-500 dark:text-zinc-400">Incoming Ingress Stream</span>
+                  <span className="text-zinc-700 dark:text-zinc-300 font-medium">Weighted Round-Robin Multiplexing</span>
                 </div>
 
                 <div className="space-y-2">
                   {Array.from({ length: Math.min(4, actualPods) }).map((_, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs font-mono">
-                      <span className="w-16 text-zinc-500 text-[10px]">Lane {i + 1}:</span>
-                      <div className="flex-1 bg-zinc-900 rounded-full h-2 overflow-hidden">
+                      <span className="w-16 text-zinc-500 dark:text-zinc-400 text-[10px]">Lane {i + 1}:</span>
+                      <div className="flex-1 bg-zinc-100 dark:bg-zinc-800 rounded-full h-2 overflow-hidden">
                         <div
-                          className="h-full bg-blue-500 rounded-full animate-pulse"
+                          className="h-full bg-zinc-900 dark:bg-zinc-100 rounded-full"
                           style={{ width: `${100 / Math.min(4, actualPods)}%` }}
                         />
                       </div>
-                      <span className="text-zinc-300 w-28 text-right text-[10px]">
+                      <span className="text-zinc-600 dark:text-zinc-400 w-28 text-right text-[10px]">
                         pod-web-0{i + 1} ({Math.round(rps / actualPods)} req/s)
                       </span>
                     </div>
@@ -584,15 +584,15 @@ export default function PipelineViewer({
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <span className="text-zinc-500 text-[10px]">Circuit Breaker Status:</span>
-                  <div className="text-emerald-400 font-bold mt-1">Closed (Healthy Traffic)</div>
-                  <span className="text-zinc-500 text-[10px]">0 Pod Ejections</span>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">Circuit Breaker Status:</span>
+                  <div className="text-emerald-600 dark:text-emerald-400 font-bold mt-1">Closed (Healthy Traffic)</div>
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">0 Pod Ejections</span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <span className="text-zinc-500 text-[10px]">Keep-Alive Pool:</span>
-                  <div className="text-cyan-400 font-bold mt-1">2,048 Max Sockets</div>
-                  <span className="text-zinc-500 text-[10px]">Zero Handshake Latency</span>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">Keep-Alive Pool:</span>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold mt-1">2,048 Max Sockets</div>
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">Zero Handshake Latency</span>
                 </div>
               </div>
             </div>
@@ -602,20 +602,20 @@ export default function PipelineViewer({
       case 2: // Kubernetes Workload Pods Cluster
         return (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#0b0b12] border border-purple-500/30 space-y-3">
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-purple-400 font-bold font-mono text-xs">
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold font-mono text-xs">
                   <Server className="w-4 h-4" />
                   <span>KUBERNETES DATA PLANE POD REPLICA SET ARCHITECTURE</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                   {actualPods} Active Pods
                 </span>
               </div>
 
               {/* Data Plane Rack View */}
-              <div className="bg-[#07070b] p-3 rounded-lg border border-zinc-800">
-                <div className="text-[10px] font-mono text-zinc-400 mb-2 flex items-center justify-between">
+              <div className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800">
+                <div className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 mb-2 flex items-center justify-between">
                   <span>Cluster Deployment: default/web-workload</span>
                   <span>Target CPU: 60% • Cluster Avg: {cpu}%</span>
                 </div>
@@ -626,27 +626,27 @@ export default function PipelineViewer({
                       key={p.id}
                       className={`p-2 rounded-lg border text-[10px] font-mono ${
                         p.isPrewarmed
-                          ? 'bg-purple-950/40 border-purple-400 text-purple-200'
+                          ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-400 dark:border-zinc-600 text-zinc-900 dark:text-zinc-100'
                           : p.cpu > 80
-                          ? 'bg-rose-950/40 border-rose-500 text-rose-200'
-                          : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                          ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+                          : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'
                       }`}
                     >
                       <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold">{p.id}</span>
+                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">{p.id}</span>
                         {p.isPrewarmed && (
-                          <span className="text-[8px] px-1 rounded bg-purple-500/30 text-purple-300">
+                          <span className="text-[8px] px-1 rounded bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-medium">
                             LSTM
                           </span>
                         )}
                       </div>
-                      <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden my-1">
+                      <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden my-1">
                         <div
-                          className={`h-full ${p.cpu > 80 ? 'bg-rose-500' : p.isPrewarmed ? 'bg-purple-400' : 'bg-cyan-400'}`}
+                          className={`h-full ${p.cpu > 80 ? 'bg-rose-500' : 'bg-zinc-900 dark:bg-zinc-100'}`}
                           style={{ width: `${p.cpu}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-[9px] text-zinc-400">
+                      <div className="flex justify-between text-[9px] text-zinc-500 dark:text-zinc-400">
                         <span>CPU: {p.cpu}%</span>
                         <span>{p.mem}MB</span>
                       </div>
@@ -656,17 +656,17 @@ export default function PipelineViewer({
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
-                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <span className="text-zinc-500 text-[10px]">CPU Limit:</span>
-                  <div className="text-white font-bold">500m</div>
+                <div className="p-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">CPU Limit:</span>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold">500m</div>
                 </div>
-                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <span className="text-zinc-500 text-[10px]">CPU Request:</span>
-                  <div className="text-white font-bold">250m</div>
+                <div className="p-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">CPU Request:</span>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold">250m</div>
                 </div>
-                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <span className="text-zinc-500 text-[10px]">Per-Pod Capacity:</span>
-                  <div className="text-cyan-400 font-bold">~25 RPS</div>
+                <div className="p-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">Per-Pod Capacity:</span>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold">~25 RPS</div>
                 </div>
               </div>
             </div>
@@ -676,51 +676,51 @@ export default function PipelineViewer({
       case 3: // Telemetry Harvester
         return (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#0b0b12] border border-emerald-500/30 space-y-3">
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold font-mono text-xs">
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold font-mono text-xs">
                   <Layers className="w-4 h-4" />
                   <span>AUTONOMIC METRICS HARVESTING PIPELINE (cAdvisor & k8shorizmetrics)</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                   15s Scrape Cycle
                 </span>
               </div>
 
               {/* 4-Step Scrape Flow Pipeline */}
               <div className="grid grid-cols-4 gap-2 text-xs font-mono text-center">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <div className="text-emerald-400 font-bold text-[11px]">Step 1: Scrape</div>
-                  <div className="text-zinc-300 mt-1">cAdvisor Daemon</div>
-                  <div className="text-zinc-500 text-[9px] mt-0.5">Kubelet /metrics</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold text-[11px]">Step 1: Scrape</div>
+                  <div className="text-zinc-600 dark:text-zinc-300 mt-1">cAdvisor Daemon</div>
+                  <div className="text-zinc-500 dark:text-zinc-400 text-[9px] mt-0.5">Kubelet /metrics</div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <div className="text-emerald-400 font-bold text-[11px]">Step 2: Filter</div>
-                  <div className="text-zinc-300 mt-1">Unready Excluded</div>
-                  <div className="text-zinc-500 text-[9px] mt-0.5">0 Initializers filtered</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold text-[11px]">Step 2: Filter</div>
+                  <div className="text-zinc-600 dark:text-zinc-300 mt-1">Unready Excluded</div>
+                  <div className="text-zinc-500 dark:text-zinc-400 text-[9px] mt-0.5">0 Initializers filtered</div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <div className="text-emerald-400 font-bold text-[11px]">Step 3: Buffer</div>
-                  <div className="text-zinc-300 mt-1">50-Step Window</div>
-                  <div className="text-zinc-500 text-[9px] mt-0.5">Sliding metric vector</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold text-[11px]">Step 3: Buffer</div>
+                  <div className="text-zinc-600 dark:text-zinc-300 mt-1">50-Step Window</div>
+                  <div className="text-zinc-500 dark:text-zinc-400 text-[9px] mt-0.5">Sliding metric vector</div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-emerald-500/40 shadow-sm">
-                  <div className="text-emerald-400 font-bold text-[11px]">Step 4: Dispatch</div>
-                  <div className="text-white font-bold mt-1">Parallel Brain</div>
-                  <div className="text-purple-400 text-[9px] mt-0.5">Piped to 4 Models</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 shadow-xs">
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold text-[11px]">Step 4: Dispatch</div>
+                  <div className="text-zinc-800 dark:text-zinc-200 font-bold mt-1">Parallel Brain</div>
+                  <div className="text-zinc-500 dark:text-zinc-400 text-[9px] mt-0.5">Piped to 4 Models</div>
                 </div>
               </div>
 
               {/* Raw Replica Calculation Box */}
-              <div className="bg-[#07070b] p-3 rounded-lg border border-zinc-800 flex items-center justify-between text-xs font-mono">
+              <div className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono">
                 <div>
-                  <span className="text-zinc-500 text-[10px]">Calculated Raw Replica Demand:</span>
-                  <div className="text-white font-bold mt-0.5">
-                    ceil({actualPods} pods × {cpu}% / 60%) = <span className="text-emerald-400">{reactiveHpa} pods</span>
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">Calculated Raw Replica Demand:</span>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold mt-0.5">
+                    ceil({actualPods} pods × {cpu}% / 60%) = <span className="text-emerald-600 dark:text-emerald-400">{reactiveHpa} pods</span>
                   </div>
                 </div>
-                <div className="text-right text-[10px] text-zinc-400">
-                  <span>Feed latency: <strong className="text-zinc-200">12ms</strong></span>
+                <div className="text-right text-[10px] text-zinc-500 dark:text-zinc-400">
+                  <span>Feed latency: <strong className="text-zinc-800 dark:text-zinc-200">12ms</strong></span>
                 </div>
               </div>
             </div>
@@ -730,13 +730,13 @@ export default function PipelineViewer({
       case 4: // PHPA Parallel Models Brain (The Multi-Model Forecasting Matrix)
         return (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#0b0b12] border border-purple-500/40 space-y-3 shadow-xl">
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-purple-400 font-bold font-mono text-xs">
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold font-mono text-xs">
                   <Cpu className="w-4 h-4" />
                   <span>PARALLEL MULTI-MODEL FORECASTING MATRIX & DECISION CORE</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-semibold">
                   Strategy: DecisionType: Maximum
                 </span>
               </div>
@@ -744,80 +744,80 @@ export default function PipelineViewer({
               {/* 4 Parallel Models Comparison Grid */}
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                 {/* Model 1: Reactive HPA */}
-                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Reactive HPA' ? 'bg-zinc-800/80 border-cyan-400 shadow-md ring-1 ring-cyan-400/50' : 'bg-zinc-900/80 border-zinc-800'}`}>
+                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Reactive HPA' ? 'bg-zinc-100 dark:bg-zinc-850 border-zinc-400 dark:border-zinc-600 shadow-sm' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}`}>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-cyan-300">1. Reactive HPA</span>
-                    {winningModel === 'Reactive HPA' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-cyan-500/30 text-cyan-300 font-bold">WINNER</span>}
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">1. Reactive HPA</span>
+                    {winningModel === 'Reactive HPA' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold">WINNER</span>}
                   </div>
-                  <div className="text-2xl font-bold font-mono text-white mt-1">
+                  <div className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100 mt-1 tabular-nums">
                     {reactiveHpa} <span className="text-xs font-normal text-zinc-400">replicas</span>
                   </div>
-                  <p className="text-[10px] text-zinc-400 mt-1 leading-snug">
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
                     Standard Kubernetes ratio rule. Evaluates lagging CPU load: ceil(N × CurrentCPU / TargetCPU).
                   </p>
                 </div>
 
                 {/* Model 2: Linear Regression */}
-                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Linear' ? 'bg-blue-950/40 border-blue-400 shadow-md ring-1 ring-blue-400/50' : 'bg-zinc-900/80 border-zinc-800'}`}>
+                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Linear' ? 'bg-zinc-100 dark:bg-zinc-850 border-zinc-400 dark:border-zinc-600 shadow-sm' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}`}>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-blue-300">2. Linear OLS</span>
-                    {winningModel === 'Linear' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-blue-500/30 text-blue-300 font-bold">WINNER</span>}
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">2. Linear OLS</span>
+                    {winningModel === 'Linear' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold">WINNER</span>}
                   </div>
-                  <div className="text-2xl font-bold font-mono text-white mt-1">
+                  <div className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100 mt-1 tabular-nums">
                     {linearPred} <span className="text-xs font-normal text-zinc-400">replicas</span>
                   </div>
-                  <p className="text-[10px] text-zinc-400 mt-1 leading-snug">
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
                     Ordinary Least Squares trend extrapolation on the 50-step metrics vector.
                   </p>
                 </div>
 
                 {/* Model 3: Holt-Winters */}
-                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Holt-Winters' ? 'bg-emerald-950/40 border-emerald-400 shadow-md ring-1 ring-emerald-400/50' : 'bg-zinc-900/80 border-zinc-800'}`}>
+                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'Holt-Winters' ? 'bg-zinc-100 dark:bg-zinc-850 border-zinc-400 dark:border-zinc-600 shadow-sm' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}`}>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-emerald-300">3. Holt-Winters</span>
-                    {winningModel === 'Holt-Winters' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/30 text-emerald-300 font-bold">WINNER</span>}
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">3. Holt-Winters</span>
+                    {winningModel === 'Holt-Winters' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold">WINNER</span>}
                   </div>
-                  <div className="text-2xl font-bold font-mono text-white mt-1">
+                  <div className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100 mt-1 tabular-nums">
                     {hwPred} <span className="text-xs font-normal text-zinc-400">replicas</span>
                   </div>
-                  <p className="text-[10px] text-zinc-400 mt-1 leading-snug">
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
                     Triple exponential smoothing capturing diurnal seasonal cycles and baseline drift.
                   </p>
                 </div>
 
                 {/* Model 4: 2-Layer LSTM */}
-                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'LSTM' ? 'bg-purple-950/60 border-purple-400 shadow-lg ring-1 ring-purple-400/60' : 'bg-zinc-900/80 border-zinc-800'}`}>
+                <div className={`p-3 rounded-lg border transition-all ${winningModel === 'LSTM' ? 'bg-zinc-100 dark:bg-zinc-850 border-zinc-900 dark:border-zinc-100 shadow-sm' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}`}>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-purple-300 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
                       <span>4. 2-Layer LSTM</span>
                     </span>
-                    {winningModel === 'LSTM' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-purple-500/40 text-purple-200 font-bold animate-pulse">WINNER</span>}
+                    {winningModel === 'LSTM' && <span className="px-1.5 py-0.2 rounded text-[9px] bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold">WINNER</span>}
                   </div>
-                  <div className="text-2xl font-bold font-mono text-purple-300 mt-1">
+                  <div className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100 mt-1 tabular-nums">
                     {lstmPred} <span className="text-xs font-normal text-zinc-400">replicas</span>
                   </div>
-                  <p className="text-[10px] text-zinc-300 mt-1 leading-snug">
-                    Deep recurrent lookahead neural network with 64 hidden units. Predicts flash surges 45s ahead of CPU tripwires!
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
+                    Deep recurrent lookahead neural network with 64 hidden units. Predicts flash surges 45s ahead of CPU tripwires.
                   </p>
                 </div>
               </div>
 
               {/* The MAX Decision Synthesizer Gate */}
-              <div className="p-3 bg-[#08080e] rounded-xl border border-purple-500/30 flex items-center justify-between text-xs font-mono">
+              <div className="p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs font-mono">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-900 dark:text-zinc-100 font-bold">
                     MAX
                   </div>
                   <div>
-                    <div className="text-zinc-400 text-[10px]">DecisionType: Maximum Envelope:</div>
-                    <div className="text-white font-bold text-sm">
-                      Actuating <span className="text-emerald-400">{maxVal} Replicas</span> via {winningModel}
+                    <div className="text-zinc-500 dark:text-zinc-400 text-[10px]">DecisionType: Maximum Envelope:</div>
+                    <div className="text-zinc-900 dark:text-zinc-100 font-bold text-sm">
+                      Actuating <span className="text-emerald-600 dark:text-emerald-400">{maxVal} Replicas</span> via {winningModel}
                     </div>
                   </div>
                 </div>
-                <div className="text-right text-[10px] text-zinc-400">
-                  <span>Preemptive lead time: <strong className="text-cyan-300">+45s</strong></span>
+                <div className="text-right text-[10px] text-zinc-500 dark:text-zinc-400">
+                  <span>Preemptive lead time: <strong className="text-zinc-800 dark:text-zinc-200">+45s</strong></span>
                 </div>
               </div>
             </div>
@@ -827,40 +827,40 @@ export default function PipelineViewer({
       case 5: // Scale Actuator
         return (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-[#0b0b12] border border-amber-500/30 space-y-3">
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-amber-400 font-bold font-mono text-xs">
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold font-mono text-xs">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>KUBERNETES SCALECLIENT ACTUATION & FEEDBACK LOOP</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                   Loop Closed
                 </span>
               </div>
 
               {/* 3-Step Actuation Sequence */}
               <div className="grid grid-cols-3 gap-2 text-xs font-mono text-center">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <div className="text-amber-400 font-bold text-[11px]">1. Stabilization</div>
-                  <div className="text-zinc-300 mt-1">300s Cooldown</div>
-                  <div className="text-zinc-500 text-[9px] mt-0.5">Prevents thrashing</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold text-[11px]">1. Stabilization</div>
+                  <div className="text-zinc-600 dark:text-zinc-300 mt-1">300s Cooldown</div>
+                  <div className="text-zinc-500 dark:text-zinc-400 text-[9px] mt-0.5">Prevents thrashing</div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-                  <div className="text-amber-400 font-bold text-[11px]">2. Boundary Clamp</div>
-                  <div className="text-white font-bold mt-1">[2, 30] Pods</div>
-                  <div className="text-zinc-500 text-[9px] mt-0.5">Min/Max limits</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold text-[11px]">2. Boundary Clamp</div>
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold mt-1">[2, 30] Pods</div>
+                  <div className="text-zinc-500 dark:text-zinc-400 text-[9px] mt-0.5">Min/Max limits</div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-amber-500/40 shadow-sm">
-                  <div className="text-amber-400 font-bold text-[11px]">3. REST PATCH</div>
-                  <div className="text-cyan-300 font-bold mt-1">K8s API Server</div>
-                  <div className="text-emerald-400 text-[9px] mt-0.5">200 OK Applied</div>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 shadow-xs">
+                  <div className="text-zinc-900 dark:text-zinc-100 font-bold text-[11px]">3. REST PATCH</div>
+                  <div className="text-zinc-800 dark:text-zinc-200 font-bold mt-1">K8s API Server</div>
+                  <div className="text-emerald-600 dark:text-emerald-400 text-[9px] mt-0.5">200 OK Applied</div>
                 </div>
               </div>
 
               {/* Live JSON Merge Patch Payload */}
-              <div className="bg-[#07070b] p-3 rounded-lg border border-zinc-800 font-mono text-xs">
-                <span className="text-zinc-500 text-[10px] block mb-1">PATCH /apis/apps/v1/namespaces/default/deployments/web-workload/scale:</span>
-                <pre className="text-amber-300 text-[11px]">
+              <div className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                <span className="text-zinc-500 dark:text-zinc-400 text-[10px] block mb-1">PATCH /apis/apps/v1/namespaces/default/deployments/web-workload/scale:</span>
+                <pre className="text-zinc-800 dark:text-zinc-200 text-[11px]">
                   {`{ "spec": { "replicas": ${actualPods} } }`}
                 </pre>
               </div>
@@ -876,41 +876,39 @@ export default function PipelineViewer({
   return (
     <div className="space-y-4 animate-fadeIn select-none">
       {/* 1. TOP CONTROL DOCK: View Mode Toggle + Camera Angles + Real-Time Live Traffic Deck */}
-      <div className="rounded-2xl p-4 lg:p-5 border border-zinc-700/80 bg-[#0d0d14] shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/40 to-transparent" />
-
+      <div className="raised-card rounded-lg p-4 lg:p-5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative overflow-hidden">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#06b6d4]"></span>
-              <h2 className="text-base font-bold text-white tracking-wide">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-wide">
                 PHPA Architectural Pipeline Visualizer
               </h2>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 font-semibold">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold">
                 Live Interactive Lab
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
               Switch between 3D Spatial Canvas or 2D Crisp Schematic • Click any stage to open deep real-time architecture diagrams.
             </p>
           </div>
 
           {/* Unified Perspective & Mode Controls */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center bg-zinc-950 border border-zinc-700/90 rounded-lg p-1 text-xs font-mono shadow-sm">
+            <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md p-1 text-xs font-mono shadow-sm">
               <button
                 onClick={() => setViewMode('2d')}
                 className={`px-3 py-1 rounded transition-all font-semibold ${
                   viewMode === '2d'
-                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
                 title="2D Crisp High-Contrast Schematic"
               >
-                📐 2D Crisp Flow
+                2D Schematic
               </button>
 
-              <div className="w-[1px] h-4 bg-zinc-700/80 mx-1.5"></div>
+              <div className="w-[1px] h-4 bg-zinc-300 dark:bg-zinc-700 mx-1.5"></div>
 
               <button
                 onClick={() => {
@@ -919,8 +917,8 @@ export default function PipelineViewer({
                 }}
                 className={`px-2.5 py-1 rounded transition-colors ${
                   viewMode === '3d' && viewPreset === 'isometric'
-                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
                 title="3D Isometric (44°)"
               >
@@ -933,12 +931,12 @@ export default function PipelineViewer({
                 }}
                 className={`px-2.5 py-1 rounded transition-colors ${
                   viewMode === '3d' && viewPreset === 'front'
-                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
                 title="3D Front Flow (12°)"
               >
-                Front Flow (12°)
+                Front (12°)
               </button>
               <button
                 onClick={() => {
@@ -947,8 +945,8 @@ export default function PipelineViewer({
                 }}
                 className={`px-2.5 py-1 rounded transition-colors ${
                   viewMode === '3d' && viewPreset === 'top'
-                    ? 'bg-purple-600 text-white font-semibold shadow-sm'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
                 title="3D Top-Down (68°)"
               >
@@ -958,10 +956,10 @@ export default function PipelineViewer({
 
             <div className="flex items-center gap-2">
               {/* Prominent Zoom In / Out Controls */}
-              <div className="flex items-center bg-zinc-950 border border-zinc-700/90 rounded-lg p-1 text-xs font-mono shadow-sm">
+              <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md p-1 text-xs font-mono shadow-sm">
                 <button
                   onClick={() => setZoom((prev) => Math.max(0.45, parseFloat((prev - 0.1).toFixed(2))))}
-                  className="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors flex items-center justify-center"
+                  className="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center"
                   title="Zoom Out (-10%)"
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
@@ -969,7 +967,7 @@ export default function PipelineViewer({
 
                 <button
                   onClick={() => setZoom(1.0)}
-                  className="px-2 py-0.5 rounded hover:bg-zinc-800 text-[11px] font-bold text-zinc-300 hover:text-white transition-colors min-w-[44px] text-center"
+                  className="px-2 py-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-[11px] font-bold text-zinc-800 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white transition-colors min-w-[44px] text-center"
                   title="Click to reset zoom to 100%"
                 >
                   {Math.round(zoom * 100)}%
@@ -977,7 +975,7 @@ export default function PipelineViewer({
 
                 <button
                   onClick={() => setZoom((prev) => Math.min(1.85, parseFloat((prev + 0.1).toFixed(2))))}
-                  className="p-1.5 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors flex items-center justify-center"
+                  className="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors flex items-center justify-center"
                   title="Zoom In (+10%)"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
@@ -989,10 +987,10 @@ export default function PipelineViewer({
                   if (viewMode === '2d') setViewMode('3d');
                   setIsOrbiting((prev) => !prev);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-mono font-medium transition-all ${
                   viewMode === '3d' && isOrbiting
-                    ? 'bg-cyan-950/60 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                    : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 shadow-sm'
+                    : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700'
                 }`}
                 title={viewMode === '2d' ? 'Click to enter 3D Auto-Orbit' : 'Toggle slow 3D Auto-Orbit'}
               >
@@ -1002,7 +1000,7 @@ export default function PipelineViewer({
 
               <button
                 onClick={handleResetCamera}
-                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors"
+                className="p-1.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
                 title="Reset View"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -1012,10 +1010,10 @@ export default function PipelineViewer({
         </div>
 
         {/* Embedded Live Traffic Deck */}
-        <div className="mt-4 pt-3.5 border-t border-zinc-800/80 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <div className="mt-4 pt-3.5 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           <div className="md:col-span-4 flex items-center gap-3">
-            <span className="text-[11px] font-mono text-zinc-400 flex items-center gap-1.5 flex-shrink-0">
-              <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 flex-shrink-0">
+              <Sliders className="w-3.5 h-3.5" />
               <span>Live Traffic:</span>
             </span>
             <input
@@ -1029,9 +1027,9 @@ export default function PipelineViewer({
                 if (setManualRps) setManualRps(val);
                 if (setTrafficMode) setTrafficMode('manual');
               }}
-              className="w-full accent-cyan-400 h-1.5 bg-zinc-800 rounded-lg cursor-pointer"
+              className="w-full accent-zinc-900 dark:accent-zinc-100 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg cursor-pointer"
             />
-            <span className="font-mono text-xs font-bold text-cyan-400 w-16 text-right">
+            <span className="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 w-16 text-right">
               {rps} RPS
             </span>
           </div>
@@ -1042,7 +1040,7 @@ export default function PipelineViewer({
                 if (setManualRps) setManualRps(90);
                 if (setTrafficMode) setTrafficMode('manual');
               }}
-              className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-700 hover:border-cyan-500/50 text-[11px] font-mono text-zinc-300 hover:text-white transition-colors"
+              className="px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
             >
               Calm (90)
             </button>
@@ -1051,15 +1049,15 @@ export default function PipelineViewer({
                 if (setManualRps) setManualRps(280);
                 if (setTrafficMode) setTrafficMode('manual');
               }}
-              className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-700 hover:border-cyan-500/50 text-[11px] font-mono text-zinc-300 hover:text-white transition-colors"
+              className="px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
             >
               Peak (280)
             </button>
             <button
               onClick={() => onInjectSpike && onInjectSpike(5.0)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-rose-950/60 border border-rose-500/60 hover:bg-rose-900/60 text-[11px] font-mono font-bold text-rose-300 hover:text-rose-100 transition-colors shadow-sm"
+              className="flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border border-zinc-900 dark:border-zinc-700 text-[11px] font-mono font-semibold transition-colors shadow-sm"
             >
-              <Flame className="w-3 h-3 text-rose-400 animate-pulse" />
+              <Flame className="w-3 h-3 text-rose-500 animate-pulse" />
               <span>5x Surge</span>
             </button>
             <button
@@ -1068,42 +1066,42 @@ export default function PipelineViewer({
               }}
               className={`px-2 py-1 rounded border text-[11px] font-mono transition-colors ${
                 trafficMode === 'auto'
-                  ? 'bg-cyan-950/50 border-cyan-500/60 text-cyan-300'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 border-zinc-900 dark:border-zinc-700 font-semibold'
+                  : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
               }`}
             >
               Auto Diurnal
             </button>
           </div>
 
-          <div className="md:col-span-3 flex items-center justify-end gap-2 text-xs font-mono text-zinc-400">
+          <div className="md:col-span-3 flex items-center justify-end gap-2 text-xs font-mono text-zinc-500 dark:text-zinc-400">
             <span>
-              Pods: <strong className="text-purple-400">{actualPods}</strong>
+              Pods: <strong className="text-zinc-900 dark:text-zinc-100">{actualPods}</strong>
             </span>
-            <span className="text-zinc-600">•</span>
+            <span>•</span>
             <span>
-              P95: <strong className={p95 > 100 ? 'text-rose-400' : 'text-emerald-400'}>{p95}ms</strong>
+              P95: <strong className={`tabular-nums ${p95 > 100 ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-900 dark:text-zinc-100'}`}>{p95}ms</strong>
             </span>
-            <span className="text-zinc-600">•</span>
+            <span>•</span>
             <span>
-              Engine: <strong className="text-purple-400">MAX({winningModel})</strong>
+              Engine: <strong className="text-zinc-900 dark:text-zinc-100">MAX({winningModel})</strong>
             </span>
           </div>
         </div>
       </div>
 
       {/* 2. STEP-BY-STEP CONTROLLABLE PROBE TRACER BAR */}
-      <div className="rounded-xl p-3 border border-amber-500/30 bg-[#100e0a] flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-lg">
+      <div className="raised-card rounded-lg p-3 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5 flex-shrink-0">
-            <Zap className="w-3 h-3 text-amber-400" />
-            <span>STEP-BY-STEP TRACE PROBE</span>
+          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 flex-shrink-0">
+            <Zap className="w-3 h-3 text-zinc-700 dark:text-zinc-300" />
+            <span>STEP-BY-STEP PROBE</span>
           </span>
 
           {probeHop === 0 ? (
             <button
               onClick={handleStartProbe}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold font-mono transition-all shadow-md shadow-amber-500/20"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white dark:text-zinc-100 border border-zinc-900 dark:border-zinc-700 text-xs font-semibold font-mono transition-all shadow-sm"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Start Trace</span>
@@ -1111,7 +1109,7 @@ export default function PipelineViewer({
           ) : isProbePlaying ? (
             <button
               onClick={handlePauseProbe}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 border border-amber-500 text-amber-300 text-xs font-bold font-mono transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-semibold font-mono transition-colors"
             >
               <Pause className="w-3.5 h-3.5" />
               <span>Pause</span>
@@ -1119,7 +1117,7 @@ export default function PipelineViewer({
           ) : (
             <button
               onClick={handleResumeProbe}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold font-mono transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white dark:text-zinc-100 border border-zinc-900 dark:border-zinc-700 text-xs font-semibold font-mono transition-colors shadow-sm"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Resume</span>
@@ -1129,7 +1127,7 @@ export default function PipelineViewer({
           <button
             onClick={handlePrevStep}
             disabled={probeHop <= 1}
-            className="p-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            className="p-1 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors"
             title="Previous Stage"
           >
             <SkipBack className="w-3.5 h-3.5" />
@@ -1137,26 +1135,26 @@ export default function PipelineViewer({
           <button
             onClick={handleNextStep}
             disabled={probeHop >= 6 || probeHop === 0}
-            className="p-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            className="p-1 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors"
             title="Next Stage"
           >
             <SkipForward className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleResetProbe}
-            className="p-1 rounded bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white transition-colors"
+            className="p-1 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
             title="Reset Probe"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
 
-          <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded p-0.5 text-[10px] font-mono">
+          <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md p-0.5 text-[10px] font-mono">
             {[0.5, 1, 2, 4].map((spd) => (
               <button
                 key={spd}
                 onClick={() => setProbeSpeed(spd)}
                 className={`px-1.5 py-0.5 rounded transition-colors ${
-                  probeSpeed === spd ? 'bg-amber-500 text-zinc-950 font-bold' : 'text-zinc-400 hover:text-white'
+                  probeSpeed === spd ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-bold shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
                 title={`Set visual propagation & probe velocity to ${spd}x`}
               >
@@ -1177,12 +1175,12 @@ export default function PipelineViewer({
                   setIsProbePlaying(false);
                   setProbeHop(wp.id);
                 }}
-                className={`px-2 py-1 rounded transition-all flex items-center gap-1 ${
+                className={`px-2 py-1 rounded-md transition-all flex items-center gap-1 ${
                   isActive
-                    ? 'bg-amber-400 text-zinc-950 font-bold shadow-md shadow-amber-400/30'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-bold border border-zinc-900 dark:border-zinc-700 shadow-sm'
                     : isPassed
-                    ? 'bg-zinc-800 text-zinc-300 border border-zinc-700'
-                    : 'bg-zinc-950 text-zinc-500 border border-zinc-800 hover:text-zinc-300'
+                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700'
+                    : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-500 border border-zinc-200 dark:border-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
               >
                 <span>{wp.id}.</span>
@@ -1198,7 +1196,7 @@ export default function PipelineViewer({
         ref={canvasRef}
         onPointerDown={handlePointerDown}
         onDoubleClick={handleResetCamera}
-        className={`relative w-full rounded-2xl border border-zinc-700/80 bg-[#07070b] overflow-hidden shadow-2xl min-h-[660px] flex items-center justify-center ${
+        className={`relative w-full rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-100 dark:bg-zinc-950 overflow-hidden shadow-sm raised-card min-h-[660px] flex items-center justify-center ${
           viewMode === '3d' ? (isCursorGrabbing ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
         }`}
         style={{
@@ -1206,54 +1204,54 @@ export default function PipelineViewer({
           textRendering: 'optimizeLegibility',
         }}
       >
-        <div className="absolute inset-0 pointer-events-none opacity-30">
-          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-[100px]" />
-          <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-30">
+          <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-zinc-300/30 dark:bg-zinc-700/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-zinc-400/20 dark:bg-zinc-800/10 rounded-full blur-[120px]" />
         </div>
 
         {/* Top-Left Instructions HUD */}
-        <div className="absolute top-3 left-4 z-20 pointer-events-none hidden md:flex items-center gap-2 bg-zinc-900/90 border border-zinc-700/80 px-2.5 py-1 rounded-md text-[10px] font-mono text-zinc-400 shadow-md backdrop-blur-md">
+        <div className="absolute top-3 left-4 z-20 pointer-events-none hidden md:flex items-center gap-2 bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-700/80 px-2.5 py-1 rounded-md text-[10px] font-mono text-zinc-600 dark:text-zinc-400 shadow-sm backdrop-blur-md">
           {viewMode === '3d' ? (
             <>
               <span>🖱️ Drag to Orbit</span>
-              <span className="text-zinc-600">•</span>
+              <span className="text-zinc-400 dark:text-zinc-600">•</span>
               <span>Hold Ctrl + Scroll to Zoom</span>
-              <span className="text-zinc-600">•</span>
+              <span className="text-zinc-400 dark:text-zinc-600">•</span>
               <span>Double-click to Reset</span>
             </>
           ) : (
             <>
-              <span className="text-cyan-400 font-bold">📐 2D Crisp Flow Mode Active</span>
-              <span className="text-zinc-600">•</span>
-              <span>Zero-tilt razor-sharp vector architecture</span>
-              <span className="text-zinc-600">•</span>
+              <span className="font-semibold text-zinc-900 dark:text-zinc-100">📐 2D Crisp Flow Mode Active</span>
+              <span className="text-zinc-400 dark:text-zinc-600">•</span>
+              <span>Zero-tilt vector architecture</span>
+              <span className="text-zinc-400 dark:text-zinc-600">•</span>
               <span>Click any card for deep diagrams</span>
             </>
           )}
         </div>
 
         {/* Dedicated Tactile Zoom & Tilt Controls (Top-Right) */}
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-4 z-30 pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-zinc-900/90 border border-zinc-700/80 rounded-lg p-0.5 sm:p-1 shadow-xl backdrop-blur-md text-xs font-mono">
-          <span className="text-[9px] sm:text-[10px] text-zinc-400 px-1 sm:px-1.5 py-0.5 font-bold">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-4 z-30 pointer-events-auto flex items-center gap-1 sm:gap-1.5 bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-700/80 rounded-lg p-0.5 sm:p-1 shadow-md backdrop-blur-md text-xs font-mono text-zinc-700 dark:text-zinc-300">
+          <span className="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400 px-1 sm:px-1.5 py-0.5 font-bold">
             {Math.round(zoom * 100)}%
           </span>
           <button
             onClick={() => setZoom((prev) => Math.max(0.25, parseFloat((prev - 0.1).toFixed(2))))}
-            className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
             title="Zoom Out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setZoom((prev) => Math.min(1.85, parseFloat((prev + 0.1).toFixed(2))))}
-            className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors"
+            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
             title="Zoom In"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setZoom(getResponsiveZoom(1.0))}
-            className="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[9px] sm:text-[10px] text-zinc-300 hover:text-white transition-colors"
+            className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-[9px] sm:text-[10px] text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
             title="Fit Canvas"
           >
             Fit
@@ -1261,31 +1259,31 @@ export default function PipelineViewer({
 
           {viewMode === '3d' && (
             <>
-              <div className="w-[1px] h-4 bg-zinc-700 mx-0.5" />
+              <div className="w-[1px] h-4 bg-zinc-200 dark:bg-zinc-700 mx-0.5" />
               <button
                 onClick={() => setPitch((p) => Math.max(12, p - 6))}
-                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                 title="Tilt Up"
               >
                 <ChevronUp className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setPitch((p) => Math.min(78, p + 6))}
-                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                 title="Tilt Down"
               >
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setYaw((y) => Math.max(-80, y - 10))}
-                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                 title="Turn Left"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setYaw((y) => Math.min(80, y + 10))}
-                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                 title="Turn Right"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -1303,20 +1301,20 @@ export default function PipelineViewer({
               exit={{ opacity: 0, y: 20 }}
               className="absolute bottom-3 left-4 z-30 pointer-events-auto max-w-sm"
             >
-              <div className="bg-[#12100d] border border-amber-500/60 rounded-xl p-3 shadow-2xl text-xs space-y-1.5">
-                <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-1.5">
-                  <div className="flex items-center gap-1.5 font-bold text-amber-300 font-mono text-[11px]">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <div className="bg-white/95 dark:bg-zinc-900/95 border border-zinc-300 dark:border-zinc-700 rounded-xl p-3 shadow-xl text-xs space-y-1.5 backdrop-blur-md">
+                <div className="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
+                  <div className="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-zinc-100 font-mono text-[11px]">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                     <span>HOP {currentWaypoint.id}/6: {currentWaypoint.component}</span>
                   </div>
-                  <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  <span className="text-[9.5px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-medium">
                     +{currentWaypoint.delta}
                   </span>
                 </div>
-                <div className="text-[10px] font-mono text-zinc-400 truncate">
-                  Route: <span className="text-zinc-200">{currentWaypoint.route}</span>
+                <div className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 truncate">
+                  Route: <span className="text-zinc-800 dark:text-zinc-200">{currentWaypoint.route}</span>
                 </div>
-                <p className="text-[10.5px] text-zinc-300 leading-snug">
+                <p className="text-[10.5px] text-zinc-600 dark:text-zinc-300 leading-snug">
                   {currentWaypoint.action}
                 </p>
               </div>
@@ -1352,18 +1350,19 @@ export default function PipelineViewer({
           >
             {/* Grid Floor */}
             <div
-              className="absolute inset-0 rounded-3xl pointer-events-none border border-zinc-800/80"
+              className="absolute inset-0 rounded-3xl pointer-events-none border border-zinc-300 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-950/60"
               style={{
                 transform: viewMode === '3d' ? 'translateZ(-35px)' : 'none',
                 backgroundImage: `
-                  linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                  linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+                  linear-gradient(to right, currentColor 1px, transparent 1px),
+                  linear-gradient(to bottom, currentColor 1px, transparent 1px)
                 `,
                 backgroundSize: '40px 40px',
-                boxShadow: '0 30px 100px rgba(0,0,0,0.85) inset',
+                color: 'rgba(120, 120, 128, 0.1)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.05) inset',
               }}
             >
-              <div className="absolute inset-0 rounded-3xl border border-cyan-500/20 shadow-[0_0_40px_rgba(6,182,212,0.06)]" />
+              <div className="absolute inset-0 rounded-3xl border border-zinc-200 dark:border-zinc-800 pointer-events-none" />
             </div>
 
             {/* SVG Circuit Highway */}
@@ -1372,12 +1371,8 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(5px)' : 'none' }}
             >
               <defs>
-                <linearGradient id="grad-req" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#06b6d4" />
-                  <stop offset="100%" stopColor="#8b5cf6" />
-                </linearGradient>
-                <filter id="glow-strong" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
+                <filter id="glow-subtle" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
@@ -1387,70 +1382,70 @@ export default function PipelineViewer({
 
               {/* Highway Paths */}
               {/* Wire 1: Edge to Ingress (210 to 240) */}
-              <path d="M 210 115 L 240 115" fill="none" stroke="rgba(6, 182, 212, 0.5)" strokeWidth="2.5" strokeDasharray="4 3" />
+              <path d="M 210 115 L 240 115" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="4 3" />
               
               {/* Wire 2: Ingress to Pod Cluster (415 to 450) */}
-              <path d="M 415 115 L 450 115" fill="none" stroke="rgba(6, 182, 212, 0.6)" strokeWidth="2.5" />
+              <path d="M 415 115 L 450 115" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
               
               {/* Wire 3: Pod Cluster bottom port (295) directly to Telemetry top port (390) - Zero Gap! */}
-              <path d="M 565 295 L 565 390" fill="none" stroke="rgba(16, 185, 129, 0.6)" strokeWidth="2.5" strokeDasharray="5 3" />
+              <path d="M 565 295 L 565 390" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="5 3" />
               
               {/* Wire 4: Telemetry to Models Brain (680 to 710) */}
-              <path d="M 680 450 L 710 450" fill="none" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2.5" />
+              <path d="M 680 450 L 710 450" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
               
               {/* Wire 5: Models Brain recommendation up to Scale Actuator */}
-              <path d="M 1020 370 L 1020 180" fill="none" stroke="rgba(245, 158, 11, 0.6)" strokeWidth="2.5" strokeDasharray="5 3" />
+              <path d="M 1020 370 L 1020 180" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="5 3" />
               
               {/* Wire 6: Scale Actuator scale patch closing loop into Pod Cluster (920 to 880) */}
-              <path d="M 920 115 L 880 115" fill="none" stroke="rgba(245, 158, 11, 0.7)" strokeWidth="2.5" strokeDasharray="4 3" />
+              <path d="M 920 115 L 880 115" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="4 3" />
 
               {/* Animated Continuous Photons (Speed & Frequency Dynamically Scaled by probeSpeed & RPS) */}
               {/* Photon 1: Traveling on Wire 1 (Edge to Ingress, stops at card entrance) */}
-              <circle key={`p1-${p1Dur}`} r="3.5" fill="#06b6d4" filter="url(#glow-strong)">
+              <circle key={`p1-${p1Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
                 <animate attributeName="cx" values="210; 240" dur={p1Dur} repeatCount="indefinite" />
                 <animate attributeName="cy" values="115; 115" dur={p1Dur} repeatCount="indefinite" />
               </circle>
               {/* High-workload secondary packet stream on Wire 1 */}
               {rps > 200 && (
-                <circle key={`p1b-${p1Dur}`} r="2.8" fill="#38bdf8" filter="url(#glow-strong)" opacity="0.8">
+                <circle key={`p1b-${p1Dur}`} r="2.5" className="fill-zinc-500 dark:fill-zinc-400" opacity="0.8">
                   <animate attributeName="cx" values="210; 240" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
                   <animate attributeName="cy" values="115; 115" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
                 </circle>
               )}
 
               {/* Photon 2: Traveling on Wire 2 (Ingress exit to Pods entrance) */}
-              <circle key={`p2-${p2Dur}`} r="3.5" fill="#06b6d4" filter="url(#glow-strong)">
+              <circle key={`p2-${p2Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
                 <animate attributeName="cx" values="415; 450" dur={p2Dur} repeatCount="indefinite" />
                 <animate attributeName="cy" values="115; 115" dur={p2Dur} repeatCount="indefinite" />
               </circle>
               {/* High-workload secondary packet stream on Wire 2 */}
               {rps > 200 && (
-                <circle key={`p2b-${p2Dur}`} r="2.8" fill="#38bdf8" filter="url(#glow-strong)" opacity="0.8">
+                <circle key={`p2b-${p2Dur}`} r="2.5" className="fill-zinc-500 dark:fill-zinc-400" opacity="0.8">
                   <animate attributeName="cx" values="415; 450" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
                   <animate attributeName="cy" values="115; 115" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
                 </circle>
               )}
 
               {/* Photon 3: Telemetry Scrape (From bottom edge of Pod Cluster 295 down to Telemetry 390) */}
-              <circle key={`p3-${p3Dur}`} r="3.5" fill="#10b981" filter="url(#glow-strong)">
+              <circle key={`p3-${p3Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
                 <animate attributeName="cx" values="565; 565" dur={p3Dur} repeatCount="indefinite" />
                 <animate attributeName="cy" values="295; 390" dur={p3Dur} repeatCount="indefinite" />
               </circle>
 
               {/* Photon 4: Telemetry to Models Brain (680 to 710) */}
-              <circle key={`p4-${p4Dur}`} r="3.5" fill="#a855f7" filter="url(#glow-strong)">
+              <circle key={`p4-${p4Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
                 <animate attributeName="cx" values="680; 710" dur={p4Dur} repeatCount="indefinite" />
                 <animate attributeName="cy" values="450; 450" dur={p4Dur} repeatCount="indefinite" />
               </circle>
 
               {/* Photon 5: Models to Actuator (1020, 370 down to 180) */}
-              <circle key={`p5-${p5Dur}`} r="3.5" fill="#f59e0b" filter="url(#glow-strong)">
+              <circle key={`p5-${p5Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
                 <animate attributeName="cx" values="1020; 1020" dur={p5Dur} repeatCount="indefinite" />
                 <animate attributeName="cy" values="370; 180" dur={p5Dur} repeatCount="indefinite" />
               </circle>
 
               {/* Photon 6: Actuator patch into Pod Cluster (920 to 880) */}
-              <circle key={`p6-${p6Dur}`} r="4" fill="#f59e0b" filter="url(#glow-strong)">
+              <circle key={`p6-${p6Dur}`} r="3.5" className="fill-zinc-800 dark:fill-zinc-200">
                 <animate attributeName="cx" values="920; 880" dur={p6Dur} repeatCount="indefinite" />
                 <animate attributeName="cy" values="115; 115" dur={p6Dur} repeatCount="indefinite" />
               </circle>
@@ -1460,37 +1455,37 @@ export default function PipelineViewer({
                 <g>
                   {/* Active Orthogonal Wire Probe Photon: travels strictly along the wire of the active hop */}
                   {probeHop === 1 && (
-                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                    <circle r="4" className="fill-zinc-950 dark:fill-white">
                       <animate attributeName="cx" values="210; 240" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                       <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 2 && (
-                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                    <circle r="4" className="fill-zinc-950 dark:fill-white">
                       <animate attributeName="cx" values="415; 450" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                       <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 3 && (
-                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                    <circle r="4" className="fill-zinc-950 dark:fill-white">
                       <animate attributeName="cx" values="565; 565" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                       <animate attributeName="cy" values="295; 390" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 4 && (
-                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                    <circle r="4" className="fill-zinc-950 dark:fill-white">
                       <animate attributeName="cx" values="680; 710" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                       <animate attributeName="cy" values="450; 450" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 5 && (
-                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                    <circle r="4" className="fill-zinc-950 dark:fill-white">
                       <animate attributeName="cx" values="1020; 1020" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                       <animate attributeName="cy" values="370; 180" dur={`${Math.max(0.25, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
                   )}
                   {probeHop === 6 && (
-                    <circle r="4.5" fill="#fbbf24" filter="url(#glow-strong)">
+                    <circle r="4" className="fill-zinc-950 dark:fill-white">
                       <animate attributeName="cx" values="920; 880" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                       <animate attributeName="cy" values="115; 115" dur={`${Math.max(0.2, 0.55 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
                     </circle>
@@ -1502,19 +1497,17 @@ export default function PipelineViewer({
                       <circle
                         cx={currentWaypoint.cx}
                         cy={currentWaypoint.cy}
-                        r="5.5"
-                        fill="#fbbf24"
-                        filter="url(#glow-strong)"
+                        r="5"
+                        className="fill-zinc-950 dark:fill-white"
                       />
                       <circle
                         cx={currentWaypoint.cx}
                         cy={currentWaypoint.cy}
-                        r="10"
+                        r="9"
                         fill="none"
-                        stroke="#f59e0b"
+                        className="stroke-zinc-900 dark:stroke-zinc-100 animate-ping"
                         strokeWidth="1.5"
                         opacity="0.6"
-                        className="animate-ping"
                       />
                     </g>
                   )}
@@ -1533,38 +1526,36 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(30px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-3 border transition-all shadow-xl ${
+                className={`rounded-xl p-3 border transition-all raised-card ${
                   probeHop === 1
-                    ? 'bg-[#181812] border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.4)] scale-105'
-                    : 'bg-[#0f0f15] border-cyan-500/40 hover:border-cyan-400 hover:scale-105'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20 scale-105'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="w-6 h-6 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                  <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
                     <Activity className="w-3.5 h-3.5" />
                   </div>
                   {isSpiking ? (
-                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse">
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 animate-pulse">
                       5X SURGE
                     </span>
                   ) : (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold border border-zinc-200 dark:border-zinc-700">
                       LIVE
                     </span>
                   )}
                 </div>
-                <h4 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                   1. Traffic Ingestion
                 </h4>
                 <div className="mt-2 flex items-baseline justify-between text-xs">
-                  <span className="text-zinc-400 text-[11px]">Volume:</span>
-                  <span className="font-mono font-bold text-cyan-400">{rps} RPS</span>
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">Volume:</span>
+                  <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{rps} RPS</span>
                 </div>
-                <div className="w-full bg-zinc-800 rounded-full h-1 mt-1 overflow-hidden">
+                <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1 mt-1 overflow-hidden">
                   <div
-                    className={`h-1 rounded-full transition-all duration-300 ${
-                      isSpiking ? 'bg-rose-500' : 'bg-cyan-400'
-                    }`}
+                    className="h-1 rounded-full transition-all duration-300 bg-zinc-900 dark:bg-zinc-100"
                     style={{ width: `${Math.min(100, (rps / 450) * 100)}%` }}
                   />
                 </div>
@@ -1582,30 +1573,30 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-3 border transition-all shadow-xl ${
+                className={`rounded-xl p-3 border transition-all raised-card ${
                   probeHop === 2
-                    ? 'bg-[#181812] border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.4)] scale-105'
-                    : 'bg-[#0f0f15] border-blue-500/40 hover:border-blue-400 hover:scale-105'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20 scale-105'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="w-6 h-6 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
+                  <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
                     <Network className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
                     Envoy Mesh
                   </span>
                 </div>
-                <h4 className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
+                <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                   2. Ingress Router
                 </h4>
                 <div className="mt-2 flex items-baseline justify-between text-xs">
-                  <span className="text-zinc-400 text-[11px]">P95 Latency:</span>
-                  <span className={`font-mono font-bold ${p95 > 100 ? 'text-rose-400 animate-pulse' : 'text-emerald-400'}`}>
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">P95 Latency:</span>
+                  <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">
                     {p95}ms
                   </span>
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-1">Weighted Round Robin</div>
+                <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1">Weighted Round Robin</div>
               </div>
             </div>
 
@@ -1620,35 +1611,35 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(45px)' : 'none' }}
             >
               <div
-                className={`rounded-2xl p-3.5 border transition-all shadow-2xl h-full flex flex-col justify-between ${
+                className={`rounded-2xl p-3.5 border transition-all raised-card h-full flex flex-col justify-between ${
                   probeHop === 3
-                    ? 'bg-[#14121a] border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.35)]'
-                    : 'bg-[#0e0e16] border-purple-500/40 hover:border-purple-400'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                    <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
                       <Server className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
+                      <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                         3. Target Pods Cluster
                       </h4>
-                      <span className="text-[10px] font-mono text-zinc-400">
+                      <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
                         k8s: default/web-workload
                       </span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 font-bold">
                       {actualPods} Active Replicas
                     </span>
                   </div>
                 </div>
 
                 {/* Compact Pod Rack Grid */}
-                <div className="bg-[#08080c] rounded-xl p-2 border border-zinc-800/90 flex-1 my-1 overflow-y-auto flex items-center justify-center">
+                <div className="bg-zinc-50 dark:bg-zinc-950 rounded-xl p-2 border border-zinc-200 dark:border-zinc-800/90 flex-1 my-1 overflow-y-auto flex items-center justify-center">
                   <div className="grid grid-cols-6 gap-1.5 w-full">
                     <AnimatePresence>
                       {Array.from({ length: actualPods }).map((_, idx) => {
@@ -1673,46 +1664,40 @@ export default function PipelineViewer({
                             <div
                               className={`rounded-md p-1 text-center border transition-all duration-300 ${
                                 isTargetedByProbe
-                                  ? 'bg-amber-500/20 border-amber-400 shadow-[0_0_12px_#f59e0b] scale-110'
+                                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 scale-110 shadow-sm'
                                   : isPrewarmed
-                                  ? 'bg-purple-950/60 border-purple-400/80 shadow-[0_0_8px_rgba(168,85,247,0.3)]'
+                                  ? 'bg-zinc-100 dark:bg-zinc-800/80 border-zinc-400 dark:border-zinc-600'
                                   : isSpiking
-                                  ? 'bg-rose-950/40 border-rose-500/60 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
-                                  : 'bg-[#14141d] border-zinc-700/80 hover:border-cyan-400/80'
+                                  ? 'bg-zinc-200 dark:bg-zinc-800 border-zinc-500'
+                                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
                               }`}
                             >
                               <div className="flex items-center justify-between mb-0.5">
                                 <span
                                   className={`w-1.5 h-1.5 rounded-full ${
                                     isTargetedByProbe
-                                      ? 'bg-amber-400 shadow-[0_0_6px_#fbbf24] animate-ping'
+                                      ? 'bg-zinc-100 dark:bg-zinc-900 animate-ping'
                                       : isPrewarmed
-                                      ? 'bg-purple-400 shadow-[0_0_5px_#a855f7] animate-pulse'
-                                      : podCpu > 80
-                                      ? 'bg-rose-500 shadow-[0_0_5px_#f43f5e]'
-                                      : 'bg-emerald-400 shadow-[0_0_5px_#34d399]'
+                                      ? 'bg-zinc-500 dark:bg-zinc-400 animate-pulse'
+                                      : 'bg-zinc-700 dark:bg-zinc-300'
                                   }`}
                                 />
-                                <span className="text-[8px] font-mono text-zinc-400">
+                                <span className={`text-[8px] font-mono ${isTargetedByProbe ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                   #{idx + 1}
                                 </span>
                               </div>
 
-                              <div className="w-full bg-zinc-800 rounded-full h-1 overflow-hidden my-0.5">
+                              <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-1 overflow-hidden my-0.5">
                                 <div
                                   className={`h-full ${
                                     isTargetedByProbe
-                                      ? 'bg-amber-400'
-                                      : podCpu > 80
-                                      ? 'bg-rose-500'
-                                      : isPrewarmed
-                                      ? 'bg-purple-400'
-                                      : 'bg-cyan-400'
+                                      ? 'bg-white dark:bg-zinc-900'
+                                      : 'bg-zinc-900 dark:bg-zinc-100'
                                   }`}
                                   style={{ width: `${podCpu}%` }}
                                 />
                               </div>
-                              <span className="text-[7.5px] font-mono text-zinc-400 block truncate">
+                              <span className={`text-[7.5px] font-mono block truncate ${isTargetedByProbe ? 'text-zinc-200 dark:text-zinc-800 font-bold' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                 {podCpu}%
                               </span>
                             </div>
@@ -1723,12 +1708,12 @@ export default function PipelineViewer({
                   </div>
                 </div>
 
-                <div className="mt-2 pt-1.5 border-t border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                <div className="mt-2 pt-1.5 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
                   <span>
-                    Avg Pod CPU: <strong className="text-white">{cpu}%</strong> (Target: 60%)
+                    Avg Pod CPU: <strong className="text-zinc-900 dark:text-zinc-100">{cpu}%</strong> (Target: 60%)
                   </span>
                   <span>
-                    Ideal Demand: <strong className="text-cyan-300">{idealDemand}</strong>
+                    Ideal Demand: <strong className="text-zinc-900 dark:text-zinc-100">{idealDemand}</strong>
                   </span>
                 </div>
               </div>
@@ -1745,29 +1730,29 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-3 border transition-all shadow-xl ${
+                className={`rounded-xl p-3 border transition-all raised-card ${
                   probeHop === 4
-                    ? 'bg-[#181812] border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.4)] scale-105'
-                    : 'bg-[#0f0f15] border-emerald-500/40 hover:border-emerald-400 hover:scale-105'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20 scale-105'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                  <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
                     <Layers className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
                     15s Cadence
                   </span>
                 </div>
-                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                   4. k8shorizmetrics
                 </h4>
-                <p className="text-[11px] text-zinc-400 mt-1 line-clamp-1">
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1">
                   cAdvisor scrape & metric buffer
                 </p>
                 <div className="mt-2 flex items-center justify-between text-[11px] font-mono">
                   <span className="text-zinc-500">Unready pods:</span>
-                  <span className="text-emerald-400 font-semibold">0 filtered</span>
+                  <span className="text-zinc-900 dark:text-zinc-100 font-semibold">0 filtered</span>
                 </div>
               </div>
             </div>
@@ -1783,27 +1768,27 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
             >
               <div
-                className={`rounded-2xl p-4 border transition-all shadow-2xl ${
+                className={`rounded-2xl p-4 border transition-all raised-card ${
                   probeHop === 5
-                    ? 'bg-[#14121a] border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.35)]'
-                    : 'bg-[#0e0e16] border-purple-500/40 hover:border-purple-400'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                    <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
                       <Cpu className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors">
+                      <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                         5. Parallel Model Evaluator
                       </h4>
-                      <span className="text-[10px] font-mono text-zinc-400">
+                      <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
                         Dispatching 4 Models Concurrently
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-bold">
                     MAX Envelope
                   </span>
                 </div>
@@ -1812,15 +1797,15 @@ export default function PipelineViewer({
                   <div
                     className={`rounded-lg p-2 border text-[11px] transition-all ${
                       winningModel === 'Reactive HPA'
-                        ? 'bg-zinc-800 border-cyan-400 text-white shadow-sm'
-                        : 'bg-[#09090e] border-zinc-800 text-zinc-400'
+                        ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800/80 text-zinc-500 dark:text-zinc-400'
                     }`}
                   >
                     <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-zinc-500">Reactive HPA</span>
-                      {winningModel === 'Reactive HPA' && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                      <span className="text-zinc-500 dark:text-zinc-400">Reactive HPA</span>
+                      {winningModel === 'Reactive HPA' && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100" />}
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-white text-xs">
+                    <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs">
                       <span>{reactiveHpa}</span>
                       <span className="text-[10px] font-normal text-zinc-500">pods</span>
                     </div>
@@ -1829,15 +1814,15 @@ export default function PipelineViewer({
                   <div
                     className={`rounded-lg p-2 border text-[11px] transition-all ${
                       winningModel === 'Linear'
-                        ? 'bg-blue-950/50 border-blue-400 text-white shadow-sm'
-                        : 'bg-[#09090e] border-zinc-800 text-zinc-400'
+                        ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800/80 text-zinc-500 dark:text-zinc-400'
                     }`}
                   >
                     <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-zinc-500">Linear OLS</span>
-                      {winningModel === 'Linear' && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                      <span className="text-zinc-500 dark:text-zinc-400">Linear OLS</span>
+                      {winningModel === 'Linear' && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100" />}
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-white text-xs">
+                    <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs">
                       <span>{linearPred}</span>
                       <span className="text-[10px] font-normal text-zinc-500">pods</span>
                     </div>
@@ -1846,15 +1831,15 @@ export default function PipelineViewer({
                   <div
                     className={`rounded-lg p-2 border text-[11px] transition-all ${
                       winningModel === 'Holt-Winters'
-                        ? 'bg-emerald-950/50 border-emerald-400 text-white shadow-sm'
-                        : 'bg-[#09090e] border-zinc-800 text-zinc-400'
+                        ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800/80 text-zinc-500 dark:text-zinc-400'
                     }`}
                   >
                     <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-zinc-500">Holt-Winters</span>
-                      {winningModel === 'Holt-Winters' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                      <span className="text-zinc-500 dark:text-zinc-400">Holt-Winters</span>
+                      {winningModel === 'Holt-Winters' && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100" />}
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-white text-xs">
+                    <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs">
                       <span>{hwPred}</span>
                       <span className="text-[10px] font-normal text-zinc-500">pods</span>
                     </div>
@@ -1863,24 +1848,24 @@ export default function PipelineViewer({
                   <div
                     className={`rounded-lg p-2 border text-[11px] transition-all ${
                       winningModel === 'LSTM'
-                        ? 'bg-purple-950/60 border-purple-400 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.3)]'
-                        : 'bg-[#09090e] border-zinc-800 text-zinc-400'
+                        ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                        : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800/80 text-zinc-500 dark:text-zinc-400'
                     }`}
                   >
                     <div className="flex justify-between items-center text-[10px] mb-1">
-                      <span className="text-purple-300 font-semibold">2-Layer LSTM</span>
-                      {winningModel === 'LSTM' && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />}
+                      <span className="text-zinc-900 dark:text-zinc-100 font-semibold">2-Layer LSTM</span>
+                      {winningModel === 'LSTM' && <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 animate-ping" />}
                     </div>
-                    <div className="flex items-baseline justify-between font-mono font-bold text-white text-xs">
-                      <span className="text-purple-300">{lstmPred}</span>
+                    <div className="flex items-baseline justify-between font-mono font-bold text-zinc-900 dark:text-zinc-100 text-xs">
+                      <span>{lstmPred}</span>
                       <span className="text-[10px] font-normal text-zinc-500">pods</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-2.5 pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px] font-mono">
-                  <span className="text-zinc-400">MAX Output:</span>
-                  <span className="text-emerald-400 font-bold">
+                <div className="mt-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] font-mono">
+                  <span className="text-zinc-500 dark:text-zinc-400">MAX Output:</span>
+                  <span className="text-zinc-900 dark:text-zinc-100 font-bold">
                     {maxVal} Replicas via {winningModel}
                   </span>
                 </div>
@@ -1898,28 +1883,28 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-3 border transition-all shadow-xl ${
+                className={`rounded-xl p-3 border transition-all raised-card ${
                   probeHop === 6
-                    ? 'bg-[#181812] border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.4)] scale-105'
-                    : 'bg-[#0f0f15] border-amber-500/40 hover:border-amber-400 hover:scale-105'
+                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20 scale-105'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                  <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
                     ScaleClient
                   </span>
                 </div>
-                <h4 className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                   6. Scale Actuator
                 </h4>
                 <div className="mt-2 flex items-baseline justify-between text-xs">
-                  <span className="text-zinc-400 text-[11px]">Patched:</span>
-                  <span className="font-mono font-bold text-cyan-400">{actualPods} pods</span>
+                  <span className="text-zinc-500 dark:text-zinc-400 text-[11px]">Patched:</span>
+                  <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{actualPods} pods</span>
                 </div>
-                <div className="text-[10px] text-zinc-400 mt-0.5 font-mono">Loop Closed ⚡</div>
+                <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 font-mono">Loop Closed ⚡</div>
               </div>
             </div>
           </div>
@@ -1928,32 +1913,32 @@ export default function PipelineViewer({
 
       {/* 4. LIVE PACKET PAYLOAD INSPECTOR CARD */}
       {currentWaypoint && (
-        <div className="rounded-xl p-3.5 border border-amber-500/40 bg-[#0c0a07] shadow-xl text-xs font-mono space-y-2">
+        <div className="rounded-xl p-3.5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 raised-card text-xs font-mono space-y-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-amber-300 font-bold">
-              <Terminal className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold">
+              <Terminal className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
               <span>LIVE PACKET PAYLOAD INSPECTOR (HOP {currentWaypoint.id}/6)</span>
             </div>
-            <span className="text-[10px] text-zinc-400">
-              Total Incurred Latency: <strong className="text-amber-300">+{currentWaypoint.total}</strong>
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+              Total Incurred Latency: <strong className="text-zinc-900 dark:text-zinc-100">+{currentWaypoint.total}</strong>
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px] bg-black/40 rounded-lg p-2.5 border border-zinc-800">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px] bg-zinc-50 dark:bg-zinc-950/70 rounded-lg p-2.5 border border-zinc-200 dark:border-zinc-800">
             <div>
-              <span className="text-zinc-500 block">HTTP Request Context:</span>
-              <span className="text-zinc-200">GET /api/v1/workload HTTP/2.0</span>
-              <span className="text-zinc-400 block text-[10px]">Host: phpa-cluster.local</span>
+              <span className="text-zinc-500 dark:text-zinc-400 block">HTTP Request Context:</span>
+              <span className="text-zinc-900 dark:text-zinc-100 font-medium">GET /api/v1/workload HTTP/2.0</span>
+              <span className="text-zinc-500 dark:text-zinc-400 block text-[10px]">Host: phpa-cluster.local</span>
             </div>
             <div>
-              <span className="text-zinc-500 block">Target Routing Destination:</span>
-              <span className="text-purple-300 font-bold">pod-0{activePodTarget} (10.244.1.{10 + activePodTarget})</span>
-              <span className="text-zinc-400 block text-[10px]">Weight: 100 • Health: Passing</span>
+              <span className="text-zinc-500 dark:text-zinc-400 block">Target Routing Destination:</span>
+              <span className="text-zinc-900 dark:text-zinc-100 font-bold">pod-0{activePodTarget} (10.244.1.{10 + activePodTarget})</span>
+              <span className="text-zinc-500 dark:text-zinc-400 block text-[10px]">Weight: 100 • Health: Passing</span>
             </div>
             <div>
-              <span className="text-zinc-500 block">Actuation Status:</span>
-              <span className="text-emerald-400 font-bold">Closed-Loop Stable</span>
-              <span className="text-zinc-400 block text-[10px]">{actualPods} replicas active</span>
+              <span className="text-zinc-500 dark:text-zinc-400 block">Actuation Status:</span>
+              <span className="text-zinc-900 dark:text-zinc-100 font-bold">Closed-Loop Stable</span>
+              <span className="text-zinc-500 dark:text-zinc-400 block text-[10px]">{actualPods} replicas active</span>
             </div>
           </div>
         </div>
@@ -1972,32 +1957,36 @@ export default function PipelineViewer({
                 setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
-              className={`text-left p-2.5 rounded-xl border transition-all flex items-start gap-2.5 ${
+              className={`text-left p-2.5 rounded-lg border transition-all flex items-start gap-2.5 focus:outline-none focus:ring-0 ${
                 isSelected
-                  ? 'bg-zinc-800 border-purple-500 shadow-md ring-1 ring-purple-500/50'
-                  : 'bg-[#0d0d14] border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/60'
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-sm'
+                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/60'
               }`}
             >
               <div
-                className={`p-1.5 rounded-lg ${
-                  stage.color === 'cyan'
-                    ? 'bg-cyan-500/20 text-cyan-400'
-                    : stage.color === 'blue'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : stage.color === 'purple'
-                    ? 'bg-purple-500/20 text-purple-400'
-                    : stage.color === 'emerald'
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : stage.color === 'violet'
-                    ? 'bg-violet-500/20 text-violet-400'
-                    : 'bg-amber-500/20 text-amber-400'
+                className={`p-1.5 rounded-md flex-shrink-0 ${
+                  isSelected
+                    ? 'bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[11px] font-bold text-white truncate">{stage.name}</div>
-                <div className="text-[9.5px] text-zinc-400 truncate">{stage.subtitle}</div>
+                <div
+                  className={`text-[11px] font-semibold truncate ${
+                    isSelected ? 'text-white dark:text-zinc-900' : 'text-zinc-900 dark:text-zinc-100'
+                  }`}
+                >
+                  {stage.name}
+                </div>
+                <div
+                  className={`text-[9.5px] truncate mt-0.5 ${
+                    isSelected ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'
+                  }`}
+                >
+                  {stage.subtitle}
+                </div>
               </div>
             </button>
           );
@@ -2007,58 +1996,58 @@ export default function PipelineViewer({
       {/* 6. DEEP STAGE DIAGNOSTICS & ARCHITECTURE DIAGRAM MODAL */}
       <AnimatePresence>
         {isDrawerOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-[#0e0e18] border border-zinc-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/70">
+              <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-950/80">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-400">
+                  <div className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200">
                     {React.createElement(stages[selectedStage].icon, { className: 'w-5 h-5' })}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                       <span>{stages[selectedStage].name}</span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 font-normal">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-normal">
                         Internal Mechanics
                       </span>
                     </h3>
-                    <p className="text-xs text-zinc-400">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
                       {stages[selectedStage].subtitle}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsDrawerOpen(false)}
-                  className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+                  className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-700 transition-colors focus:outline-none focus:ring-0"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Modal Sub-Tabs: Diagrams First! */}
-              <div className="flex items-center gap-2 px-4 pt-3 border-b border-zinc-800 bg-[#0a0a10] text-xs font-mono">
+              <div className="flex items-center gap-2 px-4 pt-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-xs font-mono">
                 <button
                   onClick={() => setActiveTab('diagram')}
                   className={`pb-2 px-2.5 border-b-2 transition-colors flex items-center gap-1.5 ${
                     activeTab === 'diagram'
-                      ? 'border-cyan-400 text-cyan-300 font-bold'
-                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 font-bold'
+                      : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
-                  <GitBranch className="w-3.5 h-3.5 text-cyan-400" />
+                  <GitBranch className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
                   <span>Real-Time Flow Diagram</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('overview')}
                   className={`pb-2 px-2.5 border-b-2 transition-colors ${
                     activeTab === 'overview'
-                      ? 'border-purple-400 text-purple-300 font-bold'
-                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 font-bold'
+                      : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
                   Overview & Telemetry
@@ -2067,8 +2056,8 @@ export default function PipelineViewer({
                   onClick={() => setActiveTab('internals')}
                   className={`pb-2 px-2.5 border-b-2 transition-colors ${
                     activeTab === 'internals'
-                      ? 'border-purple-400 text-purple-300 font-bold'
-                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 font-bold'
+                      : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
                   Math Formulation
@@ -2078,8 +2067,8 @@ export default function PipelineViewer({
                     onClick={() => setActiveTab('pods')}
                     className={`pb-2 px-2.5 border-b-2 transition-colors flex items-center gap-1.5 ${
                       activeTab === 'pods'
-                        ? 'border-purple-400 text-purple-300 font-bold'
-                        : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                        ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 font-bold'
+                        : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                     }`}
                   >
                     <Server className="w-3 h-3" />
@@ -2090,8 +2079,8 @@ export default function PipelineViewer({
                   onClick={() => setActiveTab('yaml')}
                   className={`pb-2 px-2.5 border-b-2 transition-colors ${
                     activeTab === 'yaml'
-                      ? 'border-purple-400 text-purple-300 font-bold'
-                      : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 font-bold'
+                      : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
                   }`}
                 >
                   Kubernetes YAML
@@ -2104,19 +2093,19 @@ export default function PipelineViewer({
 
                 {activeTab === 'overview' && (
                   <div className="space-y-4">
-                    <p className="text-xs text-zinc-300 leading-relaxed">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
                       {stages[selectedStage].description}
                     </p>
 
-                    <div className="rounded-xl bg-zinc-950 p-3.5 border border-zinc-800">
-                      <h5 className="text-[11px] font-mono text-zinc-400 mb-2 uppercase tracking-wider font-semibold">
+                    <div className="rounded-xl bg-zinc-50 dark:bg-zinc-950 p-3.5 border border-zinc-200 dark:border-zinc-800">
+                      <h5 className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider font-semibold">
                         Live Operational Metrics
                       </h5>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         {Object.entries(stages[selectedStage].internals).map(([k, v]) => (
-                          <div key={k} className="p-2.5 rounded bg-[#12121c] border border-zinc-800/80">
-                            <span className="text-zinc-400 text-[10px] block">{k}</span>
-                            <span className="font-mono text-white font-semibold mt-0.5 block truncate">
+                          <div key={k} className="p-2.5 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                            <span className="text-zinc-500 dark:text-zinc-400 text-[10px] block">{k}</span>
+                            <span className="font-mono text-zinc-900 dark:text-zinc-100 font-semibold mt-0.5 block truncate">
                               {v}
                             </span>
                           </div>
@@ -2129,176 +2118,176 @@ export default function PipelineViewer({
                 {activeTab === 'internals' && (
                   <div className="space-y-4">
                     {/* Visual Academic Mathematical Formulation */}
-                    <div className="rounded-xl bg-zinc-950 p-4 border border-purple-500/40 shadow-xl space-y-3">
-                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-[10px] text-purple-300 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
+                    <div className="rounded-xl bg-zinc-50 dark:bg-zinc-950 p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                        <span className="text-[10px] text-zinc-900 dark:text-zinc-100 uppercase font-bold tracking-wider font-mono flex items-center gap-1.5">
                           <span>AUTONOMIC MATHEMATICAL FORMULATION</span>
                         </span>
-                        <span className="text-[9.5px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        <span className="text-[9.5px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                           Stage {selectedStage + 1} Formal Specification
                         </span>
                       </div>
 
                       {/* Visual Math Expression */}
-                      <div className="p-4 bg-[#100f1a] rounded-xl border border-purple-500/30 flex items-center justify-center min-h-[70px]">
+                      <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 flex items-center justify-center min-h-[70px] shadow-sm">
                         {selectedStage === 0 && (
-                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
-                            <span className="italic font-bold text-cyan-400 text-lg">λ(t)</span>
+                          <div className="flex items-center gap-2 text-base font-serif text-zinc-900 dark:text-zinc-100 flex-wrap justify-center">
+                            <span className="italic font-bold text-zinc-900 dark:text-white text-lg">λ(t)</span>
                             <span>=</span>
-                            <span className="italic font-semibold text-zinc-300">λ̄</span>
+                            <span className="italic font-semibold text-zinc-600 dark:text-zinc-300">λ̄</span>
                             <span>+</span>
                             <span className="italic">A</span>
                             <span>·</span>
-                            <span>sin</span>
-                            <span className="text-zinc-500 text-2xl">(</span>
+                            <span className="font-sans text-xs uppercase font-semibold">sin</span>
+                            <span className="text-zinc-400 text-2xl">(</span>
                             <span className="inline-flex flex-col items-center justify-center text-xs mx-1">
-                              <span className="border-b border-purple-400/60 pb-0.5 px-2 font-mono">2π · t</span>
+                              <span className="border-b border-zinc-300 dark:border-zinc-700 pb-0.5 px-2 font-mono">2π · t</span>
                               <span className="pt-0.5 font-mono">T</span>
                             </span>
-                            <span className="text-zinc-500 text-2xl">)</span>
+                            <span className="text-zinc-400 text-2xl">)</span>
                             <span>+</span>
-                            <span className="italic font-semibold text-rose-400">ξ(t)</span>
+                            <span className="italic font-semibold text-zinc-600 dark:text-zinc-300">ξ(t)</span>
                           </div>
                         )}
 
                         {selectedStage === 1 && (
-                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
-                            <span className="font-sans font-bold text-blue-400 text-sm">P95 Latency</span>
+                          <div className="flex items-center gap-2 text-base font-serif text-zinc-900 dark:text-zinc-100 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-zinc-900 dark:text-white text-sm">P95 Latency</span>
                             <span>≈</span>
-                            <span className="italic font-semibold text-zinc-300">L<sub>0</sub></span>
+                            <span className="italic font-semibold text-zinc-600 dark:text-zinc-300">L<sub>0</sub></span>
                             <span>+</span>
                             <span className="italic">β</span>
                             <span>·</span>
-                            <span className="text-zinc-500 text-2xl">[</span>
+                            <span className="text-zinc-400 text-2xl">[</span>
                             <span className="inline-flex flex-col items-center justify-center text-xs mx-1">
-                              <span className="border-b border-blue-400/60 pb-0.5 px-2 italic font-semibold text-cyan-300">λ(t)</span>
-                              <span className="pt-0.5 italic font-semibold text-purple-300">N<sub>actual</sub>(t) · C<sub>pod</sub></span>
+                              <span className="border-b border-zinc-300 dark:border-zinc-700 pb-0.5 px-2 italic font-semibold text-zinc-800 dark:text-zinc-200">λ(t)</span>
+                              <span className="pt-0.5 italic font-semibold text-zinc-600 dark:text-zinc-400">N<sub>actual</sub>(t) · C<sub>pod</sub></span>
                             </span>
-                            <span className="text-zinc-500 text-2xl">]</span>
-                            <span className="text-xs text-zinc-400 -mt-2">α</span>
+                            <span className="text-zinc-400 text-2xl">]</span>
+                            <span className="text-xs text-zinc-500 -mt-2">α</span>
                           </div>
                         )}
 
                         {selectedStage === 2 && (
-                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
-                            <span className="font-sans font-bold text-purple-300 text-sm">U<sub>cpu</sub>(t)</span>
+                          <div className="flex items-center gap-2 text-base font-serif text-zinc-900 dark:text-zinc-100 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-zinc-900 dark:text-white text-sm">U<sub>cpu</sub>(t)</span>
                             <span>=</span>
-                            <span className="font-sans font-bold text-zinc-300 text-xs uppercase">min</span>
-                            <span className="text-zinc-500 text-2xl">(</span>
-                            <span className="font-mono text-zinc-300 text-sm">100%</span>
-                            <span className="text-zinc-500">,</span>
+                            <span className="font-sans font-bold text-zinc-700 dark:text-zinc-300 text-xs uppercase">min</span>
+                            <span className="text-zinc-400 text-2xl">(</span>
+                            <span className="font-mono text-zinc-700 dark:text-zinc-300 text-sm">100%</span>
+                            <span className="text-zinc-400">,</span>
                             <span className="inline-flex flex-col items-center justify-center text-xs mx-1">
-                              <span className="border-b border-purple-400/60 pb-0.5 px-2 italic font-semibold text-cyan-300">λ(t)</span>
-                              <span className="pt-0.5 italic font-semibold text-purple-300">N<sub>actual</sub>(t) · 25 RPS</span>
+                              <span className="border-b border-zinc-300 dark:border-zinc-700 pb-0.5 px-2 italic font-semibold text-zinc-800 dark:text-zinc-200">λ(t)</span>
+                              <span className="pt-0.5 italic font-semibold text-zinc-600 dark:text-zinc-400">N<sub>actual</sub>(t) · 25 RPS</span>
                             </span>
                             <span className="text-zinc-400">×</span>
-                            <span className="font-mono text-emerald-400 text-sm">60%</span>
-                            <span className="text-zinc-500 text-2xl">)</span>
+                            <span className="font-mono text-zinc-900 dark:text-white text-sm font-semibold">60%</span>
+                            <span className="text-zinc-400 text-2xl">)</span>
                           </div>
                         )}
 
                         {selectedStage === 3 && (
-                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
-                            <span className="font-sans font-bold text-emerald-400 text-sm">R<sub>raw</sub></span>
+                          <div className="flex items-center gap-2 text-base font-serif text-zinc-900 dark:text-zinc-100 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-zinc-900 dark:text-white text-sm">R<sub>raw</sub></span>
                             <span>=</span>
-                            <span className="text-3xl font-sans text-emerald-300 font-light leading-none">⌈</span>
-                            <span className="italic font-bold text-purple-300 mx-1">N<sub>current</sub></span>
+                            <span className="text-3xl font-sans text-zinc-400 font-light leading-none">⌈</span>
+                            <span className="italic font-bold text-zinc-800 dark:text-zinc-200 mx-1">N<sub>current</sub></span>
                             <span className="text-zinc-400">×</span>
                             <span className="inline-flex flex-col items-center justify-center text-xs mx-2">
-                              <span className="border-b border-emerald-400/60 pb-0.5 px-2 font-mono text-zinc-200">Current CPU</span>
-                              <span className="pt-0.5 font-mono text-emerald-400">Target CPU (60%)</span>
+                              <span className="border-b border-zinc-300 dark:border-zinc-700 pb-0.5 px-2 font-mono text-zinc-800 dark:text-zinc-200">Current CPU</span>
+                              <span className="pt-0.5 font-mono text-zinc-600 dark:text-zinc-400 font-semibold">Target CPU (60%)</span>
                             </span>
-                            <span className="text-3xl font-sans text-emerald-300 font-light leading-none">⌉</span>
+                            <span className="text-3xl font-sans text-zinc-400 font-light leading-none">⌉</span>
                           </div>
                         )}
 
                         {selectedStage === 4 && (
-                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
-                            <span className="font-sans font-bold text-purple-300 text-sm">N<sub>target</sub></span>
+                          <div className="flex items-center gap-2 text-base font-serif text-zinc-900 dark:text-zinc-100 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-zinc-900 dark:text-white text-sm">N<sub>target</sub></span>
                             <span>=</span>
-                            <span className="font-sans font-bold text-purple-400 text-xs uppercase">max</span>
-                            <span className="text-zinc-500 text-2xl">(</span>
-                            <span className="font-mono text-cyan-300 text-xs">R<sub>hpa</sub></span>
-                            <span className="text-zinc-500">,</span>
-                            <span className="font-mono text-blue-300 text-xs">ŷ<sub>linear</sub></span>
-                            <span className="text-zinc-500">,</span>
-                            <span className="font-mono text-emerald-300 text-xs">ŷ<sub>hw</sub></span>
-                            <span className="text-zinc-500">,</span>
-                            <span className="font-mono text-purple-300 text-xs font-bold">ŷ<sub>lstm</sub></span>
-                            <span className="text-zinc-500 text-2xl">)</span>
+                            <span className="font-sans font-bold text-zinc-700 dark:text-zinc-300 text-xs uppercase">max</span>
+                            <span className="text-zinc-400 text-2xl">(</span>
+                            <span className="font-mono text-zinc-700 dark:text-zinc-300 text-xs">R<sub>hpa</sub></span>
+                            <span className="text-zinc-400">,</span>
+                            <span className="font-mono text-zinc-700 dark:text-zinc-300 text-xs">ŷ<sub>linear</sub></span>
+                            <span className="text-zinc-400">,</span>
+                            <span className="font-mono text-zinc-700 dark:text-zinc-300 text-xs">ŷ<sub>hw</sub></span>
+                            <span className="text-zinc-400">,</span>
+                            <span className="font-mono text-zinc-900 dark:text-white text-xs font-bold">ŷ<sub>lstm</sub></span>
+                            <span className="text-zinc-400 text-2xl">)</span>
                           </div>
                         )}
 
                         {selectedStage === 5 && (
-                          <div className="flex items-center gap-2 text-base font-serif text-purple-200 flex-wrap justify-center">
-                            <span className="font-sans font-bold text-amber-400 text-sm">N<sub>actuated</sub></span>
+                          <div className="flex items-center gap-2 text-base font-serif text-zinc-900 dark:text-zinc-100 flex-wrap justify-center">
+                            <span className="font-sans font-bold text-zinc-900 dark:text-white text-sm">N<sub>actuated</sub></span>
                             <span>=</span>
-                            <span className="font-sans font-bold text-amber-300 text-xs uppercase">clamp</span>
-                            <span className="text-zinc-500 text-xl">(</span>
-                            <span className="font-mono text-zinc-300 text-xs">min = 2</span>
-                            <span className="text-zinc-500">,</span>
-                            <span className="font-mono text-zinc-300 text-xs">max = 30</span>
-                            <span className="text-zinc-500">,</span>
-                            <span className="italic font-bold text-purple-300 text-sm">N<sub>target</sub></span>
-                            <span className="text-zinc-500 text-xl">)</span>
+                            <span className="font-sans font-bold text-zinc-700 dark:text-zinc-300 text-xs uppercase">clamp</span>
+                            <span className="text-zinc-400 text-xl">(</span>
+                            <span className="font-mono text-zinc-700 dark:text-zinc-300 text-xs">min = 2</span>
+                            <span className="text-zinc-400">,</span>
+                            <span className="font-mono text-zinc-700 dark:text-zinc-300 text-xs">max = 30</span>
+                            <span className="text-zinc-400">,</span>
+                            <span className="italic font-bold text-zinc-900 dark:text-white text-sm">N<sub>target</sub></span>
+                            <span className="text-zinc-400 text-xl">)</span>
                           </div>
                         )}
                       </div>
 
                       {/* Live Value Substitution Box */}
-                      <div className="p-3 rounded-lg bg-[#0c0c16] border border-zinc-800 text-xs font-mono">
+                      <div className="p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                         <span className="text-zinc-500 text-[10px] uppercase font-bold block mb-1">
                           Live Numerical Substitution:
                         </span>
                         {selectedStage === 0 && (
-                          <div className="text-zinc-300">
-                            λ(t) = <strong className="text-cyan-400">{rps} RPS</strong> (Base: 100 RPS, Diurnal Delta: {(rps - 100).toFixed(0)} RPS {isSpiking ? ', Flash Crowd: 5.0x Burst' : ''})
+                          <div className="text-zinc-700 dark:text-zinc-300">
+                            λ(t) = <strong className="text-zinc-900 dark:text-zinc-100">{rps} RPS</strong> (Base: 100 RPS, Diurnal Delta: {(rps - 100).toFixed(0)} RPS {isSpiking ? ', Flash Crowd: 5.0x Burst' : ''})
                           </div>
                         )}
                         {selectedStage === 1 && (
-                          <div className="text-zinc-300">
-                            P95 = <strong className={p95 > 100 ? 'text-rose-400' : 'text-emerald-400'}>{p95} ms</strong> ≈ 3.8ms (Base) + 12 · ({rps} / ({actualPods} × 25)) ms
+                          <div className="text-zinc-700 dark:text-zinc-300">
+                            P95 = <strong className={p95 > 100 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}>{p95} ms</strong> ≈ 3.8ms (Base) + 12 · ({rps} / ({actualPods} × 25)) ms
                           </div>
                         )}
                         {selectedStage === 2 && (
-                          <div className="text-zinc-300">
-                            U<sub>cpu</sub> = <strong className="text-purple-300">{cpu}%</strong> = min(100%, ({rps} / ({actualPods} × 25)) × 60%)
+                          <div className="text-zinc-700 dark:text-zinc-300">
+                            U<sub>cpu</sub> = <strong className="text-zinc-900 dark:text-zinc-100">{cpu}%</strong> = min(100%, ({rps} / ({actualPods} × 25)) × 60%)
                           </div>
                         )}
                         {selectedStage === 3 && (
-                          <div className="text-zinc-300">
-                            R<sub>raw</sub> = ⌈ {actualPods} pods × ({cpu}% / 60%) ⌉ = <strong className="text-emerald-400">{reactiveHpa} replicas</strong>
+                          <div className="text-zinc-700 dark:text-zinc-300">
+                            R<sub>raw</sub> = ⌈ {actualPods} pods × ({cpu}% / 60%) ⌉ = <strong className="text-emerald-600 dark:text-emerald-400">{reactiveHpa} replicas</strong>
                           </div>
                         )}
                         {selectedStage === 4 && (
-                          <div className="text-zinc-300">
-                            N<sub>target</sub> = max( {reactiveHpa}, {linearPred}, {hwPred}, {lstmPred} ) = <strong className="text-purple-300">{maxVal} replicas via {winningModel}</strong>
+                          <div className="text-zinc-700 dark:text-zinc-300">
+                            N<sub>target</sub> = max( {reactiveHpa}, {linearPred}, {hwPred}, {lstmPred} ) = <strong className="text-zinc-900 dark:text-zinc-100">{maxVal} replicas via {winningModel}</strong>
                           </div>
                         )}
                         {selectedStage === 5 && (
-                          <div className="text-zinc-300">
-                            N<sub>actuated</sub> = clamp(2, 30, {maxVal}) = <strong className="text-amber-400">{actualPods} replicas applied</strong>
+                          <div className="text-zinc-700 dark:text-zinc-300">
+                            N<sub>actuated</sub> = clamp(2, 30, {maxVal}) = <strong className="text-zinc-900 dark:text-zinc-100">{actualPods} replicas applied</strong>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="rounded-xl bg-zinc-950 p-3 border border-zinc-800 space-y-2 text-xs">
-                      <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold tracking-wider block">
+                    <div className="rounded-xl bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs">
+                      <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 uppercase font-semibold tracking-wider block">
                         Subsystem Specifications
                       </span>
-                      <div className="space-y-1.5 text-zinc-300">
-                        <div className="flex justify-between py-1 border-b border-zinc-900">
-                          <span className="text-zinc-400">Component Scope:</span>
-                          <span className="font-mono text-zinc-200">Kubernetes Core Data/Control Plane</span>
+                      <div className="space-y-1.5 text-zinc-700 dark:text-zinc-300">
+                        <div className="flex justify-between py-1 border-b border-zinc-200 dark:border-zinc-800">
+                          <span className="text-zinc-500 dark:text-zinc-400">Component Scope:</span>
+                          <span className="font-mono text-zinc-900 dark:text-zinc-100">Kubernetes Core Data/Control Plane</span>
                         </div>
-                        <div className="flex justify-between py-1 border-b border-zinc-900">
-                          <span className="text-zinc-400">Execution Frequency:</span>
-                          <span className="font-mono text-zinc-200">Continuous Event Loop (15s Cadence)</span>
+                        <div className="flex justify-between py-1 border-b border-zinc-200 dark:border-zinc-800">
+                          <span className="text-zinc-500 dark:text-zinc-400">Execution Frequency:</span>
+                          <span className="font-mono text-zinc-900 dark:text-zinc-100">Continuous Event Loop (15s Cadence)</span>
                         </div>
                         <div className="flex justify-between py-1">
-                          <span className="text-zinc-400">Fault Tolerance:</span>
-                          <span className="font-mono text-emerald-400">Active HA with Fallback to Reactive HPA</span>
+                          <span className="text-zinc-500 dark:text-zinc-400">Fault Tolerance:</span>
+                          <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Active HA with Fallback to Reactive HPA</span>
                         </div>
                       </div>
                     </div>
@@ -2307,14 +2296,14 @@ export default function PipelineViewer({
 
                 {activeTab === 'pods' && selectedStage === 2 && (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
-                      <span>Workload: <strong>web-workload</strong></span>
+                    <div className="flex items-center justify-between text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                      <span>Workload: <strong className="text-zinc-900 dark:text-zinc-100">web-workload</strong></span>
                       <span>{actualPods} pods in replica set</span>
                     </div>
 
-                    <div className="rounded-xl border border-zinc-800 overflow-hidden bg-zinc-950 text-xs font-mono">
+                    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-950 text-xs font-mono">
                       <table className="w-full text-left">
-                        <thead className="bg-[#12121e] text-[10px] text-zinc-400 border-b border-zinc-800">
+                        <thead className="bg-zinc-50 dark:bg-zinc-900 text-[10px] text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
                           <tr>
                             <th className="p-2">Pod Name</th>
                             <th className="p-2">IP Address</th>
@@ -2324,53 +2313,53 @@ export default function PipelineViewer({
                             <th className="p-2">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-zinc-900">
+                        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/80">
                           {containerPods.map((p) => (
                             <tr
                               key={p.id}
-                              className={`hover:bg-zinc-900/60 ${
+                              className={`hover:bg-zinc-50 dark:hover:bg-zinc-900/60 ${
                                 p.isTargeted
-                                  ? 'bg-amber-500/10'
+                                  ? 'bg-amber-50 dark:bg-amber-950/20'
                                   : p.isPrewarmed
-                                  ? 'bg-purple-950/20'
+                                  ? 'bg-zinc-100/70 dark:bg-zinc-800/40'
                                   : ''
                               }`}
                             >
-                              <td className="p-2 flex items-center gap-1.5 font-bold text-white">
+                              <td className="p-2 flex items-center gap-1.5 font-semibold text-zinc-900 dark:text-zinc-100">
                                 <span
                                   className={`w-1.5 h-1.5 rounded-full ${
                                     p.isTargeted
-                                      ? 'bg-amber-400 animate-ping'
+                                      ? 'bg-amber-500 animate-ping'
                                       : p.isPrewarmed
-                                      ? 'bg-purple-400'
-                                      : 'bg-emerald-400'
+                                      ? 'bg-zinc-900 dark:bg-zinc-100'
+                                      : 'bg-emerald-500'
                                   }`}
                                 />
                                 <span>{p.id}</span>
                               </td>
-                              <td className="p-2 text-zinc-400">{p.ip}</td>
+                              <td className="p-2 text-zinc-500 dark:text-zinc-400">{p.ip}</td>
                               <td className="p-2">
                                 <div className="flex items-center gap-1.5">
-                                  <div className="w-12 bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                                  <div className="w-12 bg-zinc-200 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                                     <div
-                                      className={`h-full ${p.cpu > 80 ? 'bg-rose-500' : 'bg-cyan-400'}`}
+                                      className={`h-full ${p.cpu > 80 ? 'bg-rose-500' : 'bg-zinc-900 dark:bg-zinc-100'}`}
                                       style={{ width: `${p.cpu}%` }}
                                     />
                                   </div>
-                                  <span className={p.cpu > 80 ? 'text-rose-400 font-bold' : 'text-zinc-300'}>
+                                  <span className={p.cpu > 80 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-zinc-700 dark:text-zinc-300'}>
                                     {p.cpu}%
                                   </span>
                                 </div>
                               </td>
-                              <td className="p-2 text-zinc-400">{p.mem} MB</td>
-                              <td className="p-2 text-zinc-400">{p.age}</td>
+                              <td className="p-2 text-zinc-500 dark:text-zinc-400">{p.mem} MB</td>
+                              <td className="p-2 text-zinc-500 dark:text-zinc-400">{p.age}</td>
                               <td className="p-2">
                                 {p.isPrewarmed ? (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/40">
-                                    LSTM Pre-warmed
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-medium">
+                                    Pre-warmed
                                   </span>
                                 ) : (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                                     Ready
                                   </span>
                                 )}
@@ -2385,11 +2374,11 @@ export default function PipelineViewer({
 
                 {activeTab === 'yaml' && (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
                       <span>Production Deployment Manifest</span>
-                      <span className="text-[10px] text-zinc-500">YAML Format</span>
+                      <span className="text-[10px] text-zinc-400">YAML Format</span>
                     </div>
-                    <pre className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-cyan-300 overflow-x-auto leading-relaxed">
+                    <pre className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs font-mono text-zinc-800 dark:text-zinc-200 overflow-x-auto leading-relaxed">
                       {stages[selectedStage].yaml}
                     </pre>
                   </div>

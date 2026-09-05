@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
   Sliders, 
@@ -36,6 +35,7 @@ export default function OperationalGuardrails({
   onSetTraffic,
   onReset,
   buttonFeedback,
+  isSpotlighted = false,
 }) {
   const [copied, setCopied] = useState(false);
   const [activeProfile, setActiveProfile] = useState('custom');
@@ -158,104 +158,113 @@ spec:
 
   return (
     <div className="space-y-4 animate-fadeIn">
-      {/* 1. Top Bento KPI Cards for Operational Guardrails */}
+      {/* 1. Top KPI Cards for Operational Guardrails */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Card 1: Replica Range Boundary */}
-        <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card">
+          <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider">Replica Range</span>
-            <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
+            <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
               <Server className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-white font-mono">{minPods} → {maxPods}</span>
-            <span className="text-[11px] text-zinc-400">pods boundary</span>
+            <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums">{minPods} → {maxPods}</span>
+            <span className="text-[11px] text-zinc-500">pods boundary</span>
           </div>
-          <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-            Current: <span className="text-purple-300 font-bold">{actualPods} pods active</span>
+          <div className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100"></span>
+            Current: <span className="text-zinc-900 dark:text-zinc-100 font-semibold">{actualPods} pods active</span>
           </div>
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
         </div>
 
         {/* Card 2: Target CPU Threshold */}
-        <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card">
+          <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider">Target CPU Load</span>
-            <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+            <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
               <Cpu className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-cyan-400 font-mono">{targetCpu}%</span>
-            <span className="text-[11px] text-zinc-400">utilization</span>
+            <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums">{targetCpu}%</span>
+            <span className="text-[11px] text-zinc-500">utilization</span>
           </div>
-          <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-            Observed: <span className="text-zinc-200 font-semibold">{cpu}% average</span>
+          <div className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100"></span>
+            Observed: <span className="text-zinc-900 dark:text-zinc-100 font-semibold">{cpu}% average</span>
           </div>
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
         </div>
 
         {/* Card 3: Downscale Stabilization Cooldown */}
-        <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card">
+          <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider">Cooldown Window</span>
-            <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+            <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
               <Clock className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-amber-400 font-mono">{cooldownSec}s</span>
-            <span className="text-[11px] text-zinc-400">anti-flapping</span>
+            <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums">{cooldownSec}s</span>
+            <span className="text-[11px] text-zinc-500">anti-flapping</span>
           </div>
-          <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-            Delay: <span className="text-emerald-400 font-semibold">0s scale-up preemption</span>
+          <div className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100"></span>
+            Delay: <span className="text-zinc-900 dark:text-zinc-100 font-semibold">0s scale-up preemption</span>
           </div>
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
         </div>
 
         {/* Card 4: FinOps Cost Ceiling */}
-        <div className="bento-card rounded-xl p-3.5 relative overflow-hidden bg-zinc-900/60 border border-zinc-800 group">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card">
+          <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 mb-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider">FinOps Budget Cap</span>
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
               <DollarSign className="w-3.5 h-3.5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-emerald-400 font-mono">${monthlyCeiling}</span>
-            <span className="text-[11px] text-zinc-400">/ mo max</span>
+            <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums">${monthlyCeiling}</span>
+            <span className="text-[11px] text-zinc-500">/ mo max</span>
           </div>
-          <div className="mt-1 text-[11px] text-zinc-400 flex items-center gap-1.5 font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]"></span>
-            Run-Rate: <span className="text-emerald-300 font-semibold">${currentHourly}/hr</span>
+          <div className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Run-Rate: <span className="text-zinc-900 dark:text-zinc-100 font-semibold">${currentHourly}/hr</span>
           </div>
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
         </div>
       </div>
 
       {/* 2. Interactive Visual Cluster Safety Spectrum (The Range Gauge) */}
-      <div className="bento-card rounded-xl p-3.5 sm:p-4 border border-zinc-800/90 bg-zinc-950/90 relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 mb-3 border-b border-zinc-800/80 gap-2">
+      <div
+        id="demo-target-step-4"
+        className={`bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card transition-all duration-300 ${
+        isSpotlighted ? 'relative z-40 ring-2 ring-amber-500 ring-offset-2 ring-offset-zinc-900 shadow-2xl' : ''
+      }`}>
+        {isSpotlighted && (
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-600 text-white text-[11px] font-mono font-bold shadow-lg w-fit animate-bounce mb-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            <span>NOTICE: Safe Operating Band (2-30 Pods) & Clamping Protection</span>
+          </div>
+        )}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800 gap-2">
           <div className="flex items-center gap-2">
-            <Gauge className="w-4 h-4 text-purple-400 flex-shrink-0" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wide truncate">
-              Live Replica Allocation Spectrum & Boundary Gauge
+            <Gauge className="w-4 h-4 text-zinc-700 dark:text-zinc-300 flex-shrink-0" />
+            <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider truncate">
+              Live Replica Allocation Spectrum &amp; Boundary Gauge
             </h3>
           </div>
           <div className="flex items-center gap-2 font-mono text-[10px] self-start sm:self-auto">
-            <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
-              Safe Band: <strong className="text-emerald-400">{minPods} – {maxPods} pods</strong>
+            <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
+              Safe Band: <strong className="text-zinc-900 dark:text-zinc-100">{minPods} – {maxPods} pods</strong>
             </span>
             <span className={`px-2 py-0.5 rounded font-bold ${
               actualPods >= maxPods 
-                ? 'bg-rose-950/80 border border-rose-500/50 text-rose-300' 
+                ? 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-600 text-rose-600 dark:text-rose-400' 
                 : actualPods > maxPods * 0.8 
-                ? 'bg-amber-950/80 border border-amber-500/50 text-amber-300'
-                : 'bg-emerald-950/80 border border-emerald-500/50 text-emerald-300'
+                ? 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-600 text-amber-600 dark:text-amber-400' 
+                : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-emerald-600 dark:text-emerald-400'
             }`}>
               {actualPods >= maxPods ? 'CEILING CLAMPED' : 'WITHIN BOUNDS'}
             </span>
@@ -263,78 +272,104 @@ spec:
         </div>
 
         {/* Visual Multi-Segment Bar */}
-        <div className="relative pt-6 pb-4 px-2">
-          {/* Track background */}
-          <div className="h-4 bg-zinc-900 rounded-full border border-zinc-800 overflow-hidden relative">
-            {/* Safe zone filling from min to max */}
+        <div className="relative pt-7 pb-5 px-2">
+          {/* Recessed Track with Inner Depth */}
+          <div className="h-4 bg-zinc-100 dark:bg-zinc-950 rounded-full border border-zinc-300 dark:border-zinc-700 overflow-hidden relative shadow-inner">
+            {/* Safe zone window in BACKGROUND (z-0): min to max pods */}
             <div 
-              className="absolute top-0 bottom-0 bg-gradient-to-r from-purple-600/30 via-emerald-600/30 to-rose-600/40 border-x border-purple-500/40"
+              className="absolute top-0 bottom-0 bg-zinc-200/90 dark:bg-zinc-800/90 border-x-2 border-zinc-400 dark:border-zinc-600 z-0"
               style={{
                 left: `${minPercent}%`,
                 width: `${maxPercent - minPercent}%`
               }}
-            />
+            >
+              {/* Subtle hatched texture to distinguish the safe band */}
+              <div 
+                className="w-full h-full opacity-25" 
+                style={{
+                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, currentColor 4px, currentColor 6px)',
+                  color: 'rgb(113 113 122)'
+                }}
+              />
+            </div>
 
-            {/* Active utilization progress bar */}
+            {/* Active utilization progress bar in FOREGROUND (z-10): solid high contrast fill */}
             <div 
-              className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-cyan-400 transition-all duration-300 rounded-full"
+              className="absolute top-0 bottom-0 left-0 bg-zinc-900 dark:bg-zinc-100 transition-all duration-300 rounded-full z-10 shadow-sm"
               style={{ width: `${activePercent}%` }}
             />
           </div>
 
+          {/* Needle Node on Bar */}
+          <div
+            className="absolute top-[36px] -translate-y-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-300"
+            style={{ left: `${activePercent}%` }}
+          >
+            <div className="w-4 h-4 rounded-full bg-zinc-900 dark:bg-zinc-100 border-2 border-white dark:border-zinc-900 shadow-md" />
+          </div>
+
           {/* Min Pods Marker */}
           <div 
-            className="absolute top-0 flex flex-col items-center -translate-x-1/2"
+            className="absolute top-0 flex flex-col items-center -translate-x-1/2 pointer-events-none z-10"
             style={{ left: `${minPercent}%` }}
           >
-            <span className="text-[9px] font-mono text-purple-300 font-bold bg-zinc-900 px-1 rounded border border-purple-500/30">
+            <span className="text-[10px] font-mono font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-1.5 py-0.5 rounded border border-zinc-400 dark:border-zinc-600 shadow-xs">
               MIN ({minPods})
             </span>
-            <div className="w-0.5 h-2 bg-purple-400 mt-0.5"></div>
+            <div className="w-0.5 h-3 bg-zinc-600 dark:bg-zinc-400 mt-0.5"></div>
           </div>
 
           {/* Current Active Pods Floating Indicator */}
           <div 
-            className="absolute -top-1 flex flex-col items-center -translate-x-1/2 z-10 transition-all duration-300"
+            className="absolute -top-1.5 flex flex-col items-center -translate-x-1/2 z-30 transition-all duration-300 pointer-events-none"
             style={{ left: `${activePercent}%` }}
           >
-            <div className="px-1.5 py-0.5 rounded-full bg-white text-zinc-950 font-bold font-mono text-[10px] shadow-lg flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping"></span>
-              {actualPods} pods
+            <div className="px-2 py-0.5 rounded-full bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold font-mono text-[11px] shadow-md flex items-center gap-1.5 border border-zinc-800 dark:border-zinc-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>{actualPods} pods</span>
             </div>
-            <div className="w-1 h-3 bg-white mt-0.5 rounded-full shadow"></div>
+            <div className="w-0.5 h-3 bg-zinc-900 dark:bg-zinc-100 mt-0.5"></div>
           </div>
 
           {/* Max Pods Marker */}
           <div 
-            className="absolute top-0 flex flex-col items-center -translate-x-1/2"
+            className="absolute top-0 flex flex-col items-center -translate-x-1/2 pointer-events-none z-10"
             style={{ left: `${maxPercent}%` }}
           >
-            <span className="text-[9px] font-mono text-rose-300 font-bold bg-zinc-900 px-1 rounded border border-rose-500/30">
+            <span className="text-[10px] font-mono font-bold bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 px-1.5 py-0.5 rounded border border-zinc-400 dark:border-zinc-600 shadow-xs">
               MAX ({maxPods})
             </span>
-            <div className="w-0.5 h-2 bg-rose-400 mt-0.5"></div>
+            <div className="w-0.5 h-3 bg-zinc-600 dark:bg-zinc-400 mt-0.5"></div>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center justify-between text-[10px] font-mono text-zinc-400 pt-2 border-t border-zinc-900">
-          <span>0 pods (scale-to-zero)</span>
+        <div className="flex flex-wrap items-center justify-between text-[11px] font-mono text-zinc-600 dark:text-zinc-400 pt-2.5 border-t border-zinc-200 dark:border-zinc-800">
+          <span className="font-semibold text-zinc-700 dark:text-zinc-300">0 pods (scale-to-zero)</span>
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-purple-500"></span> Minimum Floor</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-cyan-400"></span> Active Cluster</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-rose-500"></span> Hard Ceiling</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-xs bg-zinc-900 dark:bg-zinc-100 border border-zinc-800 dark:border-zinc-200 inline-block"></span>
+              <strong className="text-zinc-900 dark:text-zinc-100">Active Replicas ({actualPods})</strong>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-xs bg-zinc-300 dark:bg-zinc-700 border border-zinc-400 dark:border-zinc-600 inline-block"></span>
+              <span>Safe Band ({minPods}–{maxPods})</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-xs bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 inline-block"></span>
+              <span>Unallocated Headroom</span>
+            </span>
           </div>
-          <span>{maxSpectrum} pods limit</span>
+          <span className="font-semibold text-zinc-700 dark:text-zinc-300">{maxSpectrum} pods limit</span>
         </div>
       </div>
 
       {/* 3. Operational Profile Presets */}
-      <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90">
-        <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card">
+        <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wide">
+            <Sparkles className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+            <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wide">
               Pre-Configured Operational Profiles
             </h3>
           </div>
@@ -354,32 +389,32 @@ spec:
               <button
                 key={p.id}
                 onClick={() => handleSelectProfile(p)}
-                className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between group ${
+                className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between group ${
                   isSelected
-                    ? 'bg-purple-950/30 border-purple-500/60 shadow-md shadow-purple-500/10'
-                    : 'bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/90'
+                    ? 'bg-zinc-100 dark:bg-zinc-800 border-zinc-400 dark:border-zinc-600 shadow-sm'
+                    : 'bg-zinc-50 dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-white">
-                      <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-purple-400' : 'text-zinc-400'}`} />
+                    <div className="flex items-center gap-1.5 font-semibold text-xs text-zinc-900 dark:text-zinc-100">
+                      <Icon className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
                       <span className="truncate">{p.name}</span>
                     </div>
-                    <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-zinc-800 text-zinc-300">
+                    <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400">
                       {p.badge}
                     </span>
                   </div>
-                  <p className="text-[10px] text-zinc-400 leading-relaxed mb-2.5">
+                  <p className="text-[10px] text-zinc-600 dark:text-zinc-400 leading-relaxed mb-2.5">
                     {p.desc}
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-zinc-800/60 grid grid-cols-2 gap-1 text-[9px] font-mono text-zinc-400">
-                  <div>Min: <strong className="text-white">{p.values.minPods}</strong></div>
-                  <div>Max: <strong className="text-white">{p.values.maxPods}</strong></div>
-                  <div>CPU: <strong className="text-white">{p.values.targetCpu}%</strong></div>
-                  <div>Cool: <strong className="text-white">{p.values.cooldownSec}s</strong></div>
+                <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-2 gap-1 text-[9px] font-mono text-zinc-500 dark:text-zinc-400">
+                  <div>Min: <strong className="text-zinc-900 dark:text-zinc-100">{p.values.minPods}</strong></div>
+                  <div>Max: <strong className="text-zinc-900 dark:text-zinc-100">{p.values.maxPods}</strong></div>
+                  <div>CPU: <strong className="text-zinc-900 dark:text-zinc-100">{p.values.targetCpu}%</strong></div>
+                  <div>Cool: <strong className="text-zinc-900 dark:text-zinc-100">{p.values.cooldownSec}s</strong></div>
                 </div>
               </button>
             );
@@ -392,48 +427,48 @@ spec:
         {/* LEFT COLUMN: 7 Columns */}
         <div className="lg:col-span-7 space-y-4">
           {/* Interactive Operational Boundary Controls */}
-          <div className="bento-card rounded-xl p-5 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between pb-2.5 mb-4 border-b border-zinc-800/80">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
+            <div className="flex items-center justify-between pb-2.5 mb-4 border-b border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
                   <Sliders className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Cluster Operational Boundaries</h3>
-                  <p className="text-[10px] text-zinc-400">Fine-tune individual parameters controlling autoscaler clamping</p>
+                  <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">Cluster Operational Boundaries</h3>
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Fine-tune individual parameters controlling autoscaler clamping</p>
                 </div>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-medium">
+              <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 text-[10px] font-mono font-medium">
                 Live Clamping Active
               </span>
             </div>
 
-            <div className="space-y-4 text-xs font-mono">
+            <div className="space-y-3 text-xs font-mono">
               {/* 1. Min Replicas */}
-              <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="p-3 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <div className="font-semibold text-zinc-200 font-sans flex items-center gap-1.5">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 font-sans flex items-center gap-1.5">
                     <span>Minimum Replica Floor</span>
                     <span className="text-[10px] font-mono text-zinc-500">(minReplicas)</span>
                   </div>
-                  <div className="text-[11px] text-zinc-400 font-sans mt-0.5">
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans mt-0.5">
                     Guarantees warm baseline pods to prevent scale-to-zero cold-start queue delay.
                   </div>
                 </div>
                 <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                   <button
                     onClick={() => onUpdateGuardrail('minPods', -1)}
-                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:text-white font-bold transition-colors"
+                    className="w-7 h-7 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold transition-colors"
                     title="Decrease minimum pods"
                   >
                     -
                   </button>
-                  <span className="text-white font-bold text-sm min-w-[60px] text-center px-2 py-1 rounded bg-zinc-950 border border-zinc-800">
+                  <span className="text-zinc-900 dark:text-zinc-100 font-bold text-sm min-w-[60px] text-center px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                     {minPods} pods
                   </span>
                   <button
                     onClick={() => onUpdateGuardrail('minPods', 1)}
-                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:text-white font-bold transition-colors"
+                    className="w-7 h-7 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold transition-colors"
                     title="Increase minimum pods"
                   >
                     +
@@ -442,30 +477,30 @@ spec:
               </div>
 
               {/* 2. Max Replicas */}
-              <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="p-3 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <div className="font-semibold text-zinc-200 font-sans flex items-center gap-1.5">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 font-sans flex items-center gap-1.5">
                     <span>Maximum Replica Ceiling</span>
                     <span className="text-[10px] font-mono text-zinc-500">(maxReplicas)</span>
                   </div>
-                  <div className="text-[11px] text-zinc-400 font-sans mt-0.5">
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans mt-0.5">
                     Hard safety ceiling protecting Kubernetes nodes against runaway cloud billing.
                   </div>
                 </div>
                 <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                   <button
                     onClick={() => onUpdateGuardrail('maxPods', -5)}
-                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:text-white font-bold transition-colors"
+                    className="w-7 h-7 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold transition-colors"
                     title="Decrease maximum pods"
                   >
                     -
                   </button>
-                  <span className="text-white font-bold text-sm min-w-[60px] text-center px-2 py-1 rounded bg-zinc-950 border border-zinc-800">
+                  <span className="text-zinc-900 dark:text-zinc-100 font-bold text-sm min-w-[60px] text-center px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                     {maxPods} pods
                   </span>
                   <button
                     onClick={() => onUpdateGuardrail('maxPods', 5)}
-                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:text-white font-bold transition-colors"
+                    className="w-7 h-7 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold transition-colors"
                     title="Increase maximum pods"
                   >
                     +
@@ -474,30 +509,30 @@ spec:
               </div>
 
               {/* 3. Target Pod CPU */}
-              <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="p-3 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <div className="font-semibold text-zinc-200 font-sans flex items-center gap-1.5">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 font-sans flex items-center gap-1.5">
                     <span>Target Pod CPU Load</span>
                     <span className="text-[10px] font-mono text-zinc-500">(targetCPUUtilization)</span>
                   </div>
-                  <div className="text-[11px] text-zinc-400 font-sans mt-0.5">
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans mt-0.5">
                     Nominal operating load. Lower targets leave more headroom for flash traffic bursts.
                   </div>
                 </div>
                 <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                   <button
                     onClick={() => onUpdateGuardrail('targetCpu', -5)}
-                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:text-white font-bold transition-colors"
+                    className="w-7 h-7 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold transition-colors"
                     title="Decrease target CPU"
                   >
                     -
                   </button>
-                  <span className="text-cyan-300 font-bold text-sm min-w-[60px] text-center px-2 py-1 rounded bg-zinc-950 border border-zinc-800">
+                  <span className="text-zinc-900 dark:text-zinc-100 font-bold text-sm min-w-[60px] text-center px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                     {targetCpu}%
                   </span>
                   <button
                     onClick={() => onUpdateGuardrail('targetCpu', 5)}
-                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:text-white font-bold transition-colors"
+                    className="w-7 h-7 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold transition-colors"
                     title="Increase target CPU"
                   >
                     +
@@ -506,30 +541,30 @@ spec:
               </div>
 
               {/* 4. Scale-Down Stabilization Cooldown */}
-              <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="p-3 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <div className="font-semibold text-zinc-200 font-sans flex items-center gap-1.5">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 font-sans flex items-center gap-1.5">
                     <span>Scale-Down Stabilization Window</span>
                     <span className="text-[10px] font-mono text-zinc-500">(cooldownWindowSeconds)</span>
                   </div>
-                  <div className="text-[11px] text-zinc-400 font-sans mt-0.5">
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans mt-0.5">
                     Cool-off period before decommissioning idle pods, preventing rapid pod thrashing (flapping).
                   </div>
                 </div>
                 <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                   <button
                     onClick={() => onUpdateGuardrail('cooldownSec', -15)}
-                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:text-white font-bold transition-colors"
+                    className="w-7 h-7 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold transition-colors"
                     title="Decrease cooldown window"
                   >
                     -
                   </button>
-                  <span className="text-amber-400 font-bold text-sm min-w-[60px] text-center px-2 py-1 rounded bg-zinc-950 border border-zinc-800">
+                  <span className="text-zinc-900 dark:text-zinc-100 font-bold text-sm min-w-[60px] text-center px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                     {cooldownSec}s
                   </span>
                   <button
                     onClick={() => onUpdateGuardrail('cooldownSec', 15)}
-                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 flex items-center justify-center text-zinc-200 hover:text-white font-bold transition-colors"
+                    className="w-7 h-7 rounded bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold transition-colors"
                     title="Increase cooldown window"
                   >
                     +
@@ -540,34 +575,34 @@ spec:
           </div>
 
           {/* FinOps Cloud Cost Breakdown Card */}
-          <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90">
-            <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/80">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card">
+            <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-xs font-bold text-white uppercase tracking-wide">
-                  FinOps Budget Governance & Projection
+                <DollarSign className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+                <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wide">
+                  FinOps Budget Governance &amp; Projection
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-zinc-400">AWS / GCP EKS Rate: $0.040/hr</span>
+              <span className="text-[10px] font-mono text-zinc-500">AWS / GCP EKS Rate: $0.040/hr</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2.5 text-center text-xs font-mono">
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800">
-                <div className="text-[10px] text-zinc-400 font-sans">Monthly Floor</div>
-                <div className="text-base font-bold text-white mt-0.5">${monthlyFloor}</div>
-                <div className="text-[9px] text-zinc-500">at {minPods} min pods</div>
+              <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                <div className="text-[10px] text-zinc-500 font-sans">Monthly Floor</div>
+                <div className="text-base font-bold text-zinc-900 dark:text-zinc-100 mt-0.5 tabular-nums">${monthlyFloor}</div>
+                <div className="text-[9px] text-zinc-400">at {minPods} min pods</div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-500/30">
-                <div className="text-[10px] text-emerald-300 font-sans">Active Run-Rate</div>
-                <div className="text-base font-bold text-emerald-400 mt-0.5">${currentMonthly}</div>
-                <div className="text-[9px] text-emerald-300/80">${currentHourly}/hr active</div>
+              <div className="p-2.5 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
+                <div className="text-[10px] text-zinc-700 dark:text-zinc-300 font-sans font-semibold">Active Run-Rate</div>
+                <div className="text-base font-bold text-zinc-900 dark:text-zinc-100 mt-0.5 tabular-nums">${currentMonthly}</div>
+                <div className="text-[9px] text-zinc-500">${currentHourly}/hr active</div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800">
-                <div className="text-[10px] text-zinc-400 font-sans">Hard Cap Ceiling</div>
-                <div className="text-base font-bold text-rose-300 mt-0.5">${monthlyCeiling}</div>
-                <div className="text-[9px] text-zinc-500">at {maxPods} max pods</div>
+              <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                <div className="text-[10px] text-zinc-500 font-sans">Hard Cap Ceiling</div>
+                <div className="text-base font-bold text-zinc-900 dark:text-zinc-100 mt-0.5 tabular-nums">${monthlyCeiling}</div>
+                <div className="text-[9px] text-zinc-400">at {maxPods} max pods</div>
               </div>
             </div>
           </div>
@@ -576,83 +611,83 @@ spec:
         {/* RIGHT COLUMN: 5 Columns */}
         <div className="lg:col-span-5 space-y-4">
           {/* Chaos & Boundary Stress Testing Sandbox */}
-          <div className="bento-card rounded-xl p-5 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-800/80">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
+            <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400">
+                <div className="w-6 h-6 rounded bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
                   <Zap className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Boundary Stress Testing</h3>
-                  <p className="text-[10px] text-zinc-400">Test if boundaries hold under synthetic anomalies</p>
+                  <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">Boundary Stress Testing</h3>
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Test if boundaries hold under synthetic anomalies</p>
                 </div>
               </div>
               <span className="text-[10px] text-zinc-500 font-mono">Chaos Suite</span>
             </div>
 
-            <p className="text-xs text-zinc-400 leading-relaxed mb-3">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">
               Trigger traffic surges or drop traffic to observe the cluster clamping strictly against your guardrails:
             </p>
 
             <div className="grid grid-cols-2 gap-2.5 mb-3">
               <button
                 onClick={onInjectSpike}
-                className={`p-3 rounded-lg border transition-all flex flex-col items-center text-center group ${
+                className={`p-3 rounded-md border transition-all flex flex-col items-center text-center ${
                   buttonFeedback === 'spike'
-                    ? 'bg-rose-500/30 border-rose-400 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-                    : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 hover:border-rose-500/50 text-rose-300'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-sm'
+                    : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-semibold text-xs text-rose-200">
-                  <Zap className="w-4 h-4 group-hover:scale-110 transition-transform text-rose-400" />
+                <div className="flex items-center gap-1.5 font-semibold text-xs">
+                  <Zap className="w-4 h-4" />
                   <span>{buttonFeedback === 'spike' ? 'Surge Injected!' : '5x Flash Surge'}</span>
                 </div>
-                <span className="text-[10px] text-rose-400/80 mt-1 font-mono">Verify max ceiling ({maxPods} pods)</span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono">Verify ceiling ({maxPods} pods)</span>
               </button>
 
               <button
                 onClick={onTriggerLstmEvent}
-                className={`p-3 rounded-lg border transition-all flex flex-col items-center text-center group ${
+                className={`p-3 rounded-md border transition-all flex flex-col items-center text-center ${
                   buttonFeedback === 'lstm'
-                    ? 'bg-purple-500/30 border-purple-400 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
-                    : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 hover:border-purple-500/50 text-purple-300'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-sm'
+                    : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-semibold text-xs text-purple-200">
-                  <BrainCircuit className="w-4 h-4 group-hover:scale-110 transition-transform text-purple-400" />
+                <div className="flex items-center gap-1.5 font-semibold text-xs">
+                  <BrainCircuit className="w-4 h-4" />
                   <span>{buttonFeedback === 'lstm' ? 'Preemption Active!' : 'Trigger LSTM'}</span>
                 </div>
-                <span className="text-[10px] text-purple-400/80 mt-1 font-mono">Verify proactive lead</span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono">Verify proactive lead</span>
               </button>
 
               <button
                 onClick={() => onAdjustRps(50)}
-                className={`p-3 rounded-lg border transition-all flex flex-col items-center text-center group ${
+                className={`p-3 rounded-md border transition-all flex flex-col items-center text-center ${
                   buttonFeedback === 'plus'
-                    ? 'bg-cyan-500/30 border-cyan-400 text-white shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-                    : 'bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/30 hover:border-cyan-500/50 text-cyan-300'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-sm'
+                    : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-semibold text-xs text-cyan-200">
-                  <ArrowUpRight className="w-4 h-4 group-hover:scale-110 transition-transform text-cyan-400" />
+                <div className="flex items-center gap-1.5 font-semibold text-xs">
+                  <ArrowUpRight className="w-4 h-4" />
                   <span>{buttonFeedback === 'plus' ? '+50 Applied!' : '+50 RPS Load'}</span>
                 </div>
-                <span className="text-[10px] text-cyan-400/80 mt-1 font-mono">Step load upward</span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono">Step load upward</span>
               </button>
 
               <button
                 onClick={() => onAdjustRps(-50)}
-                className={`p-3 rounded-lg border transition-all flex flex-col items-center text-center group ${
+                className={`p-3 rounded-md border transition-all flex flex-col items-center text-center ${
                   buttonFeedback === 'minus'
-                    ? 'bg-emerald-500/30 border-emerald-400 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                    : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-sm'
+                    : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-semibold text-xs text-emerald-200">
-                  <ArrowDownRight className="w-4 h-4 group-hover:scale-110 transition-transform text-emerald-400" />
+                <div className="flex items-center gap-1.5 font-semibold text-xs">
+                  <ArrowDownRight className="w-4 h-4" />
                   <span>{buttonFeedback === 'minus' ? '-50 Applied!' : '-50 RPS Load'}</span>
                 </div>
-                <span className="text-[10px] text-emerald-400/80 mt-1 font-mono">Step load downward</span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono">Step load downward</span>
               </button>
             </div>
 
@@ -660,14 +695,14 @@ spec:
             <div className="grid grid-cols-2 gap-2 mb-2">
               <button
                 onClick={() => onSetTraffic && onSetTraffic(10, 'manual')}
-                className="py-1.5 px-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs flex items-center justify-center gap-1 font-mono transition-colors"
+                className="py-1.5 px-2 rounded-md bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs flex items-center justify-center gap-1 font-mono transition-colors"
                 title="Drop traffic to 10 RPS to test minimum pod floor"
               >
                 <span>📉 Drop to 10 RPS</span>
               </button>
               <button
                 onClick={() => onSetTraffic && onSetTraffic(500, 'manual')}
-                className="py-1.5 px-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs flex items-center justify-center gap-1 font-mono transition-colors"
+                className="py-1.5 px-2 rounded-md bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs flex items-center justify-center gap-1 font-mono transition-colors"
                 title="Ramp traffic to 500 RPS to test maximum pod ceiling"
               >
                 <span>📈 Jump to 500 RPS</span>
@@ -676,10 +711,10 @@ spec:
 
             <button
               onClick={onReset}
-              className={`w-full py-2 rounded-lg border flex items-center justify-center gap-2 text-xs transition-colors font-mono ${
+              className={`w-full py-2 rounded-md border flex items-center justify-center gap-2 text-xs transition-colors font-mono ${
                 buttonFeedback === 'reset'
-                  ? 'bg-zinc-800 border-zinc-600 text-white shadow-sm'
-                  : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-sm'
+                  : 'bg-zinc-50 dark:bg-zinc-950 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300'
               }`}
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -688,22 +723,22 @@ spec:
           </div>
 
           {/* Declarative Kubernetes CRD Manifest */}
-          <div className="bento-card rounded-xl p-4 border border-zinc-800/90 bg-zinc-950/90 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-zinc-800/80">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card">
+            <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-zinc-200 dark:border-zinc-800">
               <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-purple-400" />
-                <span className="font-bold text-xs text-white uppercase tracking-wider">PredictiveHPA.yaml</span>
+                <Layers className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+                <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">PredictiveHPA.yaml</span>
               </div>
               <button
                 onClick={handleCopyYaml}
-                className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white text-[11px] font-mono transition-colors"
+                className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-[11px] font-mono transition-colors"
               >
-                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-zinc-400" />}
+                {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-zinc-500" />}
                 <span>{copied ? 'Copied!' : 'Copy YAML'}</span>
               </button>
             </div>
 
-            <div className="p-3 rounded-lg bg-zinc-900/80 border border-zinc-800 font-mono text-[10px] text-purple-300 overflow-x-auto max-h-[190px] leading-relaxed">
+            <div className="p-3 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-[10px] text-zinc-800 dark:text-zinc-200 overflow-x-auto max-h-[190px] leading-relaxed">
               <pre>{yamlManifest}</pre>
             </div>
           </div>

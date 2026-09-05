@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { 
   BrainCircuit, 
   TrendingUp, 
@@ -74,11 +73,10 @@ export default function ModelScorecard({ latest }) {
       name: '2-Layer LSTM',
       category: 'Recurrent Neural Network',
       badge: 'Proactive Pre-warming',
-      badgeClass: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
-      borderClass: 'border-purple-500/40',
-      glowClass: 'from-purple-950/30 to-zinc-950/80',
+      badgeClass: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700',
+      borderClass: 'border-zinc-200 dark:border-zinc-800',
       icon: BrainCircuit,
-      iconColor: 'text-purple-400',
+      iconColor: 'text-zinc-800 dark:text-zinc-200',
       current_pods: lstm_pred,
       pod_hours: lstmData.pod_hours?.toFixed(2) || '0.00',
       cost: `$${(lstmData.cost_dollars || 0).toFixed(3)}`,
@@ -96,11 +94,10 @@ export default function ModelScorecard({ latest }) {
       name: 'Holt-Winters',
       category: 'Triple Exponential Smoothing',
       badge: 'Periodic Smoothing',
-      badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-      borderClass: 'border-emerald-500/30',
-      glowClass: 'from-emerald-950/20 to-zinc-950/80',
+      badgeClass: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700',
+      borderClass: 'border-zinc-200 dark:border-zinc-800',
       icon: Waves,
-      iconColor: 'text-emerald-400',
+      iconColor: 'text-zinc-800 dark:text-zinc-200',
       current_pods: holt_winters_pred,
       pod_hours: hwData.pod_hours?.toFixed(2) || '0.00',
       cost: `$${(hwData.cost_dollars || 0).toFixed(3)}`,
@@ -118,11 +115,10 @@ export default function ModelScorecard({ latest }) {
       name: 'Linear Regression',
       category: 'Ordinary Least Squares',
       badge: 'First-Order Extrapolation',
-      badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-      borderClass: 'border-blue-500/30',
-      glowClass: 'from-blue-950/20 to-zinc-950/80',
+      badgeClass: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700',
+      borderClass: 'border-zinc-200 dark:border-zinc-800',
       icon: TrendingUp,
-      iconColor: 'text-blue-400',
+      iconColor: 'text-zinc-800 dark:text-zinc-200',
       current_pods: linear_pred,
       pod_hours: linearData.pod_hours?.toFixed(2) || '0.00',
       cost: `$${(linearData.cost_dollars || 0).toFixed(3)}`,
@@ -140,11 +136,10 @@ export default function ModelScorecard({ latest }) {
       name: 'Reactive HPA',
       category: 'Kubernetes Controller Baseline',
       badge: 'Moving-Average Baseline',
-      badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-      borderClass: 'border-amber-500/30',
-      glowClass: 'from-amber-950/20 to-zinc-950/80',
+      badgeClass: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700',
+      borderClass: 'border-zinc-200 dark:border-zinc-800',
       icon: Activity,
-      iconColor: 'text-amber-400',
+      iconColor: 'text-zinc-800 dark:text-zinc-200',
       current_pods: reactive_hpa,
       pod_hours: hpaData.pod_hours?.toFixed(2) || '0.00',
       cost: `$${(hpaData.cost_dollars || 0).toFixed(3)}`,
@@ -160,29 +155,29 @@ export default function ModelScorecard({ latest }) {
   ];
 
   return (
-    <div className="bento-card rounded-xl p-3.5 border border-zinc-800/90 relative overflow-hidden bg-zinc-950/90">
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 raised-card relative overflow-hidden">
       {/* Component Header & View Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 mb-3 border-b border-zinc-800/80 relative z-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-zinc-200 dark:border-zinc-800 relative z-10">
         <div>
           <div className="flex items-center gap-2">
-            <Scale className="w-4 h-4 text-purple-400" />
-            <h3 className="text-xs font-bold text-white tracking-wide">
+            <Scale className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+            <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
               Comparative Autoscaler Model Evaluation
             </h3>
           </div>
-          <p className="text-[10px] text-zinc-400 mt-0.5">
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
             Empirical benchmark measuring compute spend, <Term id="coldstart">cold-start delay</Term>, and <Term id="mape">forecast accuracy</Term>
           </p>
         </div>
 
         {/* View Switcher Pills */}
-        <div className="flex items-center gap-1 bg-zinc-900/90 p-0.5 rounded-lg border border-zinc-800 self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-0.5 rounded-md border border-zinc-200 dark:border-zinc-700 self-start sm:self-auto">
           <button
             onClick={() => setActiveView('cards')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium transition-all ${
               activeView === 'cards'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-700'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
             <LayoutGrid className="w-3 h-3" />
@@ -190,10 +185,10 @@ export default function ModelScorecard({ latest }) {
           </button>
           <button
             onClick={() => setActiveView('matrix')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium transition-all ${
               activeView === 'matrix'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-700'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
             <TableProperties className="w-3 h-3" />
@@ -201,10 +196,10 @@ export default function ModelScorecard({ latest }) {
           </button>
           <button
             onClick={() => setActiveView('bars')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-medium transition-all ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-medium transition-all ${
               activeView === 'bars'
-                ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200 dark:border-zinc-700'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
             <BarChart3 className="w-3 h-3" />
@@ -214,97 +209,97 @@ export default function ModelScorecard({ latest }) {
       </div>
 
       {/* Analytical Findings Banner */}
-      <div className="mb-3 p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800/90 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs relative z-10">
+      <div className="mb-3 p-3 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs relative z-10">
         <div className="flex items-start md:items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-purple-400 mt-1 md:mt-0 flex-shrink-0"></div>
-          <span className="text-[11px] text-zinc-300 leading-snug">
-            <strong className="text-white font-semibold">Analytical Summary:</strong> The{' '}
-            <strong className="text-purple-300 font-semibold"><Term id="lstm">2-Layer LSTM</Term></strong> reduced compute consumption by{' '}
-            <span className="text-emerald-400 font-mono font-bold">
+          <div className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 mt-1.5 md:mt-0 flex-shrink-0"></div>
+          <span className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+            <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">Analytical Summary:</strong> The{' '}
+            <strong className="text-zinc-900 dark:text-zinc-100 font-semibold"><Term id="lstm">2-Layer LSTM</Term></strong> reduced compute consumption by{' '}
+            <span className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">
               {lstmData.saved_pct ? `${lstmData.saved_pct.toFixed(1)}%` : '23.4%'} ({lstmData.saved_dollars ? `$${lstmData.saved_dollars.toFixed(3)}` : '$0.052'})
             </span>{' '}
             relative to the <Term id="hpa">reactive baseline</Term>, maintaining{' '}
-            <span className="text-white font-semibold">0 <Term id="underprovision">under-provisioning deficits</Term></span>.
+            <span className="text-zinc-900 dark:text-zinc-100 font-semibold">0 <Term id="underprovision">under-provisioning deficits</Term></span>.
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-[9px] font-mono text-zinc-400 self-end md:self-auto flex-shrink-0">
-          <span className="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800">Rate: $0.040/<Term id="podhours">pod-hr</Term></span>
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-zinc-500 dark:text-zinc-400 self-end md:self-auto flex-shrink-0">
+          <span className="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">Rate: $0.040/<Term id="podhours">pod-hr</Term></span>
         </div>
       </div>
 
       {/* VIEW 1: 4 MODEL CARDS */}
       {activeView === 'cards' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
           {models.map((m) => {
             const Icon = m.icon;
             return (
               <div
                 key={m.id}
-                className={`rounded-xl p-3 border bg-gradient-to-b ${m.glowClass} ${m.borderClass} transition-all duration-200 hover:border-zinc-500/50 flex flex-col justify-between`}
+                className="bg-white dark:bg-zinc-900 rounded-lg p-3.5 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all raised-card flex flex-col justify-between"
               >
                 <div>
                   {/* Card Header */}
-                  <div className="flex items-center justify-between gap-1 mb-2">
+                  <div className="flex items-center justify-between gap-1 mb-2.5">
                     <div className="flex items-center gap-1.5">
-                      <Icon className={`w-3.5 h-3.5 ${m.iconColor}`} />
-                      <span className="font-bold text-white text-[11px] tracking-tight">{m.name}</span>
+                      <Icon className={`w-4 h-4 ${m.iconColor}`} />
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-xs tracking-tight">{m.name}</span>
                     </div>
-                    <span className={`text-[8px] font-medium px-1.5 py-0.5 rounded border uppercase ${m.badgeClass}`}>
+                    <span className={`text-[9px] font-medium px-2 py-0.5 rounded border uppercase ${m.badgeClass}`}>
                       {m.badge}
                     </span>
                   </div>
 
                   {/* Current Output */}
-                  <div className="flex items-center justify-between bg-zinc-900/90 rounded-md p-1.5 mb-2 border border-zinc-800">
-                    <span className="text-[10px] text-zinc-400">Current Output:</span>
-                    <span className="text-xs font-mono font-bold text-white">
-                      {m.current_pods} <span className="text-[9px] font-normal text-zinc-400">pods</span>
+                  <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-950 rounded-md p-2 mb-2.5 border border-zinc-200 dark:border-zinc-800">
+                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Current Output:</span>
+                    <span className="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
+                      {m.current_pods} <span className="text-[10px] font-normal text-zinc-400">pods</span>
                     </span>
                   </div>
 
                   {/* Key Metrics Grid */}
-                  <div className="space-y-1.5 text-[10px] font-mono">
+                  <div className="space-y-1.5 text-[11px] font-mono">
                     {/* Compute Spend */}
-                    <div className="flex items-center justify-between text-zinc-300">
-                      <span className="text-zinc-400 font-sans">Compute Spend:</span>
-                      <span className="font-semibold text-zinc-200">{m.cost}</span>
+                    <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+                      <span className="text-zinc-500 dark:text-zinc-400 font-sans">Compute Spend:</span>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{m.cost}</span>
                     </div>
 
                     {/* Spend Delta vs HPA */}
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-400 font-sans">Delta vs Baseline:</span>
-                      <span className={`font-bold ${
-                        m.isSaving === true ? 'text-emerald-400' :
-                        m.isSaving === false ? 'text-rose-400' : 'text-zinc-400'
+                      <span className="text-zinc-500 dark:text-zinc-400 font-sans">Delta vs Baseline:</span>
+                      <span className={`font-bold tabular-nums ${
+                        m.isSaving === true ? 'text-emerald-600 dark:text-emerald-400' :
+                        m.isSaving === false ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-500'
                       }`}>
                         {m.savedDollars} ({m.savedPct})
                       </span>
                     </div>
 
                     {/* SLA Deficits */}
-                    <div className="flex items-center justify-between text-zinc-300">
-                      <span className="text-zinc-400 font-sans"><Term id="underprovision">Deficit Ticks</Term>:</span>
-                      <span className={`font-bold ${m.deficits === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {m.deficits} {m.deficits === 0 ? '(Zero SLA Risk)' : 'starvation ticks'}
+                    <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+                      <span className="text-zinc-500 dark:text-zinc-400 font-sans"><Term id="underprovision">Deficit Ticks</Term>:</span>
+                      <span className={`font-bold tabular-nums ${m.deficits === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                        {m.deficits} {m.deficits === 0 ? '(Zero SLA Risk)' : 'ticks'}
                       </span>
                     </div>
 
                     {/* Idle Waste */}
-                    <div className="flex items-center justify-between text-zinc-300">
-                      <span className="text-zinc-400 font-sans"><Term id="overprovision">Idle Overhead</Term>:</span>
-                      <span className="text-zinc-300">{m.waste}</span>
+                    <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+                      <span className="text-zinc-500 dark:text-zinc-400 font-sans"><Term id="overprovision">Idle Overhead</Term>:</span>
+                      <span className="text-zinc-800 dark:text-zinc-200 tabular-nums">{m.waste}</span>
                     </div>
 
                     {/* Accuracy */}
-                    <div className="flex items-center justify-between text-zinc-300">
-                      <span className="text-zinc-400 font-sans"><Term id="mape">Forecast Accuracy</Term>:</span>
-                      <span className="text-cyan-300 font-bold">{m.accuracy}</span>
+                    <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+                      <span className="text-zinc-500 dark:text-zinc-400 font-sans"><Term id="mape">Forecast Accuracy</Term>:</span>
+                      <span className="text-zinc-900 dark:text-zinc-100 font-bold tabular-nums">{m.accuracy}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Technical Characteristic */}
-                <div className="mt-2.5 pt-2 border-t border-zinc-800/80 text-[9px] text-zinc-400 leading-tight">
+                <div className="mt-3 pt-2.5 border-t border-zinc-100 dark:border-zinc-800 text-[10px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
                   {m.verdict}
                 </div>
               </div>
@@ -315,9 +310,9 @@ export default function ModelScorecard({ latest }) {
 
       {/* VIEW 2: SIDE-BY-SIDE MATRIX */}
       {activeView === 'matrix' && (
-        <div className="overflow-x-auto relative z-10 rounded-lg border border-zinc-800">
-          <table className="w-full text-[11px] text-left">
-            <thead className="text-[10px] uppercase bg-zinc-900/90 text-zinc-400 font-semibold border-b border-zinc-800">
+        <div className="overflow-x-auto relative z-10 rounded-lg border border-zinc-200 dark:border-zinc-800">
+          <table className="w-full text-xs text-left">
+            <thead className="text-[10px] uppercase bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 font-semibold border-b border-zinc-200 dark:border-zinc-800">
               <tr>
                 <th className="p-2.5">Algorithm</th>
                 <th className="p-2.5 text-center">Output</th>
@@ -329,39 +324,39 @@ export default function ModelScorecard({ latest }) {
                 <th className="p-2.5">Behavioral Characteristic</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/70 font-mono">
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 font-mono text-xs">
               {models.map((m) => (
-                <tr key={m.id} className="hover:bg-zinc-900/50 transition-colors">
-                  <td className="p-2.5 font-sans font-bold flex items-center gap-2 text-white">
+                <tr key={m.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                  <td className="p-2.5 font-sans font-semibold flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
                     <m.icon className={`w-3.5 h-3.5 ${m.iconColor}`} />
                     <span>{m.name}</span>
                   </td>
-                  <td className="p-2.5 text-center font-bold text-zinc-200">
+                  <td className="p-2.5 text-center font-bold text-zinc-800 dark:text-zinc-200 tabular-nums">
                     {m.current_pods} pods
                   </td>
-                  <td className="p-2.5 text-right font-bold text-zinc-200">
+                  <td className="p-2.5 text-right font-bold text-zinc-800 dark:text-zinc-200 tabular-nums">
                     {m.cost}
                   </td>
-                  <td className={`p-2.5 text-right font-bold ${
-                    m.isSaving === true ? 'text-emerald-400' :
-                    m.isSaving === false ? 'text-rose-400' : 'text-zinc-400'
+                  <td className={`p-2.5 text-right font-bold tabular-nums ${
+                    m.isSaving === true ? 'text-emerald-600 dark:text-emerald-400' :
+                    m.isSaving === false ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-500'
                   }`}>
                     {m.savedDollars} ({m.savedPct})
                   </td>
                   <td className="p-2.5 text-center">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                      m.deficits === 0 ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30' : 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      m.deficits === 0 ? 'bg-zinc-100 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 border border-zinc-200 dark:border-zinc-700' : 'bg-zinc-100 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 border border-zinc-200 dark:border-zinc-700'
                     }`}>
                       {m.deficits}
                     </span>
                   </td>
-                  <td className="p-2.5 text-center text-cyan-300 font-bold">
+                  <td className="p-2.5 text-center text-zinc-900 dark:text-zinc-100 font-bold tabular-nums">
                     {m.accuracy}
                   </td>
-                  <td className="p-2.5 text-center text-zinc-400 font-sans text-[10px]">
+                  <td className="p-2.5 text-center text-zinc-500 dark:text-zinc-400 font-sans text-[11px]">
                     {m.leadTime}
                   </td>
-                  <td className="p-2.5 font-sans text-[10px] text-zinc-400">
+                  <td className="p-2.5 font-sans text-[11px] text-zinc-600 dark:text-zinc-400">
                     {m.verdict}
                   </td>
                 </tr>
@@ -375,59 +370,51 @@ export default function ModelScorecard({ latest }) {
       {activeView === 'bars' && (
         <div className="space-y-3 relative z-10 pt-1">
           {/* Bar 1: Forecast Accuracy */}
-          <div className="p-2.5 rounded-lg bg-zinc-900/70 border border-zinc-800">
-            <div className="flex justify-between text-xs font-sans font-bold text-white mb-2">
+          <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <div className="flex justify-between text-xs font-sans font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
               <span className="flex items-center gap-1.5">
                 <Term id="mape">Forecast Accuracy (100% - MAPE Deviation)</Term>
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono">Higher = Closer workload tracking</span>
+              <span className="text-[10px] text-zinc-500 font-mono">Higher = Closer workload tracking</span>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {models.map((m) => (
-                <div key={m.id} className="flex items-center gap-2 text-[10px] font-mono">
-                  <span className="w-28 text-zinc-300 truncate font-sans">{m.name}:</span>
-                  <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
+                <div key={m.id} className="flex items-center gap-2 text-xs font-mono">
+                  <span className="w-28 text-zinc-700 dark:text-zinc-300 truncate font-sans text-[11px]">{m.name}:</span>
+                  <div className="flex-1 h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${
-                        m.id === 'lstm' ? 'bg-purple-500' :
-                        m.id === 'holt_winters' ? 'bg-emerald-500' :
-                        m.id === 'linear' ? 'bg-blue-500' : 'bg-amber-500'
-                      }`}
+                      className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100"
                       style={{ width: m.accuracy }}
                     ></div>
                   </div>
-                  <span className="w-12 text-right font-bold text-white">{m.accuracy}</span>
+                  <span className="w-12 text-right font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">{m.accuracy}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Bar 2: Relative Compute Expenditure */}
-          <div className="p-2.5 rounded-lg bg-zinc-900/70 border border-zinc-800">
-            <div className="flex justify-between text-xs font-sans font-bold text-white mb-2">
+          <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <div className="flex justify-between text-xs font-sans font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
               <span className="flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-purple-400" />
-                <span>Relative Compute Cost & Overhead</span>
+                <DollarSign className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
+                <span>Relative Compute Cost &amp; Overhead</span>
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono">Lower = Less infrastructure expense</span>
+              <span className="text-[10px] text-zinc-500 font-mono">Lower = Less infrastructure expense</span>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {models.map((m) => (
-                <div key={m.id} className="flex items-center gap-2 text-[10px] font-mono">
-                  <span className="w-28 text-zinc-300 truncate font-sans">{m.name}:</span>
-                  <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
+                <div key={m.id} className="flex items-center gap-2 text-xs font-mono">
+                  <span className="w-28 text-zinc-700 dark:text-zinc-300 truncate font-sans text-[11px]">{m.name}:</span>
+                  <div className="flex-1 h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${
-                        m.id === 'lstm' ? 'bg-emerald-500' :
-                        m.id === 'linear' ? 'bg-rose-500' :
-                        m.id === 'holt_winters' ? 'bg-teal-500' : 'bg-amber-500'
-                      }`}
+                      className="h-full rounded-full bg-zinc-700 dark:bg-zinc-300"
                       style={{ width: `${Math.min(100, Math.max(15, (parseFloat(m.cost.replace('$', '')) / (parseFloat(hpaData.cost_dollars) * 1.3 || 1)) * 100))}%` }}
                     ></div>
                   </div>
-                  <span className={`w-28 text-right font-bold ${
-                    m.isSaving === true ? 'text-emerald-400' :
-                    m.isSaving === false ? 'text-rose-400' : 'text-zinc-400'
+                  <span className={`w-28 text-right font-bold tabular-nums ${
+                    m.isSaving === true ? 'text-emerald-600 dark:text-emerald-400' :
+                    m.isSaving === false ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-500'
                   }`}>
                     {m.cost} ({m.savedPct})
                   </span>

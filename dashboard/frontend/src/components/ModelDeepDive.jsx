@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cpu, TrendingUp, Activity, BrainCircuit, Layers, ShieldCheck, Zap, TableProperties } from 'lucide-react';
 import Term from './Term';
+import MathFormula from './MathFormula';
 
 export default function ModelDeepDive() {
   const complexityData = [
@@ -63,12 +64,12 @@ export default function ModelDeepDive() {
       {/* Page Title & Scope */}
       <div>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+          <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
             <Layers className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-wide">Mathematical Formulations & Model Specifications</h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Mathematical Formulations &amp; Model Specifications</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
               Empirical algorithmic specifications, equation derivations, and systems complexity analysis
             </p>
           </div>
@@ -76,74 +77,86 @@ export default function ModelDeepDive() {
       </div>
 
       {/* 1. Central Ensemble Arbiter Formulation */}
-      <div className="bento-card rounded-xl p-5 border border-purple-500/30 bg-gradient-to-r from-purple-950/20 via-zinc-950/80 to-zinc-950/80 relative overflow-hidden">
-        <div className="flex items-center justify-between pb-2 mb-3 border-b border-purple-500/20">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
+        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-purple-400" />
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+            <ShieldCheck className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+            <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
               Ensemble Policy: Asymmetric Upper-Bound Arbiter
             </h3>
           </div>
-          <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-mono font-medium">
-            Zero-Deficit Optimization
+          <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 text-[10px] font-mono font-medium">
+            Zero-Deficit Enforcement
           </span>
         </div>
 
-        <div className="p-3.5 rounded-lg bg-zinc-950 font-mono text-xs text-purple-300 mb-3 border border-purple-500/30 overflow-x-auto shadow-inner text-center">
-          <code>TargetReplicas(t) = clamp( max( R_HPA(t), ŷ_OLS(t), ŷ_HW(t), ŷ_LSTM(t) ), MinPods, MaxPods )</code>
-        </div>
+        <MathFormula
+          tex="\text{TargetReplicas}(t) = \operatorname{clamp}\left( \max\left( R_{\text{HPA}}(t), \; \hat{y}_{\text{OLS}}(t), \; \hat{y}_{\text{HW}}(t), \; \hat{y}_{\text{LSTM}}(t) \right), \; \text{MinPods}, \; \text{MaxPods} \right)"
+          fallback={
+            <div className="flex items-center justify-center flex-wrap gap-1.5 text-xs sm:text-sm font-mono text-zinc-900 dark:text-zinc-100 py-1 tracking-tight">
+              <span>TargetReplicas(t) = clamp( max( R_HPA(t), ŷ_OLS(t), ŷ_HW(t), ŷ_LSTM(t) ), MinPods, MaxPods )</span>
+            </div>
+          }
+          className="mb-4"
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-zinc-300 leading-relaxed">
-          <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
-            <div className="font-bold text-white text-xs mb-1 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+          <div className="p-3.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <div className="font-semibold text-zinc-900 dark:text-zinc-100 text-xs mb-1.5 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               The Asymmetric Cloud Penalty Model
             </div>
-            <p className="text-zinc-400 text-[11px]">
-              In mission-critical cloud infrastructure, the penalty for <strong className="text-rose-300 font-medium">under-provisioning</strong> (SLA violations, queue starvation, HTTP 504 gateway timeouts) dwarfs the marginal cost of <strong className="text-emerald-300 font-medium">transient over-provisioning</strong> ($0.040/pod-hr). PHPA enforces the mathematical upper bound (<code className="text-purple-300 font-mono font-bold">max(...)</code>) to strictly guarantee zero SLA violations during traffic surges.
+            <p className="text-[11px] leading-relaxed">
+              In mission-critical cloud infrastructure, the cost penalty for <strong className="text-zinc-900 dark:text-zinc-200 font-medium">under-provisioning</strong> (SLA violations, queue starvation, HTTP 504 timeouts) dwarfs the marginal cost of <strong className="text-zinc-900 dark:text-zinc-200 font-medium">transient over-provisioning</strong> ($0.040/pod-hr). PHPA enforces the mathematical upper bound (<code className="bg-zinc-200 dark:bg-zinc-800 px-1 py-0.2 rounded font-mono font-semibold text-zinc-900 dark:text-zinc-100">max(...)</code>) to strictly prevent starvation during traffic surges.
             </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/80">
-            <div className="font-bold text-white text-xs mb-1 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+          <div className="p-3.5 rounded-md bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <div className="font-semibold text-zinc-900 dark:text-zinc-100 text-xs mb-1.5 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100"></span>
               Continuous Dynamic Re-arbitration
             </div>
-            <p className="text-zinc-400 text-[11px]">
-              Every 15s Prometheus evaluation step, each model calculates its independent forward recommendation. If the 2-Layer LSTM identifies an inflection signature, its recommendation dominates immediately with 0s scale-up delay; during calm diurnal periods, Holt-Winters and HPA stabilize baseline compute spend without jitter.
+            <p className="text-[11px] leading-relaxed">
+              Every 15s evaluation cycle, each algorithm calculates its independent recommendation. If the Stacked LSTM identifies an inflection signature, its recommendation dominates immediately with 0s scale-up delay; during calm diurnal periods, Holt-Winters and HPA stabilize baseline compute spend without jitter.
             </p>
           </div>
         </div>
       </div>
 
       {/* 2. The 4 Model Formulations Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* 1. Reactive HPA */}
-        <div className="bento-card rounded-xl p-5 border border-amber-500/20 bg-zinc-950/80">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-amber-400" />
-              <h3 className="text-sm font-bold text-white">1. Vanilla Reactive HPA</h3>
+              <Activity className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+              <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">1. Vanilla Reactive HPA</h3>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
               Native Baseline
             </span>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-xs text-amber-300 mb-3 border border-amber-500/20 text-center overflow-x-auto">
-            Target = ⌈ CurrentReplicas × ( CurrentMetric / TargetMetric ) ⌉
-          </div>
+          <MathFormula
+            tex="R_{\text{target}}(t) = \left\lceil R_{\text{current}} \times \frac{\text{CurrentMetric}}{\text{TargetMetric (60\%)}} \right\rceil"
+            fallback={
+              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-mono text-zinc-900 dark:text-zinc-100 py-1">
+                <span>R_target(t) = ⌈ R_current × (CurrentMetric / TargetMetric) ⌉</span>
+              </div>
+            }
+            className="mb-3"
+          />
 
-          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">
             The standard Kubernetes Horizontal Pod Autoscaler algorithm. Evaluates moving-average resource consumption over Prometheus scrape windows and scales proportionally when the target threshold is exceeded.
           </p>
 
           <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-            <div className="p-2 rounded bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
+            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
               ✓ Deterministic baseline<br/>
               ✓ Zero training overhead
             </div>
-            <div className="p-2 rounded bg-rose-950/20 border border-rose-500/20 text-rose-300">
+            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
               ✗ 45s+ Cold-start latency lag<br/>
               ✗ Susceptible to SLA starvation
             </div>
@@ -151,31 +164,38 @@ export default function ModelDeepDive() {
         </div>
 
         {/* 2. Linear Regression */}
-        <div className="bento-card rounded-xl p-5 border border-blue-500/20 bg-zinc-950/80">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-blue-400" />
-              <h3 className="text-sm font-bold text-blue-400">2. Linear Regression (OLS)</h3>
+              <TrendingUp className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+              <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">2. Linear Regression (OLS)</h3>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/30 text-blue-300">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
               First-Order Trend
             </span>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-xs text-blue-300 mb-3 border border-blue-500/20 text-center overflow-x-auto">
-            ŷ(t + lookahead) = β₁ · (t + lookahead) + β₀
-          </div>
+          <MathFormula
+            tex="\hat{y}(t + \tau) = \beta_1 \cdot (t + \tau) + \beta_0, \quad \beta_1 = \frac{\sum (t_i - \bar{t})(y_i - \bar{y})}{\sum (t_i - \bar{t})^2}"
+            fallback={
+              <div className="flex flex-col items-center justify-center gap-1 text-xs sm:text-sm font-mono text-zinc-900 dark:text-zinc-100 py-1">
+                <div>ŷ(t + τ) = β₁ · (t + τ) + β₀</div>
+                <div className="text-[11px] text-zinc-500 dark:text-zinc-400">β₁ = ∑(tᵢ − t̄)(yᵢ − ȳ) / ∑(tᵢ − t̄)²</div>
+              </div>
+            }
+            className="mb-3"
+          />
 
-          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">
             Ordinary Least Squares (OLS) closed-form regression over the sliding window. Calculates first-order velocity (slope β₁) to project steady monotonic traffic ramps into the immediate future.
           </p>
 
           <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-            <div className="p-2 rounded bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
+            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
               ✓ Extremely fast (~1.8ms)<br/>
               ✓ Ideal for constant ramps
             </div>
-            <div className="p-2 rounded bg-rose-950/20 border border-rose-500/20 text-rose-300">
+            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
               ✗ Overshoots transient peaks<br/>
               ✗ High idle allocation overhead
             </div>
@@ -183,33 +203,39 @@ export default function ModelDeepDive() {
         </div>
 
         {/* 3. Holt-Winters */}
-        <div className="bento-card rounded-xl p-5 border border-emerald-500/20 bg-zinc-950/80">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-sm font-bold text-emerald-400">3. Holt-Winters Smoothing</h3>
+              <Cpu className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+              <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">3. Holt-Winters Smoothing</h3>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
               Triple Exponential
             </span>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-[11px] text-emerald-300 mb-3 border border-emerald-500/20 space-y-1 overflow-x-auto">
-            <div>Level:   L_t = α · (Y_t - S_t-m) + (1 - α) · (L_t-1 + b_t-1)</div>
-            <div>Trend:   b_t = β · (L_t - L_t-1) + (1 - β) · b_t-1</div>
-            <div>Season:  S_t = γ · (Y_t - L_t) + (1 - γ) · S_t-m</div>
-          </div>
+          <MathFormula
+            tex="\begin{aligned} L_t &= \alpha (Y_t - S_{t-m}) + (1 - \alpha)(L_{t-1} + b_{t-1}) \\ b_t &= \beta (L_t - L_{t-1}) + (1 - \beta) b_{t-1} \\ S_t &= \gamma (Y_t - L_t) + (1 - \gamma) S_{t-m} \end{aligned}"
+            fallback={
+              <div className="w-full flex flex-col space-y-1.5 text-xs font-mono text-zinc-900 dark:text-zinc-100 py-1">
+                <div>Level (L_t):  L_t = α · (Y_t − S_[t−m]) + (1 − α) · (L_[t−1] + b_[t−1])</div>
+                <div>Trend (b_t):  b_t = β · (L_t − L_[t−1]) + (1 − β) · b_[t−1]</div>
+                <div>Season (S_t): S_t = γ · (Y_t − L_t) + (1 − γ) · S_[t−m]</div>
+              </div>
+            }
+            className="mb-3"
+          />
 
-          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">
             Triple exponential smoothing decomposing workload time-series into level (α), trend (β), and diurnal seasonality (γ) with period m = 24 hours. Highly accurate for predictable business-hour patterns.
           </p>
 
           <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-            <div className="p-2 rounded bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
+            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
               ✓ Optimal for 24h diurnal cycles<br/>
               ✓ Low steady-state compute cost
             </div>
-            <div className="p-2 rounded bg-rose-950/20 border border-rose-500/20 text-rose-300">
+            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
               ✗ Rigid period parameter (m)<br/>
               ✗ Unresponsive to sudden spikes
             </div>
@@ -217,34 +243,41 @@ export default function ModelDeepDive() {
         </div>
 
         {/* 4. Stacked LSTM */}
-        <div className="bento-card rounded-xl p-5 border border-purple-500/30 bg-purple-950/10">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <BrainCircuit className="w-4 h-4 text-purple-400" />
-              <h3 className="text-sm font-bold text-purple-400">4. Stacked LSTM Neural Network</h3>
+              <BrainCircuit className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+              <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">4. Stacked LSTM Neural Network</h3>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
               Recurrent Deep Net
             </span>
           </div>
 
-          <div className="p-3 rounded-lg bg-zinc-950 font-mono text-[11px] text-purple-300 mb-3 border border-purple-500/20 space-y-1 overflow-x-auto">
-            <div>f_t = σ( W_f · [h_t-1, x_t] + b_f )  (Forget Gate)</div>
-            <div>i_t = σ( W_i · [h_t-1, x_t] + b_i )  (Input Gate)</div>
-            <div>C_t = f_t ⊙ C_t-1 + i_t ⊙ tanh( W_c · [h_t-1, x_t] + b_c )</div>
-            <div>h_t = σ( W_o · [h_t-1, x_t] + b_o ) ⊙ tanh( C_t )</div>
-          </div>
+          <MathFormula
+            tex="\begin{aligned} f_t &= \sigma(W_f \cdot [h_{t-1}, x_t] + b_f) \\ i_t &= \sigma(W_i \cdot [h_{t-1}, x_t] + b_i) \\ \tilde{C}_t &= \tanh(W_c \cdot [h_{t-1}, x_t] + b_c) \\ C_t &= f_t \odot C_{t-1} + i_t \odot \tilde{C}_t \\ h_t &= \sigma(W_o \cdot [h_{t-1}, x_t] + b_o) \odot \tanh(C_t) \end{aligned}"
+            fallback={
+              <div className="w-full flex flex-col space-y-1 text-xs font-mono text-zinc-900 dark:text-zinc-100 py-1">
+                <div>Forget Gate: f_t = σ(W_f · [h_[t−1], x_t] + b_f)</div>
+                <div>Input Gate:  i_t = σ(W_i · [h_[t−1], x_t] + b_i)</div>
+                <div>Candidate:   C̃_t = tanh(W_c · [h_[t−1], x_t] + b_c)</div>
+                <div>Cell State:  C_t = f_t ⊙ C_[t−1] + i_t ⊙ C̃_t</div>
+                <div>Hidden Out:  h_t = σ(W_o · [h_[t−1], x_t] + b_o) ⊙ tanh(C_t)</div>
+              </div>
+            }
+            className="mb-3"
+          />
 
-          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">
             2-layer stacked PyTorch LSTM (64 hidden units per layer) with Constant Error Carousels. Retains multi-hour temporal context while detecting higher-order acceleration curvature to pre-warm pods before queue saturation.
           </p>
 
           <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-            <div className="p-2 rounded bg-emerald-950/20 border border-emerald-500/20 text-emerald-300">
+            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
               ✓ Captures non-linear surge curves<br/>
               ✓ Eliminates cold-start latency spikes
             </div>
-            <div className="p-2 rounded bg-amber-950/20 border border-amber-500/20 text-amber-300">
+            <div className="p-2 rounded bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300">
               ⚠ Requires sequence window (T)<br/>
               ⚠ Offline training recommended
             </div>
@@ -253,20 +286,20 @@ export default function ModelDeepDive() {
       </div>
 
       {/* 3. Algorithmic Complexity & Systems Trade-off Matrix */}
-      <div className="bento-card rounded-xl p-5 border border-zinc-800/90 bg-zinc-950/90">
-        <div className="flex items-center justify-between pb-2.5 mb-4 border-b border-zinc-800">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center gap-2">
-            <TableProperties className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-sm font-bold text-white">Algorithmic Complexity & Systems Trade-off Matrix</h3>
+            <TableProperties className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+            <h3 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100">Algorithmic Complexity &amp; Systems Trade-off Matrix</h3>
           </div>
-          <span className="text-[10px] font-mono text-zinc-400">
+          <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400">
             Empirical Architecture Comparison
           </span>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
-          <table className="w-full text-[11px] text-left">
-            <thead className="text-[10px] uppercase bg-zinc-900 text-zinc-400 font-semibold border-b border-zinc-800">
+        <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+          <table className="w-full text-xs text-left">
+            <thead className="text-[10px] uppercase bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 font-semibold border-b border-zinc-200 dark:border-zinc-800">
               <tr>
                 <th className="p-3">Model</th>
                 <th className="p-3">Inference Latency</th>
@@ -277,34 +310,28 @@ export default function ModelDeepDive() {
                 <th className="p-3">Scrape Horizon</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/70 font-mono">
+            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 font-mono text-xs">
               {complexityData.map((row, idx) => {
                 const Icon = row.icon;
                 return (
-                  <tr key={idx} className="hover:bg-zinc-900/40 transition-colors">
-                    <td className="p-3 font-sans font-bold flex items-center gap-2 text-white">
-                      <Icon className={`w-3.5 h-3.5 ${row.iconColor}`} />
+                  <tr key={idx} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                    <td className="p-3 font-sans font-semibold flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                      <Icon className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
                       <div>
                         <div>{row.name}</div>
-                        <div className="text-[9px] text-zinc-500 font-normal">{row.category}</div>
+                        <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">{row.category}</div>
                       </div>
                     </td>
-                    <td className="p-3 text-cyan-300 font-bold">{row.infLatency}</td>
-                    <td className="p-3 text-zinc-300">{row.timeComplexity}</td>
-                    <td className="p-3 text-zinc-300">{row.memory}</td>
+                    <td className="p-3 text-zinc-900 dark:text-zinc-100 font-bold tabular-nums">{row.infLatency}</td>
+                    <td className="p-3 text-zinc-700 dark:text-zinc-300">{row.timeComplexity}</td>
+                    <td className="p-3 text-zinc-700 dark:text-zinc-300">{row.memory}</td>
                     <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-sans font-medium ${
-                        row.name === 'Stacked LSTM'
-                          ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40'
-                          : row.name === 'Reactive HPA'
-                          ? 'bg-rose-950/80 text-rose-300 border border-rose-500/40'
-                          : 'bg-zinc-800 text-zinc-300 border border-zinc-700'
-                      }`}>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-sans font-medium bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
                         {row.coldStart}
                       </span>
                     </td>
-                    <td className="p-3 font-sans text-zinc-300">{row.seasonality}</td>
-                    <td className="p-3 text-zinc-400">{row.promqlWindow}</td>
+                    <td className="p-3 font-sans text-zinc-700 dark:text-zinc-300">{row.seasonality}</td>
+                    <td className="p-3 text-zinc-500 dark:text-zinc-400">{row.promqlWindow}</td>
                   </tr>
                 );
               })}

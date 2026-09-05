@@ -191,7 +191,7 @@ export default function Term({ id, children, className = '' }) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span className="border-b border-dotted border-zinc-400/70 hover:border-purple-400 hover:text-purple-200 transition-colors">
+        <span className="border-b border-dotted border-zinc-400/70 hover:border-zinc-900 dark:hover:border-zinc-100 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
           {children}
         </span>
       </span>
@@ -227,39 +227,39 @@ export default function Term({ id, children, className = '' }) {
                     scale: 0.95,
                   }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="w-[330px] max-w-[calc(100vw-24px)] p-3 rounded-xl bg-zinc-900/98 backdrop-blur-xl border border-zinc-700/90 shadow-[0_16px_40px_rgba(0,0,0,0.85)] text-left text-xs relative overflow-hidden"
+                  className="w-[330px] max-w-[calc(100vw-24px)] p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl text-left text-xs relative overflow-hidden"
                 >
                   {/* Header: Title + Category Badge with robust flex clamping */}
-                  <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-800/80">
-                    <div className="flex items-center gap-1.5 font-bold text-white text-[11.5px] min-w-0 flex-1">
-                      <Info className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-zinc-100 text-[11.5px] min-w-0 flex-1">
+                      <Info className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300 shrink-0" />
                       <span className="truncate" title={info.term}>{info.term}</span>
                     </div>
-                    <span className="text-[8.5px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase shrink-0 font-semibold tracking-wide whitespace-nowrap">
+                    <span className="text-[8.5px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 uppercase shrink-0 font-semibold tracking-wide whitespace-nowrap">
                       {info.category}
                     </span>
                   </div>
 
                   {/* Definition */}
-                  <p className="text-zinc-300 text-[11px] leading-relaxed mb-2.5">
+                  <p className="text-zinc-600 dark:text-zinc-300 text-[11px] leading-relaxed mb-2.5">
                     {info.definition}
                   </p>
 
                   {/* Significance in Autoscaling */}
-                  <div className="p-2.5 rounded-lg bg-zinc-950/90 border border-zinc-800 text-[10px] text-zinc-400 leading-snug">
-                    <strong className="text-zinc-200 font-semibold">Autoscaling Impact:</strong>{' '}
+                  <div className="p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                    <strong className="text-zinc-800 dark:text-zinc-200 font-semibold">Autoscaling Impact:</strong>{' '}
                     {info.significance}
                   </div>
 
                   {/* Pointer arrow with matching border and background */}
                   {coords.placement === 'top' ? (
                     <div
-                      className="absolute top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-zinc-700/90"
+                      className="absolute top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-zinc-200 dark:border-t-zinc-800"
                       style={{ left: `${coords.arrowLeft}px`, transform: 'translateX(-50%)' }}
                     />
                   ) : (
                     <div
-                      className="absolute bottom-full w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-zinc-700/90"
+                      className="absolute bottom-full w-0 h-0 border-x-4 border-x-transparent border-b-4 border-b-zinc-200 dark:border-b-zinc-800"
                       style={{ left: `${coords.arrowLeft}px`, transform: 'translateX(-50%)' }}
                     />
                   )}
