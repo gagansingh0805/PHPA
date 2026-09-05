@@ -1060,33 +1060,36 @@ export default function App() {
               aria-checked={theme === 'dark'}
               onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
               title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-              className="relative inline-flex h-7 w-13 sm:w-14 items-center rounded-full p-0.5 transition-colors duration-300 focus:outline-none bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 shadow-inner cursor-pointer flex-shrink-0"
+              className="relative inline-flex h-[30px] w-14 items-center justify-between p-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 shadow-inner cursor-pointer select-none flex-shrink-0 transition-colors duration-200 appearance-none outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+              style={{ borderRadius: '9999px' }}
             >
               <span className="sr-only">Toggle theme</span>
 
-              {/* Sun Track Icon (Left) */}
-              <span className="absolute left-1.5 flex items-center justify-center text-amber-500 transition-opacity duration-200 pointer-events-none">
+              {/* Sliding Pill Indicator */}
+              <span
+                aria-hidden="true"
+                className={`absolute top-0.5 bottom-0.5 left-0.5 w-6 h-6 rounded-full bg-white dark:bg-zinc-950 shadow-sm border border-zinc-200/80 dark:border-zinc-700 transition-transform duration-200 ease-out pointer-events-none ${
+                  theme === 'dark' ? 'translate-x-[26px]' : 'translate-x-0'
+                }`}
+                style={{ borderRadius: '9999px' }}
+              />
+
+              {/* Sun Slot (Left) */}
+              <span
+                className={`relative z-10 w-6 h-6 flex items-center justify-center transition-colors duration-200 pointer-events-none ${
+                  theme === 'dark' ? 'text-zinc-400 dark:text-zinc-500' : 'text-amber-500'
+                }`}
+              >
                 <Sun className="w-3.5 h-3.5" />
               </span>
 
-              {/* Moon Track Icon (Right) */}
-              <span className="absolute right-1.5 flex items-center justify-center text-zinc-400 dark:text-zinc-300 transition-opacity duration-200 pointer-events-none">
-                <Moon className="w-3.5 h-3.5" />
-              </span>
-
-              {/* Sliding Circular Thumb */}
+              {/* Moon Slot (Right) */}
               <span
-                className={`inline-flex h-5.5 w-5.5 rounded-full shadow-md transform transition-transform duration-300 ease-in-out z-10 items-center justify-center ${
-                  theme === 'dark'
-                    ? 'translate-x-6 sm:translate-x-7 bg-zinc-950 text-zinc-100 border border-zinc-700'
-                    : 'translate-x-0.5 bg-white text-amber-500 border border-zinc-200'
+                className={`relative z-10 w-6 h-6 flex items-center justify-center transition-colors duration-200 pointer-events-none ${
+                  theme === 'dark' ? 'text-zinc-100' : 'text-zinc-400 dark:text-zinc-500'
                 }`}
               >
-                {theme === 'dark' ? (
-                  <Moon className="w-3 h-3 text-zinc-100" />
-                ) : (
-                  <Sun className="w-3 h-3 text-amber-500" />
-                )}
+                <Moon className="w-3.5 h-3.5" />
               </span>
             </button>
 
