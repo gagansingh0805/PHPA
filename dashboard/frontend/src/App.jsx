@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import HomeOverview from './components/HomeOverview';
-const Hero3D = lazy(() => import('./components/Hero3D'));
+import Hero3D from './components/Hero3D';
 import LSTMAttribution from './components/LSTMAttribution';
 import ModelDeepDive from './components/ModelDeepDive';
 import PipelineViewer from './components/PipelineViewer';
@@ -1015,30 +1015,22 @@ export default function App() {
 
   if (isLandingPage) {
     return (
-      <Suspense
-        fallback={
-          <div className="w-screen h-screen bg-black flex items-center justify-center text-white font-mono text-xs">
-            Initializing 3D Cluster Environment...
-          </div>
-        }
-      >
-        <Hero3D
-          theme={theme}
-          onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-          onLaunchLab={() => {
-            setIsLandingPage(false);
-            setActiveTab('lab');
-          }}
-          onExplorePipeline={() => {
-            setIsLandingPage(false);
-            setActiveTab('pipeline');
-          }}
-          onOpenOverview={() => {
-            setIsLandingPage(false);
-            setActiveTab('overview');
-          }}
-        />
-      </Suspense>
+      <Hero3D
+        theme={theme}
+        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        onLaunchLab={() => {
+          setIsLandingPage(false);
+          setActiveTab('lab');
+        }}
+        onExplorePipeline={() => {
+          setIsLandingPage(false);
+          setActiveTab('pipeline');
+        }}
+        onOpenOverview={() => {
+          setIsLandingPage(false);
+          setActiveTab('overview');
+        }}
+      />
     );
   }
 

@@ -3,11 +3,11 @@ import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import { Play, Layers, ArrowUpRight, BookOpen, Sun, Moon, Sparkles, LayoutDashboard } from 'lucide-react';
+import { Play, Layers, ArrowUpRight, BookOpen, Sun, Moon, Sparkles } from 'lucide-react';
 import PhpaLogo from './PhpaLogo';
 
 /* =========================================================================
-   1. Central "Electron Cluster" Mesh: Core + Wireframe Lattice + Orbital Rings
+   1. Central "Electron Cluster" Mesh (Declarative R3F Materials)
    ========================================================================= */
 function ClusterCore({ isMobile, isDark }) {
   const coreRef = useRef();
@@ -16,53 +16,22 @@ function ClusterCore({ isMobile, isDark }) {
   const ring2Ref = useRef();
   const ring3Ref = useRef();
 
-  // Create procedural geometries and dynamic black/white materials
-  const { coreGeo, wireGeo, ringGeo, coreMat, wireMat, ringMat } = useMemo(() => {
-    const cg = new THREE.IcosahedronGeometry(1.35, 0);
-    const wg = new THREE.IcosahedronGeometry(1.95, 1);
-    const rg = new THREE.TorusGeometry(2.6, 0.012, 16, 100);
+  // Geometries are created ONCE and never re-allocated
+  const { coreGeo, wireGeo, ringGeo } = useMemo(() => {
+    return {
+      coreGeo: new THREE.IcosahedronGeometry(1.35, 0),
+      wireGeo: new THREE.IcosahedronGeometry(1.95, 1),
+      ringGeo: new THREE.TorusGeometry(2.6, 0.012, 16, 100),
+    };
+  }, []);
 
-    // Dark mode: deep obsidian core with white wireframe & glowing silver
-    // Light mode: clean platinum core with pitch black wireframe & charcoal rings
-    const cm = new THREE.MeshStandardMaterial({
-      color: isDark ? '#111217' : '#e4e4e7',
-      emissive: isDark ? '#ffffff' : '#09090b',
-      emissiveIntensity: isDark ? 0.08 : 0.02,
-      roughness: isDark ? 0.2 : 0.35,
-      metalness: isDark ? 0.9 : 0.2,
-      wireframe: false,
-    });
-
-    const wm = new THREE.MeshStandardMaterial({
-      color: isDark ? '#ffffff' : '#09090b',
-      emissive: isDark ? '#ffffff' : '#18181b',
-      emissiveIntensity: isDark ? 1.0 : 0.05,
-      wireframe: true,
-      transparent: true,
-      opacity: isDark ? 0.9 : 0.85,
-    });
-
-    const rm = new THREE.MeshBasicMaterial({
-      color: isDark ? '#ffffff' : '#09090b',
-      wireframe: true,
-      transparent: true,
-      opacity: isDark ? 0.35 : 0.25,
-    });
-
-    return { coreGeo: cg, wireGeo: wg, ringGeo: rg, coreMat: cm, wireMat: wm, ringMat: rm };
-  }, [isDark]);
-
-  // Clean up WebGL resources
   useEffect(() => {
     return () => {
       coreGeo.dispose();
       wireGeo.dispose();
       ringGeo.dispose();
-      coreMat.dispose();
-      wireMat.dispose();
-      ringMat.dispose();
     };
-  }, [coreGeo, wireGeo, ringGeo, coreMat, wireMat, ringMat]);
+  }, [coreGeo, wireGeo, ringGeo]);
 
   useFrame((_, delta) => {
     if (coreRef.current) {
@@ -90,16 +59,54 @@ function ClusterCore({ isMobile, isDark }) {
   return (
     <group>
       {/* Solid nucleus */}
-      <mesh ref={coreRef} geometry={coreGeo} material={coreMat} />
+      <mesh ref={coreRef} geometry={coreGeo}>
+        <meshStandardMaterial
+          color={isDark ? '#111217' : '#e4e4e7'}
+          emissive={isDark ? '#ffffff' : '#09090b'}
+          emissiveIntensity={isDark ? 0.08 : 0.02}
+          roughness={isDark ? 0.2 : 0.35}
+          metalness={isDark ? 0.9 : 0.2}
+        />
+      </mesh>
 
       {/* Wireframe lattice */}
-      <mesh ref={wireframeRef} geometry={wireGeo} material={wireMat} />
+      <mesh ref={wireframeRef} geometry={wireGeo}>
+        <meshStandardMaterial
+          color={isDark ? '#ffffff' : '#09090b'}
+          emissive={isDark ? '#ffffff' : '#18181b'}
+          emissiveIntensity={isDark ? 0.9 : 0.05}
+          wireframe
+          transparent
+          opacity={isDark ? 0.9 : 0.85}
+        />
+      </mesh>
 
       {/* Latitudinal electron orbital coordinate rings */}
-      <mesh ref={ring1Ref} geometry={ringGeo} material={ringMat} rotation={[Math.PI / 4, 0, 0]} />
-      <mesh ref={ring2Ref} geometry={ringGeo} material={ringMat} rotation={[-Math.PI / 3, Math.PI / 6, 0]} />
+      <mesh ref={ring1Ref} geometry={ringGeo} rotation={[Math.PI / 4, 0, 0]}>
+        <meshBasicMaterial
+          color={isDark ? '#ffffff' : '#09090b'}
+          wireframe
+          transparent
+          opacity={isDark ? 0.35 : 0.25}
+        />
+      </mesh>
+      <mesh ref={ring2Ref} geometry={ringGeo} rotation={[-Math.PI / 3, Math.PI / 6, 0]}>
+        <meshBasicMaterial
+          color={isDark ? '#ffffff' : '#09090b'}
+          wireframe
+          transparent
+          opacity={isDark ? 0.35 : 0.25}
+        />
+      </mesh>
       {!isMobile && (
-        <mesh ref={ring3Ref} geometry={ringGeo} material={ringMat} rotation={[0, Math.PI / 3, Math.PI / 4]} />
+        <mesh ref={ring3Ref} geometry={ringGeo} rotation={[0, Math.PI / 3, Math.PI / 4]}>
+          <meshBasicMaterial
+            color={isDark ? '#ffffff' : '#09090b'}
+            wireframe
+            transparent
+            opacity={isDark ? 0.35 : 0.25}
+          />
+        </mesh>
       )}
     </group>
   );
@@ -131,26 +138,13 @@ function PodField({ count = 200, isDark }) {
     return data;
   }, [count, isDark]);
 
-  const { sphereGeo, sphereMat } = useMemo(() => {
-    const sg = new THREE.SphereGeometry(1, 10, 10);
-    const sm = new THREE.MeshStandardMaterial({
-      color: isDark ? '#ffffff' : '#09090b',
-      emissive: isDark ? '#ffffff' : '#18181b',
-      emissiveIntensity: isDark ? 2.0 : 0.05,
-      roughness: isDark ? 0.15 : 0.4,
-      metalness: isDark ? 0.95 : 0.1,
-    });
-    return { sphereGeo: sg, sphereMat: sm };
-  }, [isDark]);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 10, 10), []);
 
   useEffect(() => {
-    return () => {
-      sphereGeo.dispose();
-      sphereMat.dispose();
-    };
-  }, [sphereGeo, sphereMat]);
+    return () => sphereGeo.dispose();
+  }, [sphereGeo]);
 
-  // Set instance colors
+  // Update instance colors
   useEffect(() => {
     if (!meshRef.current) return;
     const tempColor = new THREE.Color();
@@ -183,12 +177,20 @@ function PodField({ count = 200, isDark }) {
   });
 
   return (
-    <instancedMesh ref={meshRef} args={[sphereGeo, sphereMat, count]} />
+    <instancedMesh ref={meshRef} args={[sphereGeo, null, count]}>
+      <meshStandardMaterial
+        color={isDark ? '#ffffff' : '#09090b'}
+        emissive={isDark ? '#ffffff' : '#18181b'}
+        emissiveIntensity={isDark ? 1.8 : 0.05}
+        roughness={isDark ? 0.15 : 0.4}
+        metalness={isDark ? 0.95 : 0.1}
+      />
+    </instancedMesh>
   );
 }
 
 /* =========================================================================
-   3. Main 3D Scene Controller (Parallax + Rotation)
+   3. Main 3D Scene Controller
    ========================================================================= */
 function SceneContent({ isMobile, isDark, mousePosRef }) {
   const mainGroupRef = useRef();
@@ -217,7 +219,7 @@ function SceneContent({ isMobile, isDark, mousePosRef }) {
       {/* Central Wireframe Nucleus & Orbitals */}
       <ClusterCore isMobile={isMobile} isDark={isDark} />
 
-      {/* Orbiting Electrons Particle Field: 200 on desktop, 50 on mobile */}
+      {/* Orbiting Electrons Particle Field */}
       <PodField count={isMobile ? 50 : 200} isDark={isDark} />
     </group>
   );
@@ -233,11 +235,10 @@ export default function Hero3D({
   onExplorePipeline,
   onOpenOverview,
 }) {
-  const containerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
   const isDark = theme === 'dark';
 
-  // Mouse normalized [-1, 1] tracking
+  // Mouse normalized [-1, 1] tracking across window
   const mousePosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -249,19 +250,20 @@ export default function Hero3D({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleMouseMove = (e) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-    mousePosRef.current = { x, y };
-  };
+  // Global window listener for parallax (never blocked by HTML overlays)
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = -(e.clientY / window.innerHeight) * 2 + 1;
+      mousePosRef.current = { x, y };
+    };
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, []);
 
   return (
-    <main
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      className={`relative w-screen h-screen min-h-screen overflow-hidden select-none flex flex-col justify-between transition-colors duration-300 ${
+    <div
+      className={`relative w-screen h-screen min-h-screen overflow-hidden flex flex-col justify-between transition-colors duration-300 ${
         isDark ? 'bg-[#000000] text-white' : 'bg-[#fafafa] text-zinc-950'
       }`}
       style={{
@@ -270,10 +272,11 @@ export default function Hero3D({
           : 'radial-gradient(circle at 50% 50%, #ffffff 0%, #f4f4f6 70%, #e9e9ee 100%)',
       }}
     >
-      {/* 3D WebGL Canvas Viewport filling 100% of the screen */}
-      <div className="absolute inset-0 z-0 pointer-events-auto">
+      {/* 3D WebGL Canvas Viewport filling 100% of the screen (pointer-events: none so it never steals clicks) */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <Canvas
-          dpr={[1, 2]} // Performance capped
+          dpr={[1, 2]}
+          style={{ pointerEvents: 'none' }}
           gl={{
             antialias: !isMobile,
             powerPreference: 'high-performance',
@@ -295,11 +298,11 @@ export default function Hero3D({
             mousePosRef={mousePosRef}
           />
 
-          {/* Subtle White Ethereal Bloom (Dark mode only) */}
-          {isDark && !isMobile && (
+          {/* Subtle White Ethereal Bloom (Always mounted, modulated by intensity) */}
+          {!isMobile && (
             <EffectComposer multisampling={0}>
               <Bloom
-                intensity={0.7}
+                intensity={isDark ? 0.65 : 0}
                 luminanceThreshold={0.4}
                 luminanceSmoothing={0.8}
                 mipmapBlur
@@ -309,8 +312,8 @@ export default function Hero3D({
         </Canvas>
       </div>
 
-      {/* Top Brand Navigation Bar */}
-      <header className="relative z-20 w-full px-5 sm:px-8 py-4 flex items-center justify-between pointer-events-auto">
+      {/* Top Brand Navigation Bar (High Z-Index, Pointer Events Auto) */}
+      <header className="relative z-30 w-full px-5 sm:px-8 py-4 flex items-center justify-between pointer-events-auto">
         <div className="flex items-center gap-3">
           <PhpaLogo size="sm" />
           <div className="flex items-center gap-2">
@@ -337,7 +340,11 @@ export default function Hero3D({
               type="button"
               role="switch"
               aria-checked={isDark}
-              onClick={onToggleTheme}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleTheme();
+              }}
               title={`Switch to ${isDark ? 'White / Light' : 'Black / Dark'} mode`}
               className={`relative inline-flex items-center rounded-full p-[2px] cursor-pointer transition-colors duration-200 border shadow-inner ${
                 isDark
@@ -387,10 +394,10 @@ export default function Hero3D({
         </div>
       </header>
 
-      {/* Center Hero Standalone Overlay */}
-      <section className="relative z-10 max-w-4xl mx-auto px-6 text-center pointer-events-none space-y-6 my-auto">
+      {/* Center Hero Standalone Overlay (High Z-Index, Full Pointer Events) */}
+      <section className="relative z-30 max-w-4xl mx-auto px-6 text-center space-y-6 my-auto pointer-events-auto">
         {/* Architectural Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] sm:text-xs font-mono tracking-wider backdrop-blur-md shadow-sm pointer-events-auto transition-colors">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] sm:text-xs font-mono tracking-wider backdrop-blur-md shadow-sm transition-colors">
           <span className={`w-2 h-2 rounded-full animate-ping ${isDark ? 'bg-white' : 'bg-black'}`} />
           <span className={isDark ? 'text-zinc-300' : 'text-zinc-700'}>
             AUTONOMOUS KUBERNETES AUTOSCALER
@@ -418,10 +425,15 @@ export default function Hero3D({
         </p>
 
         {/* High-Contrast Interactive Call-To-Action Buttons */}
-        <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4 pointer-events-auto">
+        <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4 relative z-40">
           {/* Primary CTA: Launch Live Simulation Lab */}
           <button
-            onClick={onLaunchLab}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onLaunchLab) onLaunchLab();
+            }}
             className={`group flex items-center gap-2.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-200 cursor-pointer font-mono tracking-tight shadow-xl hover:scale-105 active:scale-95 ${
               isDark
                 ? 'bg-white text-black hover:bg-zinc-200 shadow-white/10'
@@ -435,7 +447,12 @@ export default function Hero3D({
           {/* Secondary CTA: 3D Pipeline Architecture */}
           {onExplorePipeline && (
             <button
-              onClick={onExplorePipeline}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onExplorePipeline();
+              }}
               className={`flex items-center gap-2 px-5 py-3.5 rounded-xl border font-semibold text-xs sm:text-sm transition-all duration-200 backdrop-blur-md cursor-pointer font-mono hover:scale-105 active:scale-95 shadow-sm ${
                 isDark
                   ? 'bg-zinc-900/80 hover:bg-zinc-800 border-zinc-700 text-zinc-200 hover:border-white'
@@ -450,7 +467,12 @@ export default function Hero3D({
           {/* Tertiary CTA: Research Brief */}
           {onOpenOverview && (
             <button
-              onClick={onOpenOverview}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onOpenOverview();
+              }}
               className={`flex items-center gap-2 px-4 py-3.5 rounded-xl border font-medium text-xs sm:text-sm transition-all duration-200 backdrop-blur-sm cursor-pointer font-mono ${
                 isDark
                   ? 'bg-zinc-950/40 hover:bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
@@ -465,7 +487,7 @@ export default function Hero3D({
       </section>
 
       {/* Bottom Telemetry & Interaction Footer */}
-      <footer className="relative z-20 w-full px-5 sm:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono pointer-events-auto">
+      <footer className="relative z-30 w-full px-5 sm:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono pointer-events-auto">
         <div className={`flex items-center gap-2 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
           <span className={`w-2 h-2 rounded-full ${isDark ? 'bg-white' : 'bg-black'}`} />
           <span>200 Electron Pods In Orbit</span>
@@ -479,6 +501,6 @@ export default function Hero3D({
           <span>Move cursor to tilt 3D field</span>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
