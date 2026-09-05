@@ -1,8 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ShieldAlert, Cpu, Sparkles, Server, CheckCircle2, TrendingUp, Layers } from 'lucide-react';
+import { ArrowRight, ShieldAlert, Cpu, Sparkles, Server, CheckCircle2, TrendingUp, Layers, ChevronDown } from 'lucide-react';
 
-export default function HomeOverview({ onLaunchLab }) {
+export default function HomeOverview({ onLaunchLab, onNavigateTab }) {
+  const handleScrollToHowItWorks = (e) => {
+    if (e) e.preventDefault();
+    const el = document.getElementById('problem-comparison');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Hero Section */}
@@ -33,18 +41,21 @@ export default function HomeOverview({ onLaunchLab }) {
               <ArrowRight className="w-3.5 h-3.5" />
             </motion.button>
 
-            <a
-              href="#problem-comparison"
-              className="px-4 py-2.5 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors"
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={handleScrollToHowItWorks}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors"
             >
-              How It Works
-            </a>
+              <span>How It Works</span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+            </motion.button>
           </div>
         </div>
       </section>
 
       {/* The Core Problem: Reactive Lag vs. Proactive Scaling */}
-      <section id="problem-comparison" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <section id="problem-comparison" className="scroll-mt-16 grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Card 1: The Reactive Problem */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
           <div className="flex items-center gap-2 text-zinc-800 dark:text-zinc-200 font-semibold text-xs uppercase tracking-wider mb-2">
@@ -156,6 +167,30 @@ export default function HomeOverview({ onLaunchLab }) {
             </p>
           </div>
         </div>
+
+        {/* Quick jump to Pipeline and Models */}
+        {onNavigateTab && (
+          <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+            <div>
+              <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Explore the Full Autoscaler Architecture</h4>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Inspect the 3D isometric pipeline canvas or dive into mathematical derivations.</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => onNavigateTab('pipeline')}
+                className="px-3 py-1.5 rounded-md text-xs font-semibold bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:opacity-90 transition-opacity shadow-sm"
+              >
+                3D Pipeline Architecture
+              </button>
+              <button
+                onClick={() => onNavigateTab('models')}
+                className="px-3 py-1.5 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border border-zinc-200 dark:border-zinc-700"
+              >
+                Mathematical Theory
+              </button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

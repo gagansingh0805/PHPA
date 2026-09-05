@@ -1107,7 +1107,7 @@ export default function App() {
             {/* TAB 0: RESEARCH OVERVIEW */}
           {activeTab === 'overview' && (
             <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
-              <HomeOverview onLaunchLab={() => setActiveTab('lab')} />
+              <HomeOverview onLaunchLab={() => setActiveTab('lab')} onNavigateTab={setActiveTab} />
             </div>
           )}
 
