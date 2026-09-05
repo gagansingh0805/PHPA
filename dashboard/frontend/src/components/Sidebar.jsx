@@ -96,28 +96,28 @@ export default function Sidebar({
                   setActiveTab(item.id);
                   if (isMobile && onMobileClose) onMobileClose();
                 }}
-                className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all duration-150 focus:outline-none focus:ring-0 ${
+                className={`group relative w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all duration-150 focus:outline-none focus:ring-0 ${
                   isActive
-                    ? 'bg-zinc-100 dark:bg-zinc-850 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-700/70 shadow-xs font-medium'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 border border-transparent'
+                    ? 'bg-zinc-900 text-white border border-zinc-900 shadow-sm dark:bg-zinc-850 dark:text-white dark:border-zinc-700/80 font-medium'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900/60 border border-transparent'
                 }`}
               >
                 {/* Active Indicator Bar on Left */}
                 {isActive && (
-                  <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 bg-zinc-900 dark:bg-zinc-100 rounded-full" />
+                  <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 bg-white dark:bg-zinc-100 rounded-full" />
                 )}
                 <Icon
                   className={`w-4 h-4 flex-shrink-0 transition-colors ${
                     isActive
-                      ? 'text-zinc-900 dark:text-zinc-100 ml-1'
-                      : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
+                      ? 'text-white dark:text-zinc-100 ml-1'
+                      : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-200'
                   }`}
                 />
                 <div className="min-w-0 flex-1">
                   <div
                     className={`text-xs tracking-tight ${
                       isActive
-                        ? 'font-semibold text-zinc-900 dark:text-white'
+                        ? 'font-semibold text-white dark:text-white'
                         : 'font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100'
                     }`}
                   >
@@ -126,8 +126,8 @@ export default function Sidebar({
                   <div
                     className={`text-[10.5px] truncate leading-tight mt-0.5 ${
                       isActive
-                        ? 'text-zinc-500 dark:text-zinc-400'
-                        : 'text-zinc-400 dark:text-zinc-500'
+                        ? 'text-zinc-300 dark:text-zinc-400'
+                        : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-400'
                     }`}
                   >
                     {item.desc}

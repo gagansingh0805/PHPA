@@ -1303,15 +1303,20 @@ export default function PipelineViewer({
                   setProbeHop(wp.id);
                   setProbeProgress(0.5);
                 }}
-                className={`px-2 py-1 rounded-md transition-all flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 font-medium ${
                   isActive
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-bold border border-zinc-900 dark:border-zinc-700 shadow-sm'
+                    ? wp.id >= 5
+                      ? 'bg-emerald-600 text-white font-bold border border-emerald-500 shadow-md ring-2 ring-emerald-500/30'
+                      : 'bg-amber-500 text-white font-bold border border-amber-600 shadow-md ring-2 ring-amber-500/30'
                     : isPassed
                     ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700'
-                    : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-500 border border-zinc-200 dark:border-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-200'
+                    : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-500 border border-zinc-200 dark:border-zinc-800 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900'
                 }`}
               >
-                <span>{wp.id}.</span>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                )}
+                <span className={isActive ? 'font-bold' : ''}>{wp.id}.</span>
                 <span>{wp.title.split('. ')[1]}</span>
               </button>
             );
@@ -1363,6 +1368,24 @@ export default function PipelineViewer({
             </span>
             <span className="hidden sm:inline text-zinc-400">•</span>
             <span className="hidden sm:inline">Drag to Orbit / Scroll to Zoom / Click Nodes to Inspect</span>
+          </div>
+        )}
+
+        {/* Top-Center Active Stage Announcement Pill */}
+        {probeHop > 0 && currentWaypoint && (
+          <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-zinc-900/90 text-white dark:bg-zinc-900/95 dark:text-zinc-100 border border-amber-500/50 dark:border-amber-400/40 px-3 py-1 rounded-full text-[11px] font-mono shadow-lg backdrop-blur-md">
+            <span className={`w-2 h-2 rounded-full ${probeHop >= 5 ? 'bg-emerald-400' : 'bg-amber-400'} animate-ping`} />
+            <span className={`font-bold ${probeHop >= 5 ? 'text-emerald-400' : 'text-amber-400'}`}>
+              HOP {probeHop}/6
+            </span>
+            <span className="text-zinc-500">•</span>
+            <span className="font-semibold text-white tracking-wide">
+              {currentWaypoint.title.split('. ')[1] || currentWaypoint.title}
+            </span>
+            <span className="hidden md:inline text-zinc-500">•</span>
+            <span className="hidden md:inline text-zinc-300 text-[10px]">
+              {currentWaypoint.component}
+            </span>
           </div>
         )}
 
@@ -1847,17 +1870,26 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(30px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-3 border transition-all raised-card ${
+                className={`rounded-xl p-3 border transition-all duration-300 raised-card ${
                   probeHop === 1
-                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20 scale-105'
-                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 dark:border-amber-400 ring-4 ring-amber-500/25 dark:ring-amber-400/30 shadow-xl shadow-amber-500/10 scale-105 z-30'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-102'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                    probeHop === 1
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                  }`}>
                     <Activity className="w-3.5 h-3.5" />
                   </div>
-                  {isSpiking ? (
+                  {probeHop === 1 ? (
+                    <span className="flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-xs animate-pulse">
+                      <Zap className="w-2.5 h-2.5 fill-current" />
+                      <span>STEP 1 ACTIVE</span>
+                    </span>
+                  ) : isSpiking ? (
                     <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 animate-pulse">
                       5X SURGE
                     </span>
@@ -1894,19 +1926,30 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-3 border transition-all raised-card ${
+                className={`rounded-xl p-3 border transition-all duration-300 raised-card ${
                   probeHop === 2
-                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20 scale-105'
-                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 dark:border-amber-400 ring-4 ring-amber-500/25 dark:ring-amber-400/30 shadow-xl shadow-amber-500/10 scale-105 z-30'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-102'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                    probeHop === 2
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                  }`}>
                     <Network className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
-                    Envoy Mesh
-                  </span>
+                  {probeHop === 2 ? (
+                    <span className="flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-xs animate-pulse">
+                      <Zap className="w-2.5 h-2.5 fill-current" />
+                      <span>STEP 2 ACTIVE</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
+                      Envoy Mesh
+                    </span>
+                  )}
                 </div>
                 <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                   2. Ingress Router
@@ -1932,15 +1975,23 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(45px)' : 'none' }}
             >
               <div
-                className={`rounded-2xl p-3.5 border transition-all raised-card h-full flex flex-col justify-between ${
+                className={`rounded-2xl p-3.5 border transition-all duration-300 raised-card h-full flex flex-col justify-between ${
                   probeHop === 3
-                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 dark:border-amber-400 ring-4 ring-amber-500/25 dark:ring-amber-400/30 shadow-xl shadow-amber-500/10 z-30'
+                    : probeHop === 6
+                    ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/25 dark:ring-emerald-400/30 shadow-xl shadow-emerald-500/10 z-30'
                     : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                      probeHop === 3
+                        ? 'bg-amber-500 text-white shadow-xs'
+                        : probeHop === 6
+                        ? 'bg-emerald-500 text-white shadow-xs'
+                        : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                    }`}>
                       <Server className="w-3.5 h-3.5" />
                     </div>
                     <div>
@@ -1952,7 +2003,18 @@ export default function PipelineViewer({
                       </span>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex items-center gap-1.5">
+                    {probeHop === 3 ? (
+                      <span className="flex items-center gap-1 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-xs animate-pulse">
+                        <Zap className="w-2.5 h-2.5 fill-current" />
+                        <span>STEP 3 ACTIVE</span>
+                      </span>
+                    ) : probeHop === 6 ? (
+                      <span className="flex items-center gap-1 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow-xs animate-pulse">
+                        <CheckCircle2 className="w-2.5 h-2.5" />
+                        <span>LOOP CLOSED</span>
+                      </span>
+                    ) : null}
                     <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 font-bold">
                       {actualPods} Active Replicas
                     </span>
@@ -2051,19 +2113,30 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-3 border transition-all raised-card ${
+                className={`rounded-xl p-3 border transition-all duration-300 raised-card ${
                   probeHop === 4
-                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20 scale-105'
-                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 dark:border-amber-400 ring-4 ring-amber-500/25 dark:ring-amber-400/30 shadow-xl shadow-amber-500/10 scale-105 z-30'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-102'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
-                    <Layers className="w-3.5 h-3.5 text-emerald-500" />
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                    probeHop === 4
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                  }`}>
+                    <Layers className={`w-3.5 h-3.5 ${probeHop === 4 ? 'text-white' : 'text-emerald-500'}`} />
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
-                    15s Cadence
-                  </span>
+                  {probeHop === 4 ? (
+                    <span className="flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-xs animate-pulse">
+                      <Zap className="w-2.5 h-2.5 fill-current" />
+                      <span>STEP 4 ACTIVE</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
+                      15s Cadence
+                    </span>
+                  )}
                 </div>
                 <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                   4. k8shorizmetrics
@@ -2090,11 +2163,13 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-2.5 border transition-all raised-card ${
+                className={`rounded-xl p-2.5 border transition-all duration-300 raised-card ${
                   probeHop === 4
-                    ? 'bg-white dark:bg-zinc-800 border-amber-500 ring-2 ring-amber-500/20 shadow-md'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 dark:border-amber-400 ring-2 ring-amber-500/30 shadow-md scale-102 z-25'
                     : probeHop === 5 && winningModel === 'Reactive HPA'
-                    ? 'bg-white dark:bg-zinc-800 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg scale-105'
+                    ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/35 dark:ring-emerald-400/35 shadow-xl shadow-emerald-500/15 scale-105 z-30'
+                    : probeHop === 5
+                    ? 'bg-white/80 dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 opacity-50'
                     : winningModel === 'Reactive HPA'
                     ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
                     : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
@@ -2102,10 +2177,16 @@ export default function PipelineViewer({
               >
                 <div className="flex items-center justify-between text-[10px] font-mono mb-1">
                   <span className="font-bold text-zinc-700 dark:text-zinc-300">Reactive HPA</span>
-                  {winningModel === 'Reactive HPA' ? (
+                  {probeHop === 5 && winningModel === 'Reactive HPA' ? (
+                    <span className="flex items-center gap-1 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shadow-xs animate-pulse">
+                      ★ WINNER
+                    </span>
+                  ) : winningModel === 'Reactive HPA' ? (
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   ) : probeHop === 4 ? (
-                    <span className="text-[8px] text-amber-500 font-bold">Ingesting</span>
+                    <span className="flex items-center gap-1 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white shadow-xs animate-pulse">
+                      <Zap className="w-2 h-2 fill-current" /> Ingesting
+                    </span>
                   ) : (
                     <span className="text-[8px] text-zinc-400">Baseline</span>
                   )}
@@ -2131,11 +2212,13 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-2.5 border transition-all raised-card ${
+                className={`rounded-xl p-2.5 border transition-all duration-300 raised-card ${
                   probeHop === 4
-                    ? 'bg-white dark:bg-zinc-800 border-amber-500 ring-2 ring-amber-500/20 shadow-md'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 dark:border-amber-400 ring-2 ring-amber-500/30 shadow-md scale-102 z-25'
                     : probeHop === 5 && (winningModel === 'Linear' || winningModel === 'Linear OLS')
-                    ? 'bg-white dark:bg-zinc-800 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg scale-105'
+                    ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/35 dark:ring-emerald-400/35 shadow-xl shadow-emerald-500/15 scale-105 z-30'
+                    : probeHop === 5
+                    ? 'bg-white/80 dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 opacity-50'
                     : (winningModel === 'Linear' || winningModel === 'Linear OLS')
                     ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
                     : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
@@ -2143,10 +2226,16 @@ export default function PipelineViewer({
               >
                 <div className="flex items-center justify-between text-[10px] font-mono mb-1">
                   <span className="font-bold text-zinc-700 dark:text-zinc-300">Linear OLS</span>
-                  {(winningModel === 'Linear' || winningModel === 'Linear OLS') ? (
+                  {probeHop === 5 && (winningModel === 'Linear' || winningModel === 'Linear OLS') ? (
+                    <span className="flex items-center gap-1 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shadow-xs animate-pulse">
+                      ★ WINNER
+                    </span>
+                  ) : (winningModel === 'Linear' || winningModel === 'Linear OLS') ? (
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   ) : probeHop === 4 ? (
-                    <span className="text-[8px] text-amber-500 font-bold">Ingesting</span>
+                    <span className="flex items-center gap-1 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white shadow-xs animate-pulse">
+                      <Zap className="w-2 h-2 fill-current" /> Ingesting
+                    </span>
                   ) : (
                     <span className="text-[8px] text-zinc-400">Trend</span>
                   )}
@@ -2172,11 +2261,13 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-2.5 border transition-all raised-card ${
+                className={`rounded-xl p-2.5 border transition-all duration-300 raised-card ${
                   probeHop === 4
-                    ? 'bg-white dark:bg-zinc-800 border-amber-500 ring-2 ring-amber-500/20 shadow-md'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 dark:border-amber-400 ring-2 ring-amber-500/30 shadow-md scale-102 z-25'
                     : probeHop === 5 && winningModel === 'Holt-Winters'
-                    ? 'bg-white dark:bg-zinc-800 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg scale-105'
+                    ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/35 dark:ring-emerald-400/35 shadow-xl shadow-emerald-500/15 scale-105 z-30'
+                    : probeHop === 5
+                    ? 'bg-white/80 dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 opacity-50'
                     : winningModel === 'Holt-Winters'
                     ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
                     : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
@@ -2184,10 +2275,16 @@ export default function PipelineViewer({
               >
                 <div className="flex items-center justify-between text-[10px] font-mono mb-1">
                   <span className="font-bold text-zinc-700 dark:text-zinc-300">Holt-Winters</span>
-                  {winningModel === 'Holt-Winters' ? (
+                  {probeHop === 5 && winningModel === 'Holt-Winters' ? (
+                    <span className="flex items-center gap-1 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shadow-xs animate-pulse">
+                      ★ WINNER
+                    </span>
+                  ) : winningModel === 'Holt-Winters' ? (
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   ) : probeHop === 4 ? (
-                    <span className="text-[8px] text-amber-500 font-bold">Ingesting</span>
+                    <span className="flex items-center gap-1 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white shadow-xs animate-pulse">
+                      <Zap className="w-2 h-2 fill-current" /> Ingesting
+                    </span>
                   ) : (
                     <span className="text-[8px] text-zinc-400">Seasonal</span>
                   )}
@@ -2213,11 +2310,13 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(40px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-2.5 border transition-all raised-card ${
+                className={`rounded-xl p-2.5 border transition-all duration-300 raised-card ${
                   probeHop === 4
-                    ? 'bg-white dark:bg-zinc-800 border-amber-500 ring-2 ring-amber-500/20 shadow-md'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 dark:border-amber-400 ring-2 ring-amber-500/30 shadow-md scale-102 z-25'
                     : probeHop === 5 && winningModel === 'LSTM'
-                    ? 'bg-white dark:bg-zinc-800 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg scale-105'
+                    ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/35 dark:ring-emerald-400/35 shadow-xl shadow-emerald-500/15 scale-105 z-30'
+                    : probeHop === 5
+                    ? 'bg-white/80 dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 opacity-50'
                     : winningModel === 'LSTM'
                     ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
                     : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
@@ -2225,10 +2324,16 @@ export default function PipelineViewer({
               >
                 <div className="flex items-center justify-between text-[10px] font-mono mb-1">
                   <span className="font-bold text-zinc-900 dark:text-zinc-100">2-Layer LSTM</span>
-                  {winningModel === 'LSTM' ? (
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  {probeHop === 5 && winningModel === 'LSTM' ? (
+                    <span className="flex items-center gap-1 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shadow-xs animate-pulse">
+                      ★ WINNER
+                    </span>
+                  ) : winningModel === 'LSTM' ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   ) : probeHop === 4 ? (
-                    <span className="text-[8px] text-amber-500 font-bold">Ingesting</span>
+                    <span className="flex items-center gap-1 text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500 text-white shadow-xs animate-pulse">
+                      <Zap className="w-2 h-2 fill-current" /> Ingesting
+                    </span>
                   ) : (
                     <span className="text-[8px] text-indigo-500">Deep Net</span>
                   )}
@@ -2254,16 +2359,20 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(45px)' : 'none' }}
             >
               <div
-                className={`rounded-2xl p-3.5 border transition-all raised-card h-full flex flex-col justify-between ${
+                className={`rounded-2xl p-3.5 border transition-all duration-300 raised-card h-full flex flex-col justify-between ${
                   probeHop === 5
-                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20'
+                    ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/30 dark:ring-emerald-400/30 shadow-xl shadow-emerald-500/15 scale-105 z-30'
                     : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/80 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                        probeHop === 5
+                          ? 'bg-emerald-500 text-white shadow-xs'
+                          : 'bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/80 text-indigo-600 dark:text-indigo-400'
+                      }`}>
                         <Cpu className="w-3.5 h-3.5" />
                       </div>
                       <div>
@@ -2275,9 +2384,16 @@ export default function PipelineViewer({
                         </span>
                       </div>
                     </div>
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30">
-                      MAX
-                    </span>
+                    {probeHop === 5 ? (
+                      <span className="flex items-center gap-1 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow-xs animate-pulse">
+                        <Zap className="w-2.5 h-2.5 fill-current" />
+                        <span>STEP 5 ACTIVE</span>
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30">
+                        MAX
+                      </span>
+                    )}
                   </div>
 
                   <div className="bg-zinc-50 dark:bg-zinc-950 rounded-lg p-2 border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono space-y-1 my-1">
@@ -2323,19 +2439,30 @@ export default function PipelineViewer({
               style={{ transform: viewMode === '3d' ? 'translateZ(35px)' : 'none' }}
             >
               <div
-                className={`rounded-xl p-3 border transition-all raised-card ${
+                className={`rounded-xl p-3 border transition-all duration-300 raised-card ${
                   probeHop === 6
-                    ? 'bg-white dark:bg-zinc-800 border-zinc-900 dark:border-zinc-100 shadow-md ring-2 ring-zinc-900/10 dark:ring-zinc-100/20 scale-105'
-                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-105'
+                    ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-500/30 dark:ring-emerald-400/30 shadow-xl shadow-emerald-500/15 scale-105 z-30'
+                    : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:scale-102'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-800 dark:text-zinc-200">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                    probeHop === 6
+                      ? 'bg-emerald-500 text-white shadow-xs'
+                      : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200'
+                  }`}>
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${probeHop === 6 ? 'text-white' : 'text-amber-500'}`} />
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
-                    ScaleClient
-                  </span>
+                  {probeHop === 6 ? (
+                    <span className="flex items-center gap-1 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow-xs animate-pulse">
+                      <Zap className="w-2.5 h-2.5 fill-current" />
+                      <span>STEP 6 ACTIVE</span>
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold border border-zinc-200 dark:border-zinc-700">
+                      ScaleClient
+                    </span>
+                  )}
                 </div>
                 <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                   6. Scale Actuator
