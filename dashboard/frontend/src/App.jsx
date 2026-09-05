@@ -68,6 +68,14 @@ export default function App() {
     }
   }, [theme]);
 
+  // Ensure scroll resets cleanly to top whenever switching tabs
+  useEffect(() => {
+    const container = document.getElementById('main-scroll-container');
+    if (container) {
+      container.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [activeTab]);
+
   // Dynamic, user-configurable operational guardrails
   const [guardrails, setGuardrails] = useState({
     minPods: 2,
@@ -1039,7 +1047,7 @@ export default function App() {
             <PhpaLogo size="sm" className="hidden sm:flex" />
 
             <h2 className="text-xs sm:text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
-              {activeTab === 'overview' && <>Research Overview</>}
+              {activeTab === 'overview' && <>Homepage &amp; 3D Hero</>}
               {activeTab === 'lab' && <><span className="hidden sm:inline">Autoscaling </span>Telemetry Lab</>}
               {activeTab === 'benchmark' && <><span className="hidden sm:inline">Multi-Model </span>Benchmarks</>}
               {activeTab === 'logs' && <><span className="hidden sm:inline">Autoscaling </span>Decision Stream</>}
