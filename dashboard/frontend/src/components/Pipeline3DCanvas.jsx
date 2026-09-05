@@ -65,48 +65,48 @@ const ARCH_LAYERS = {
 };
 
 const TIER_PLATFORMS = [
-  // Tier 1: Client Skydeck (Top: Y = +7.0)
+  // Tier 1: Client Skydeck (Top: Y = +7.2, Z = +5.5)
   {
     id: 'plat-1',
     layer: 1,
-    position: [0.0, 6.2, 4.0],
-    size: [34.0, 0.3, 5.0],
+    position: [0.0, 6.4, 5.5],
+    size: [48.0, 0.3, 6.0],
     color: '#38bdf8',
     label: 'TIER 1 • CLIENT SKYDECK',
   },
-  // Tier 2: Ingress & Edge (Upper Mid: Y = +3.0)
+  // Tier 2: Ingress & Edge (Upper Mid: Y = +3.2, Z = +3.0)
   {
     id: 'plat-2',
     layer: 2,
-    position: [0.0, 2.2, 2.0],
-    size: [34.0, 0.3, 5.0],
+    position: [0.0, 2.4, 3.0],
+    size: [48.0, 0.3, 6.0],
     color: '#3b82f6',
     label: 'TIER 2 • EDGE & INGRESS MESH',
   },
-  // Tier 3: Workload Service (Center: Y = -0.5)
+  // Tier 3: Workload Service (Center: Y = -0.6, Z = 0.0)
   {
     id: 'plat-3',
     layer: 3,
     position: [0.0, -1.2, 0.0],
-    size: [16.0, 0.3, 5.5],
+    size: [24.0, 0.3, 6.5],
     color: '#8b5cf6',
     label: 'TIER 3 • TARGET WORKLOAD SERVICE',
   },
-  // Tier 4: PHPA Core Control Plane (Grand Centerpiece: Y = -4.5)
+  // Tier 4: PHPA Core Control Plane (Grand Wide Centerpiece: Y = -5.4, Z = -3.5)
   {
     id: 'plat-4',
     layer: 4,
-    position: [0.0, -5.2, -2.0],
-    size: [38.0, 0.35, 10.0],
+    position: [0.0, -5.4, -3.5],
+    size: [64.0, 0.35, 15.0],
     color: '#10b981',
     label: 'TIER 4 • PHPA PREDICTIVE CONTROL PLANE (CENTERPIECE)',
   },
-  // Tier 5: Persistence Foundation (Sub-Level: Y = -8.5)
+  // Tier 5: Persistence Foundation (Sub-Level: Y = -9.8, Z = +2.5)
   {
     id: 'plat-5',
     layer: 5,
-    position: [0.0, -9.2, -1.0],
-    size: [22.0, 0.3, 5.0],
+    position: [0.0, -9.8, 2.5],
+    size: [48.0, 0.3, 6.0],
     color: '#f43f5e',
     label: 'TIER 5 • STATE & METRICS TSDB PERSISTENCE',
   },
@@ -114,14 +114,14 @@ const TIER_PLATFORMS = [
 
 /* Solid 3D Server Pedestals: Vertical Tiers & Wide Horizontal Spread */
 const ARCH_NODES = [
-  // --- TIER 1: CLIENT SKYDECK (Y = +7.0, Z = +4.0) ---
+  // --- TIER 1: CLIENT SKYDECK (Y = +7.2, Z = +5.5) ---
   {
     id: 'web-app',
     stageId: 0,
     layer: 1,
     title: 'Web App Client',
     subtitle: 'React / Next.js SPA',
-    position: [-12.0, 7.0, 4.0],
+    position: [-16.0, 7.2, 5.5],
     size: [4.4, 0.9, 2.6],
     icon: Globe,
     color: '#38bdf8',
@@ -132,7 +132,7 @@ const ARCH_NODES = [
     layer: 1,
     title: 'Mobile App Client',
     subtitle: 'iOS & Android Native',
-    position: [0.0, 7.0, 4.0],
+    position: [0.0, 7.2, 5.5],
     size: [4.4, 0.9, 2.6],
     icon: Smartphone,
     color: '#38bdf8',
@@ -143,20 +143,20 @@ const ARCH_NODES = [
     layer: 1,
     title: 'API Consumer',
     subtitle: 'Partner SDK / Webhook',
-    position: [12.0, 7.0, 4.0],
+    position: [16.0, 7.2, 5.5],
     size: [4.4, 0.9, 2.6],
     icon: Terminal,
     color: '#38bdf8',
   },
 
-  // --- TIER 2: EDGE & INGRESS MESH (Y = +3.0, Z = +2.0) ---
+  // --- TIER 2: EDGE & INGRESS MESH (Y = +3.2, Z = +3.0) ---
   {
     id: 'cdn-waf',
     stageId: 1,
     layer: 2,
     title: 'CDN / Cloud WAF',
     subtitle: 'Edge Shield & Caching',
-    position: [-12.0, 3.0, 2.0],
+    position: [-16.0, 3.2, 3.0],
     size: [4.4, 0.9, 2.6],
     icon: Shield,
     color: '#3b82f6',
@@ -167,7 +167,7 @@ const ARCH_NODES = [
     layer: 2,
     title: 'Traffic Ingestion',
     subtitle: 'HTTP/gRPC Live Stream',
-    position: [0.0, 3.0, 2.0],
+    position: [0.0, 3.2, 3.0],
     size: [4.8, 0.9, 2.6],
     icon: Activity,
     color: '#38bdf8',
@@ -179,27 +179,27 @@ const ARCH_NODES = [
     layer: 2,
     title: 'Ingress Router',
     subtitle: 'Envoy Service Mesh',
-    position: [12.0, 3.0, 2.0],
+    position: [16.0, 3.2, 3.0],
     size: [4.8, 0.9, 2.6],
     icon: Network,
     color: '#3b82f6',
     isPrimary: true,
   },
 
-  // --- TIER 3: BACKEND WORKLOAD BRIDGE (Y = -0.5, Z = 0.0) ---
+  // --- TIER 3: BACKEND WORKLOAD BRIDGE (Y = -0.6, Z = 0.0) ---
   {
     id: 'backend-workload',
     stageId: 2,
     layer: 3,
     title: 'Sample Web Workload',
     subtitle: 'Target Application Cluster',
-    position: [0.0, -0.5, 0.0],
-    size: [7.5, 1.1, 3.4],
+    position: [0.0, -0.6, 0.0],
+    size: [8.5, 1.1, 3.6],
     icon: Box,
     color: '#8b5cf6',
   },
 
-  // --- TIER 4: PHPA PREDICTIVE AUTOSCALING CORE (Y = -4.5, Z = -2.0) ---
+  // --- TIER 4: PHPA PREDICTIVE AUTOSCALING CORE (Y = -4.6) ---
   // k8s Horizon Metrics Collector Scraper
   {
     id: 'k8s-metrics',
@@ -207,14 +207,14 @@ const ARCH_NODES = [
     layer: 4,
     title: 'k8shorizmetrics',
     subtitle: 'cAdvisor Scraper 15s',
-    position: [-4.5, -4.5, -2.0],
+    position: [-10.5, -4.6, -3.5],
     size: [4.4, 0.9, 2.6],
     icon: Layers,
     color: '#10b981',
     isCollector: true,
   },
 
-  // 4 Parallel Forecasting Models (2x2 Model Lab)
+  // 4 Staggered Parallel Forecasting Models (Non-overlapping staggered lanes)
   {
     id: 'model-hpa',
     stageId: 4,
@@ -222,7 +222,7 @@ const ARCH_NODES = [
     modelKey: 'hpa',
     title: 'Reactive HPA',
     subtitle: '⌈Cur × (CPU/60%)⌉',
-    position: [2.0, -4.5, -3.5],
+    position: [-3.0, -4.6, -5.8],
     size: [4.2, 0.85, 2.4],
     icon: Zap,
     color: '#10b981',
@@ -235,7 +235,7 @@ const ARCH_NODES = [
     modelKey: 'ols',
     title: 'Linear OLS',
     subtitle: 'dy/dt Regression Slope',
-    position: [2.0, -4.5, -0.5],
+    position: [3.5, -4.6, -2.0],
     size: [4.2, 0.85, 2.4],
     icon: Cpu,
     color: '#10b981',
@@ -248,7 +248,7 @@ const ARCH_NODES = [
     modelKey: 'hw',
     title: 'Holt-Winters',
     subtitle: 'Triple Exp. Smoothing',
-    position: [7.0, -4.5, -3.5],
+    position: [10.0, -4.6, -5.8],
     size: [4.2, 0.85, 2.4],
     icon: Sparkles,
     color: '#10b981',
@@ -261,21 +261,21 @@ const ARCH_NODES = [
     modelKey: 'lstm',
     title: '2-Layer LSTM',
     subtitle: 'Deep Sequence Predictor',
-    position: [7.0, -4.5, -0.5],
+    position: [16.5, -4.6, -2.0],
     size: [4.2, 0.85, 2.4],
     icon: Cpu,
     color: '#10b981',
     isModel: true,
   },
 
-  // Decision Arbiter & Scale Actuator
+  // Decision Arbiter & Scale Actuator (Well-separated lanes in X and Z)
   {
     id: 'max-arbiter',
     stageId: 4,
     layer: 4,
     title: 'MAX Arbiter',
     subtitle: 'Envelope Decision Engine',
-    position: [12.5, -4.5, -2.8],
+    position: [23.5, -4.6, -5.8],
     size: [4.6, 1.1, 2.6],
     icon: Shield,
     color: '#10b981',
@@ -287,21 +287,21 @@ const ARCH_NODES = [
     layer: 4,
     title: 'Scale Actuator',
     subtitle: 'Kube-API /scale PATCH Client',
-    position: [12.5, -3.0, -0.5],
+    position: [23.5, -3.2, 0.5],
     size: [4.6, 0.9, 2.4],
     icon: RotateCcw,
     color: '#10b981',
     isActuator: true,
   },
 
-  // --- TIER 5: PERSISTENCE FOUNDATION (Y = -8.5, Z = -1.0) ---
+  // --- TIER 5: PERSISTENCE FOUNDATION (Y = -9.0, Z = +2.5) ---
   {
     id: 'tsdb-store',
     stageId: 3,
     layer: 5,
     title: 'Metrics TSDB Store',
     subtitle: 'Prometheus Historical TSDB',
-    position: [-6.0, -8.5, -1.0],
+    position: [-14.0, -9.0, 2.5],
     size: [5.2, 0.9, 2.6],
     icon: Database,
     color: '#f43f5e',
@@ -312,7 +312,7 @@ const ARCH_NODES = [
     layer: 5,
     title: 'Config & etcd State',
     subtitle: 'Cluster Desired State',
-    position: [6.0, -8.5, -1.0],
+    position: [14.0, -9.0, 2.5],
     size: [5.2, 0.9, 2.6],
     icon: HardDrive,
     color: '#f43f5e',
@@ -322,40 +322,40 @@ const ARCH_NODES = [
 /* Clean Directional Conduits with Smooth Photon Flow */
 const ARCH_PIPES = [
   // Tier 1 -> Tier 2 (Vertical descent)
-  { id: 'p-web-traffic', start: [-12.0, 6.5, 4.0], end: [-12.0, 3.8, 2.0], color: '#38bdf8' },
-  { id: 'p-mob-traffic', start: [0.0, 6.5, 4.0], end: [0.0, 3.8, 2.0], color: '#38bdf8' },
-  { id: 'p-api-waf', start: [12.0, 6.5, 4.0], end: [12.0, 3.8, 2.0], color: '#38bdf8' },
+  { id: 'p-web-traffic', start: [-16.0, 6.7, 5.5], end: [-16.0, 3.8, 3.0], color: '#38bdf8' },
+  { id: 'p-mob-traffic', start: [0.0, 6.7, 5.5], end: [0.0, 3.8, 3.0], color: '#38bdf8' },
+  { id: 'p-api-waf', start: [16.0, 6.7, 5.5], end: [16.0, 3.8, 3.0], color: '#38bdf8' },
 
   // Tier 2 internal flow
-  { id: 'p-waf-traffic', start: [-9.8, 3.0, 2.0], end: [-2.6, 3.0, 2.0], color: '#3b82f6' },
-  { id: 'p-traffic-router', start: [2.6, 3.0, 2.0], end: [9.8, 3.0, 2.0], color: '#3b82f6' },
+  { id: 'p-waf-traffic', start: [-13.5, 3.2, 3.0], end: [-2.6, 3.2, 3.0], color: '#3b82f6' },
+  { id: 'p-traffic-router', start: [2.6, 3.2, 3.0], end: [13.5, 3.2, 3.0], color: '#3b82f6' },
 
   // Tier 2 Ingress -> Tier 3 Workload Bridge
-  { id: 'p-router-workload', start: [12.0, 2.5, 2.0], end: [3.8, 0.0, 0.0], color: '#8b5cf6' },
+  { id: 'p-router-workload', start: [16.0, 2.6, 3.0], end: [4.5, -0.2, 0.0], color: '#8b5cf6' },
 
   // Tier 3 Workload -> Tier 4 Core (Pods & Scraper)
-  { id: 'p-workload-pods', start: [-3.8, -0.5, 0.0], end: [-8.8, -4.5, -2.0], color: '#a855f7' },
-  { id: 'p-workload-metrics', start: [0.0, -1.0, 0.0], end: [-4.5, -3.9, -2.0], color: '#10b981' },
-  { id: 'p-pods-metrics', start: [-8.8, -4.5, -2.0], end: [-6.7, -4.5, -2.0], color: '#10b981' },
+  { id: 'p-workload-pods', start: [-4.5, -0.6, 0.0], end: [-17.0, -4.6, -3.5], color: '#a855f7' },
+  { id: 'p-workload-metrics', start: [-2.0, -1.0, 0.0], end: [-10.5, -4.0, -3.5], color: '#10b981' },
+  { id: 'p-pods-metrics', start: [-17.0, -4.6, -3.5], end: [-12.8, -4.6, -3.5], color: '#10b981' },
 
   // Scraper -> 4 Models
-  { id: 'p-met-hpa', start: [-2.3, -4.5, -2.0], end: [-0.1, -4.5, -3.5], color: '#10b981' },
-  { id: 'p-met-ols', start: [-2.3, -4.5, -2.0], end: [-0.1, -4.5, -0.5], color: '#10b981' },
-  { id: 'p-met-hw', start: [-2.3, -4.5, -2.0], end: [4.9, -4.5, -3.5], color: '#10b981' },
-  { id: 'p-met-lstm', start: [-2.3, -4.5, -2.0], end: [4.9, -4.5, -0.5], color: '#10b981' },
+  { id: 'p-met-hpa', start: [-8.2, -4.6, -3.5], end: [-5.2, -4.6, -5.8], color: '#10b981' },
+  { id: 'p-met-ols', start: [-8.2, -4.6, -3.5], end: [1.3, -4.6, -2.0], color: '#10b981' },
+  { id: 'p-met-hw', start: [-8.2, -4.6, -3.5], end: [7.8, -4.6, -5.8], color: '#10b981' },
+  { id: 'p-met-lstm', start: [-8.2, -4.6, -3.5], end: [14.3, -4.6, -2.0], color: '#10b981' },
 
   // 4 Models -> MAX Arbiter
-  { id: 'p-hpa-arb', start: [4.1, -4.5, -3.5], end: [10.2, -4.5, -2.8], color: '#10b981' },
-  { id: 'p-ols-arb', start: [4.1, -4.5, -0.5], end: [10.2, -4.5, -2.8], color: '#10b981' },
-  { id: 'p-hw-arb', start: [9.1, -4.5, -3.5], end: [10.2, -4.5, -2.8], color: '#10b981' },
-  { id: 'p-lstm-arb', start: [9.1, -4.5, -0.5], end: [10.2, -4.5, -2.8], color: '#10b981' },
+  { id: 'p-hpa-arb', start: [-0.8, -4.6, -5.8], end: [21.0, -4.6, -5.8], color: '#10b981' },
+  { id: 'p-ols-arb', start: [5.7, -4.6, -2.0], end: [21.0, -4.6, -5.8], color: '#10b981' },
+  { id: 'p-hw-arb', start: [12.2, -4.6, -5.8], end: [21.0, -4.6, -5.8], color: '#10b981' },
+  { id: 'p-lstm-arb', start: [18.7, -4.6, -2.0], end: [21.0, -4.6, -5.8], color: '#10b981' },
 
   // Arbiter -> Actuator
-  { id: 'p-arb-act', start: [12.5, -4.0, -2.8], end: [12.5, -3.5, -0.5], color: '#10b981' },
+  { id: 'p-arb-act', start: [23.5, -4.0, -5.8], end: [23.5, -3.6, 0.5], color: '#10b981' },
 
   // Tier 4 -> Tier 5 Foundation Persistence
-  { id: 'p-scrape-tsdb', start: [-4.5, -5.0, -2.0], end: [-6.0, -8.0, -1.0], color: '#f43f5e' },
-  { id: 'p-act-etcd', start: [12.5, -3.5, -0.5], end: [6.0, -8.0, -1.0], color: '#f43f5e' },
+  { id: 'p-scrape-tsdb', start: [-10.5, -5.2, -3.5], end: [-14.0, -8.5, 2.5], color: '#f43f5e' },
+  { id: 'p-act-etcd', start: [23.5, -3.6, 0.5], end: [14.0, -8.5, 2.5], color: '#f43f5e' },
 ];
 
 /* =========================================================================
@@ -396,7 +396,7 @@ function PlatformSlab({ platform, isDark }) {
    4. Grand Circular Target Pods Cluster (Radius = 3.2 units)
    ========================================================================= */
 function CircularTargetPodsCluster({
-  center = [-12.0, -4.5, -2.0],
+  center = [-20.0, -4.6, -3.5],
   actualPods = 4,
   idealDemand = 5,
   cpu = 72,
@@ -466,7 +466,7 @@ function CircularTargetPodsCluster({
         <Html
           position={[0, 1.0, 0]}
           center
-          distanceFactor={16.0}
+          distanceFactor={13.5}
           style={{ pointerEvents: 'none' }}
         >
           <div
@@ -477,7 +477,7 @@ function CircularTargetPodsCluster({
                 ? 'bg-zinc-950/90 border-emerald-500/50 text-zinc-200 shadow-2xl'
                 : 'bg-white/95 border-emerald-500/60 text-zinc-800 shadow-xl'
             } backdrop-blur-md`}
-            style={{ width: '180px' }}
+            style={{ width: '160px' }}
           >
             <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-500">
               <Server className="w-3.5 h-3.5" />
@@ -570,7 +570,7 @@ function CircularTargetPodsCluster({
           <Html
             position={[0, 0.75, 0]}
             center
-            distanceFactor={16.0}
+            distanceFactor={13.5}
             style={{ pointerEvents: 'none' }}
           >
             <div
@@ -583,7 +583,7 @@ function CircularTargetPodsCluster({
                   ? 'bg-zinc-900/60 text-zinc-500 border border-zinc-700/30'
                   : 'bg-zinc-100 text-zinc-400 border border-zinc-300'
               } backdrop-blur-md shadow-md`}
-              style={{ minWidth: '70px' }}
+              style={{ minWidth: '60px' }}
             >
               <div className="flex items-center justify-center gap-1 font-bold">
                 <span
@@ -736,7 +736,7 @@ function ArchitectureNode({ node, isSelected, isDark, latest, probeHop = 0, onSe
       <Html
         position={[0, node.size[1] / 2 + 0.9, 0]}
         center
-        distanceFactor={16.0}
+        distanceFactor={13.5}
         style={{ pointerEvents: 'none' }}
       >
         <div
@@ -747,7 +747,7 @@ function ArchitectureNode({ node, isSelected, isDark, latest, probeHop = 0, onSe
               ? 'bg-zinc-950/90 text-zinc-100 border border-zinc-750/80 shadow-2xl'
               : 'bg-white/95 text-zinc-900 border border-zinc-300 shadow-xl'
           } backdrop-blur-md`}
-          style={{ minWidth: '185px', maxWidth: '235px' }}
+          style={{ minWidth: node.isModel ? '150px' : '175px', maxWidth: node.isModel ? '180px' : '210px' }}
         >
           <div className="flex items-center justify-between gap-1 mb-1">
             <div className="flex items-center gap-1.5 overflow-hidden">
@@ -854,11 +854,11 @@ function ArchitectureNode({ node, isSelected, isDark, latest, probeHop = 0, onSe
    ========================================================================= */
 function ClosedFeedbackLoopPipe({ isDark, isActiveProbe = false }) {
   const curve = useMemo(() => {
-    // Arching 3D bezier from Scale Actuator [12.5, -3.0, -0.5] high through [0.0, 2.5, -1.0] down to Pod Cluster [-12.0, -3.5, -2.0]
+    // Arching 3D bezier from Scale Actuator [23.5, -3.2, 0.5] high through [0.0, 3.5, -1.0] down to Pod Cluster [-20.0, -3.8, -3.5]
     return new THREE.QuadraticBezierCurve3(
-      new THREE.Vector3(12.5, -3.0, -0.5),
-      new THREE.Vector3(0.0, 2.5, -1.0),
-      new THREE.Vector3(-12.0, -3.5, -2.0)
+      new THREE.Vector3(23.5, -3.2, 0.5),
+      new THREE.Vector3(0.0, 3.5, -1.0),
+      new THREE.Vector3(-20.0, -3.8, -3.5)
     );
   }, []);
 
@@ -899,12 +899,12 @@ function ClosedFeedbackLoopPipe({ isDark, isActiveProbe = false }) {
    6B. 3D Step-by-Step Probe Tracer & Docking Beacons
    ========================================================================= */
 const PROBE_WAYPOINTS_3D = [
-  { id: 1, name: 'Traffic Ingestion', position: [0.0, 3.0, 2.0], color: '#38bdf8' },
-  { id: 2, name: 'Ingress Router', position: [12.0, 3.0, 2.0], color: '#3b82f6' },
-  { id: 3, name: 'Target Pods Cluster', position: [-12.0, -4.5, -2.0], color: '#10b981' },
-  { id: 4, name: 'k8shorizmetrics Harvester', position: [-4.5, -4.5, -2.0], color: '#10b981' },
-  { id: 5, name: 'MAX Decision Arbiter', position: [12.5, -4.5, -2.8], color: '#10b981' },
-  { id: 6, name: 'Scale Actuator', position: [12.5, -3.0, -0.5], color: '#10b981' },
+  { id: 1, name: 'Traffic Ingestion', position: [0.0, 3.2, 3.0], color: '#38bdf8' },
+  { id: 2, name: 'Ingress Router', position: [16.0, 3.2, 3.0], color: '#3b82f6' },
+  { id: 3, name: 'Target Pods Cluster', position: [-20.0, -4.6, -3.5], color: '#10b981' },
+  { id: 4, name: 'k8shorizmetrics Harvester', position: [-10.5, -4.6, -3.5], color: '#10b981' },
+  { id: 5, name: 'MAX Decision Arbiter', position: [23.5, -4.6, -5.8], color: '#10b981' },
+  { id: 6, name: 'Scale Actuator', position: [23.5, -3.2, 0.5], color: '#10b981' },
 ];
 
 function DockingBeacon3D({ position, color = '#f59e0b' }) {
@@ -969,9 +969,9 @@ function ProbeTracer3D({
   // Closed feedback loop curve
   const feedbackCurve = useMemo(() => {
     return new THREE.QuadraticBezierCurve3(
-      new THREE.Vector3(12.5, -3.0, -0.5),
-      new THREE.Vector3(0.0, 2.5, -1.0),
-      new THREE.Vector3(-12.0, -3.5, -2.0)
+      new THREE.Vector3(23.5, -3.2, 0.5),
+      new THREE.Vector3(0.0, 3.5, -1.0),
+      new THREE.Vector3(-20.0, -3.8, -3.5)
     );
   }, []);
 
@@ -983,8 +983,8 @@ function ProbeTracer3D({
 
     // Hop 1: Skydeck -> Traffic Ingestion
     if (probeHop === 1 && mainParticleRef.current) {
-      const p0 = new THREE.Vector3(0.0, 6.8, 4.0);
-      const p1 = new THREE.Vector3(0.0, 3.0, 2.0);
+      const p0 = new THREE.Vector3(0.0, 7.2, 5.5);
+      const p1 = new THREE.Vector3(0.0, 3.2, 3.0);
       mainParticleRef.current.position.lerpVectors(p0, p1, t);
     }
 
@@ -992,39 +992,39 @@ function ProbeTracer3D({
     if (probeHop === 2 && mainParticleRef.current) {
       if (t < 0.5) {
         const subT = t * 2;
-        const p0 = new THREE.Vector3(0.0, 3.0, 2.0);
-        const p1 = new THREE.Vector3(12.0, 3.0, 2.0);
+        const p0 = new THREE.Vector3(0.0, 3.2, 3.0);
+        const p1 = new THREE.Vector3(16.0, 3.2, 3.0);
         mainParticleRef.current.position.lerpVectors(p0, p1, subT);
       } else {
         const subT = (t - 0.5) * 2;
-        const p0 = new THREE.Vector3(12.0, 2.5, 2.0);
-        const p1 = new THREE.Vector3(0.0, -0.5, 0.0);
+        const p0 = new THREE.Vector3(16.0, 2.6, 3.0);
+        const p1 = new THREE.Vector3(0.0, -0.6, 0.0);
         mainParticleRef.current.position.lerpVectors(p0, p1, subT);
       }
     }
 
     // Hop 3: Backend Workload -> Target Pods Cluster
     if (probeHop === 3 && mainParticleRef.current) {
-      const p0 = new THREE.Vector3(0.0, -0.5, 0.0);
-      const p1 = new THREE.Vector3(-12.0, -4.5, -2.0);
+      const p0 = new THREE.Vector3(0.0, -0.6, 0.0);
+      const p1 = new THREE.Vector3(-20.0, -4.6, -3.5);
       mainParticleRef.current.position.lerpVectors(p0, p1, t);
     }
 
     // Hop 4: Target Pods -> k8shorizmetrics -> 4 Parallel Models
     if (probeHop === 4) {
       if (mainParticleRef.current) {
-        const p0 = new THREE.Vector3(-12.0, -4.5, -2.0);
-        const p1 = new THREE.Vector3(-4.5, -4.5, -2.0);
+        const p0 = new THREE.Vector3(-20.0, -4.6, -3.5);
+        const p1 = new THREE.Vector3(-10.5, -4.6, -3.5);
         mainParticleRef.current.position.lerpVectors(p0, p1, t);
       }
       // 4 branch streams into models
       const modelTargets = [
-        new THREE.Vector3(2.0, -4.5, -3.5), // HPA
-        new THREE.Vector3(2.0, -4.5, -0.5), // OLS
-        new THREE.Vector3(7.0, -4.5, -3.5), // HW
-        new THREE.Vector3(7.0, -4.5, -0.5), // LSTM
+        new THREE.Vector3(-3.0, -4.6, -5.8), // HPA
+        new THREE.Vector3(3.5, -4.6, -2.0),  // OLS
+        new THREE.Vector3(10.0, -4.6, -5.8), // HW
+        new THREE.Vector3(16.5, -4.6, -2.0), // LSTM
       ];
-      const startP = new THREE.Vector3(-4.5, -4.5, -2.0);
+      const startP = new THREE.Vector3(-10.5, -4.6, -3.5);
       modelTargets.forEach((tgt, i) => {
         const ref = branchRefs.current[i];
         if (ref) {
@@ -1036,12 +1036,12 @@ function ProbeTracer3D({
     // Hop 5: 4 Models -> MAX Arbiter -> Scale Actuator
     if (probeHop === 5) {
       const modelStarts = [
-        new THREE.Vector3(2.0, -4.5, -3.5), // HPA
-        new THREE.Vector3(2.0, -4.5, -0.5), // OLS
-        new THREE.Vector3(7.0, -4.5, -3.5), // HW
-        new THREE.Vector3(7.0, -4.5, -0.5), // LSTM
+        new THREE.Vector3(-3.0, -4.6, -5.8), // HPA
+        new THREE.Vector3(3.5, -4.6, -2.0),  // OLS
+        new THREE.Vector3(10.0, -4.6, -5.8), // HW
+        new THREE.Vector3(16.5, -4.6, -2.0), // LSTM
       ];
-      const arbiterPos = new THREE.Vector3(12.5, -4.5, -2.8);
+      const arbiterPos = new THREE.Vector3(23.5, -4.6, -5.8);
       modelStarts.forEach((start, i) => {
         const ref = convergenceRefs.current[i];
         if (ref) {
@@ -1049,8 +1049,8 @@ function ProbeTracer3D({
         }
       });
       if (decisionRef.current) {
-        const p0 = new THREE.Vector3(12.5, -4.0, -2.8);
-        const p1 = new THREE.Vector3(12.5, -3.0, -0.5);
+        const p0 = new THREE.Vector3(23.5, -4.0, -5.8);
+        const p1 = new THREE.Vector3(23.5, -3.2, 0.5);
         decisionRef.current.position.lerpVectors(p0, p1, t);
       }
     }
@@ -1074,7 +1074,7 @@ function ProbeTracer3D({
       {/* 2. Active Illuminated Conduits for the Current Hop */}
       {probeHop === 1 && (
         <Line
-          points={[[0.0, 6.8, 4.0], [0.0, 3.0, 2.0]]}
+          points={[[0.0, 7.2, 5.5], [0.0, 3.2, 3.0]]}
           color="#f59e0b"
           lineWidth={5.0}
         />
@@ -1082,12 +1082,12 @@ function ProbeTracer3D({
       {probeHop === 2 && (
         <>
           <Line
-            points={[[0.0, 3.0, 2.0], [12.0, 3.0, 2.0]]}
+            points={[[0.0, 3.2, 3.0], [16.0, 3.2, 3.0]]}
             color="#f59e0b"
             lineWidth={5.0}
           />
           <Line
-            points={[[12.0, 2.5, 2.0], [0.0, -0.5, 0.0]]}
+            points={[[16.0, 2.6, 3.0], [0.0, -0.6, 0.0]]}
             color="#f59e0b"
             lineWidth={5.0}
           />
@@ -1095,7 +1095,7 @@ function ProbeTracer3D({
       )}
       {probeHop === 3 && (
         <Line
-          points={[[0.0, -0.5, 0.0], [-12.0, -4.5, -2.0]]}
+          points={[[0.0, -0.6, 0.0], [-20.0, -4.6, -3.5]]}
           color="#f59e0b"
           lineWidth={5.0}
         />
@@ -1103,24 +1103,24 @@ function ProbeTracer3D({
       {probeHop === 4 && (
         <>
           <Line
-            points={[[-12.0, -4.5, -2.0], [-4.5, -4.5, -2.0]]}
+            points={[[-20.0, -4.6, -3.5], [-10.5, -4.6, -3.5]]}
             color="#f59e0b"
             lineWidth={5.0}
           />
           {/* Branch lines into 4 models */}
-          <Line points={[[-4.5, -4.5, -2.0], [2.0, -4.5, -3.5]]} color="#f59e0b" lineWidth={3.5} />
-          <Line points={[[-4.5, -4.5, -2.0], [2.0, -4.5, -0.5]]} color="#f59e0b" lineWidth={3.5} />
-          <Line points={[[-4.5, -4.5, -2.0], [7.0, -4.5, -3.5]]} color="#f59e0b" lineWidth={3.5} />
-          <Line points={[[-4.5, -4.5, -2.0], [7.0, -4.5, -0.5]]} color="#f59e0b" lineWidth={3.5} />
+          <Line points={[[-10.5, -4.6, -3.5], [-3.0, -4.6, -5.8]]} color="#f59e0b" lineWidth={3.5} />
+          <Line points={[[-10.5, -4.6, -3.5], [3.5, -4.6, -2.0]]} color="#f59e0b" lineWidth={3.5} />
+          <Line points={[[-10.5, -4.6, -3.5], [10.0, -4.6, -5.8]]} color="#f59e0b" lineWidth={3.5} />
+          <Line points={[[-10.5, -4.6, -3.5], [16.5, -4.6, -2.0]]} color="#f59e0b" lineWidth={3.5} />
         </>
       )}
       {probeHop === 5 && (
         <>
-          <Line points={[[2.0, -4.5, -3.5], [12.5, -4.5, -2.8]]} color="#10b981" lineWidth={3.5} />
-          <Line points={[[2.0, -4.5, -0.5], [12.5, -4.5, -2.8]]} color="#10b981" lineWidth={3.5} />
-          <Line points={[[7.0, -4.5, -3.5], [12.5, -4.5, -2.8]]} color="#10b981" lineWidth={3.5} />
-          <Line points={[[7.0, -4.5, -0.5], [12.5, -4.5, -2.8]]} color="#10b981" lineWidth={3.5} />
-          <Line points={[[12.5, -4.0, -2.8], [12.5, -3.0, -0.5]]} color="#10b981" lineWidth={5.0} />
+          <Line points={[[-3.0, -4.6, -5.8], [23.5, -4.6, -5.8]]} color="#10b981" lineWidth={3.5} />
+          <Line points={[[3.5, -4.6, -2.0], [23.5, -4.6, -5.8]]} color="#10b981" lineWidth={3.5} />
+          <Line points={[[10.0, -4.6, -5.8], [23.5, -4.6, -5.8]]} color="#10b981" lineWidth={3.5} />
+          <Line points={[[16.5, -4.6, -2.0], [23.5, -4.6, -5.8]]} color="#10b981" lineWidth={3.5} />
+          <Line points={[[23.5, -4.0, -5.8], [23.5, -3.2, 0.5]]} color="#10b981" lineWidth={5.0} />
         </>
       )}
       {probeHop === 6 && (
@@ -1258,20 +1258,20 @@ function CameraController({ viewPreset = 'isometric', isOrbiting = false }) {
     if (!camera) return;
     if (viewPreset === 'isometric') {
       // Elevated diagonal isometric perspective framing all 5 tiers
-      gsap.to(camera.position, { x: 14, y: 18, z: 32, duration: 1.1, ease: 'power2.inOut' });
-      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.0, y: -0.5, z: 0.0, duration: 1.1 });
+      gsap.to(camera.position, { x: 18, y: 22, z: 42, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.0, y: -1.5, z: -1.0, duration: 1.1 });
     } else if (viewPreset === 'core') {
       // Direct close-up on Tier 4 PHPA Autoscaling Platform
-      gsap.to(camera.position, { x: 0, y: 3, z: 16, duration: 1.1, ease: 'power2.inOut' });
-      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.0, y: -4.5, z: -2.0, duration: 1.1 });
+      gsap.to(camera.position, { x: 2, y: 6, z: 26, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 2.0, y: -4.6, z: -3.0, duration: 1.1 });
     } else if (viewPreset === 'front') {
       // Clean Frontal Elevation View
-      gsap.to(camera.position, { x: 0, y: 0, z: 36, duration: 1.1, ease: 'power2.inOut' });
-      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.0, y: 0.0, z: 0.0, duration: 1.1 });
+      gsap.to(camera.position, { x: 0, y: 0, z: 48, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.0, y: -1.0, z: 0.0, duration: 1.1 });
     } else if (viewPreset === 'top') {
       // Overhead Architectural Blueprint View
-      gsap.to(camera.position, { x: 0, y: 40, z: 0.5, duration: 1.1, ease: 'power2.inOut' });
-      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.0, y: 0.0, z: 0.0, duration: 1.1 });
+      gsap.to(camera.position, { x: 0, y: 56, z: 0.5, duration: 1.1, ease: 'power2.inOut' });
+      if (controlsRef.current) gsap.to(controlsRef.current.target, { x: 0.0, y: -1.0, z: 0.0, duration: 1.1 });
     }
   }, [viewPreset, camera]);
 
@@ -1384,7 +1384,7 @@ export default function Pipeline3DCanvas({
           powerPreference: 'high-performance',
           alpha: false,
         }}
-        camera={{ position: [14, 18, 32], fov: 42 }}
+        camera={{ position: [18, 22, 42], fov: 42 }}
       >
         {/* Dynamic theme background */}
         <color attach="background" args={[bgColor]} />
@@ -1407,8 +1407,8 @@ export default function Pipeline3DCanvas({
 
         {/* Clean Ground Grid */}
         <gridHelper
-          args={[70, 70, gridPrimary, gridSecondary]}
-          position={[0, -10.0, 0]}
+          args={[90, 90, gridPrimary, gridSecondary]}
+          position={[0, -11.0, 0]}
         />
 
         {/* Architectural Tier Grounding Slabs */}
@@ -1445,7 +1445,7 @@ export default function Pipeline3DCanvas({
 
         {/* Centerpiece: Grand Circular Target Pods Cluster */}
         <CircularTargetPodsCluster
-          center={[-12.0, -4.5, -2.0]}
+          center={[-20.0, -4.6, -3.5]}
           actualPods={dynamicLatest.actualPods}
           idealDemand={dynamicLatest.idealDemand}
           cpu={dynamicLatest.cpu}
