@@ -53,8 +53,8 @@ export default function PipelineViewer({
   onSpeedChange,
   onReset,
 }) {
-  // 1. View Mode: '2d' (2D Crisp Schematic Architecture default) vs '3d' (Spatial 3D Canvas)
-  const [viewMode, setViewMode] = useState('2d'); // '2d' | '3d'
+  // 1. View Mode: '3d' (Unified 3D Spatial Canvas default) vs '2d' (2D Crisp Schematic Architecture)
+  const [viewMode, setViewMode] = useState('3d'); // '3d' | '2d'
 
   // Dynamic responsive auto-fit zoom calculation ensuring the full diagram fits without being cut on mobile
   const getResponsiveZoom = (base = 1, mode = viewMode) => {
@@ -911,7 +911,7 @@ export default function PipelineViewer({
               </span>
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-              Switch between 3D Spatial Canvas or 2D Crisp Schematic • Click any stage to open deep real-time architecture diagrams.
+              Unified 3D Spatial Architecture with Live Evaluator & Pod Cluster • Click any stage to inspect deep telemetry.
             </p>
           </div>
 
@@ -920,34 +920,17 @@ export default function PipelineViewer({
             <div className="flex items-center bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-md p-1 text-xs font-mono shadow-sm max-w-full overflow-x-auto scrollbar-none">
               <button
                 onClick={() => {
-                  setViewMode('2d');
-                  setZoom(getResponsiveZoom(1, '2d'));
-                }}
-                className={`px-3 py-1 rounded transition-all font-semibold flex-shrink-0 cursor-pointer ${
-                  viewMode === '2d'
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 shadow-sm'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                }`}
-                title="2D Crisp High-Contrast Schematic"
-              >
-                2D Schematic
-              </button>
-
-              <div className="w-[1px] h-4 bg-zinc-300 dark:bg-zinc-700 mx-1.5 flex-shrink-0"></div>
-
-              <button
-                onClick={() => {
                   setViewMode('3d');
                   handlePresetChange('isometric');
                 }}
-                className={`px-2.5 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
+                className={`px-3 py-1 rounded transition-colors flex-shrink-0 cursor-pointer ${
                   viewMode === '3d' && viewPreset === 'isometric'
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
-                title="3D Isometric (44°)"
+                title="3D Isometric View (44°)"
               >
-                Isometric (44°)
+                3D Isometric
               </button>
               <button
                 onClick={() => {
@@ -959,7 +942,7 @@ export default function PipelineViewer({
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
-                title="3D Front Flow (12°)"
+                title="3D Front Flow View (12°)"
               >
                 Front (12°)
               </button>
@@ -973,9 +956,26 @@ export default function PipelineViewer({
                     ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                 }`}
-                title="3D Top-Down (68°)"
+                title="3D Top-Down View (68°)"
               >
                 Top-Down (68°)
+              </button>
+
+              <div className="w-[1px] h-4 bg-zinc-300 dark:bg-zinc-700 mx-1.5 flex-shrink-0"></div>
+
+              <button
+                onClick={() => {
+                  setViewMode('2d');
+                  setZoom(getResponsiveZoom(1, '2d'));
+                }}
+                className={`px-2.5 py-1 rounded transition-all flex-shrink-0 cursor-pointer ${
+                  viewMode === '2d'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-800 dark:text-zinc-100 font-semibold shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+                title="2D Crisp High-Contrast Schematic"
+              >
+                2D Schematic
               </button>
             </div>
 
@@ -1232,7 +1232,7 @@ export default function PipelineViewer({
         onPointerDown={handlePointerDown}
         onClick={handleCanvasClick}
         onDoubleClick={handleResetCamera}
-        className={`relative w-full rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-100 dark:bg-zinc-950 overflow-hidden shadow-sm raised-card min-h-[420px] sm:min-h-[540px] md:min-h-[660px] flex items-center justify-center touch-none select-none ${
+        className={`relative w-full rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-100 dark:bg-zinc-950 overflow-hidden shadow-sm raised-card min-h-[480px] sm:min-h-[580px] md:min-h-[700px] flex items-center justify-center touch-none select-none ${
           viewMode === '3d' ? (isCursorGrabbing ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-pointer'
         }`}
         style={{
@@ -1250,26 +1250,26 @@ export default function PipelineViewer({
           <button
             onClick={() => {
               setViewMode('3d');
-              handlePresetChange('free');
+              handlePresetChange('isometric');
             }}
             className="absolute top-2 left-2 sm:top-3 sm:left-4 z-30 pointer-events-auto flex items-center gap-1.5 bg-white/95 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-mono text-zinc-800 dark:text-zinc-200 shadow-md backdrop-blur-md cursor-pointer transition-all hover:scale-105"
-            title="Click to enter 3D Free Mode"
+            title="Click to enter 3D View"
           >
             <Compass className="w-3.5 h-3.5 text-emerald-500 animate-spin" />
             <span className="font-semibold text-zinc-900 dark:text-zinc-100">2D Schematic</span>
             <span className="text-zinc-400 dark:text-zinc-500">•</span>
             <span className="text-emerald-600 dark:text-emerald-400 font-bold underline decoration-emerald-500/50">
-              Click for 3D Free Mode
+              Click for 3D View
             </span>
           </button>
         ) : (
           <div className="absolute top-2 left-2 sm:top-3 sm:left-4 z-20 pointer-events-none flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-700/80 px-2 sm:px-2.5 py-1 rounded-md text-[9px] sm:text-[10px] font-mono text-zinc-600 dark:text-zinc-400 shadow-sm backdrop-blur-md">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-              3D {viewPreset === 'free' ? 'Free Mode' : viewPreset === 'isometric' ? 'Isometric' : viewPreset === 'front' ? 'Front' : 'Top-Down'}
+              3D {viewPreset === 'isometric' ? 'Isometric (44°)' : viewPreset === 'front' ? 'Front (12°)' : viewPreset === 'top' ? 'Top-Down (68°)' : 'Interactive'}
             </span>
             <span className="hidden sm:inline text-zinc-400">•</span>
-            <span className="hidden sm:inline">Drag to Orbit / Scroll to Zoom</span>
+            <span className="hidden sm:inline">Drag to Orbit / Scroll to Zoom / Click Nodes to Inspect</span>
           </div>
         )}
 
@@ -1370,7 +1370,7 @@ export default function PipelineViewer({
 
         {/* Main Viewport: Real WebGL 3D Canvas OR 2D Crisp Schematic */}
         {viewMode === '3d' ? (
-          <div className="relative w-full h-[400px] sm:h-[500px] md:h-[640px] rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-950 transition-colors duration-200">
+          <div className="relative w-full h-[480px] sm:h-[580px] md:h-[700px] rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-950 transition-colors duration-200">
             <React.Suspense
               fallback={
                 <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 font-mono text-xs gap-3">
