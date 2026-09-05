@@ -59,6 +59,9 @@ export default function PipelineViewer({
 
   // Dynamic responsive auto-fit zoom calculation ensuring the entire architecture fits comfortably with generous margins
   const getResponsiveZoom = (base = 1, mode = viewMode) => {
+    if (mode === '2d') {
+      return 1.0 * base;
+    }
     if (typeof window !== 'undefined') {
       const w = window.innerWidth;
       // The comprehensive expanded diagram board is 1240px wide and 660px high.
@@ -83,7 +86,7 @@ export default function PipelineViewer({
   const [pitch, setPitch] = useState(44); // RotateX: 12deg to 78deg
   const [yaw, setYaw] = useState(-18); // RotateZ: -80deg to 80deg
   const [roll, setRoll] = useState(8); // RotateY
-  const [zoom, setZoom] = useState(() => getResponsiveZoom(1, '2d')); // 0.15 to 1.85
+  const [zoom, setZoom] = useState(1.0); // Default 100% (1.0) for 2D
   const [pan, setPan] = useState({ x: 0, y: 0 }); // Free Pan translation (X, Y)
   const [viewPreset, setViewPreset] = useState('isometric');
   const [isOrbiting, setIsOrbiting] = useState(false);
@@ -98,10 +101,12 @@ export default function PipelineViewer({
   useEffect(() => { yawRef.current = yaw; }, [yaw]);
   useEffect(() => { panRef.current = pan; }, [pan]);
 
-  // Window resize listener to auto-fit zoom on orientation change or screen resize
+  // Window resize listener to auto-fit zoom on orientation change or screen resize (3D mode only)
   useEffect(() => {
     const handleResize = () => {
-      setZoom(getResponsiveZoom(1, viewMode));
+      if (viewMode !== '2d') {
+        setZoom(getResponsiveZoom(1, viewMode));
+      }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
