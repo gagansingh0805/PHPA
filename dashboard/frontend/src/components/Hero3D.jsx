@@ -57,16 +57,18 @@ function ClusterCore({ isMobile, isDark }) {
 
   return (
     <group>
-      {/* Solid central nucleus core */}
-      <mesh ref={coreRef} geometry={coreGeo}>
-        <meshStandardMaterial
-          color={isDark ? '#111217' : '#e4e4e7'}
-          emissive={isDark ? '#1e2029' : '#09090b'}
-          emissiveIntensity={isDark ? 0.35 : 0.02}
-          roughness={isDark ? 0.25 : 0.35}
-          metalness={isDark ? 0.4 : 0.2}
-        />
-      </mesh>
+      {/* Solid central nucleus core (rendered in light mode, omitted in dark mode) */}
+      {!isDark && (
+        <mesh ref={coreRef} geometry={coreGeo}>
+          <meshStandardMaterial
+            color="#e4e4e7"
+            emissive="#09090b"
+            emissiveIntensity={0.02}
+            roughness={0.35}
+            metalness={0.2}
+          />
+        </mesh>
+      )}
 
       {/* Wireframe lattice */}
       <mesh ref={wireframeRef} geometry={wireGeo}>
