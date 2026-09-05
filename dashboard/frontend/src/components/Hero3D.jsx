@@ -58,10 +58,10 @@ function ClusterCore({ isMobile, isDark }) {
 
   return (
     <group>
-      {/* Solid central nucleus core (same #e4e4e7 color as white theme) */}
+      {/* Solid central nucleus core */}
       <mesh ref={coreRef} geometry={coreGeo}>
         <meshStandardMaterial
-          color="#e4e4e7"
+          color="#9CA3AF"
           emissive="#09090b"
           emissiveIntensity={0.02}
           roughness={0.35}
@@ -120,8 +120,8 @@ function PodField({ count = 200, isDark }) {
   // Electron orbital metadata
   const pods = useMemo(() => {
     const data = [];
-    // Whole black background -> Pure bright glowing white dots
-    const darkPalette = ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'];
+    // Whole black background -> Off-white glowing orbs
+    const darkPalette = ['#F5F1E8', '#F5F1E8', '#F5F1E8', '#F5F1E8', '#F5F1E8'];
     // Whole white background -> Pure jet black dots
     const lightPalette = ['#000000', '#000000', '#09090b', '#18181b', '#27272a'];
     const palette = isDark ? darkPalette : lightPalette;
@@ -179,8 +179,8 @@ function PodField({ count = 200, isDark }) {
   return (
     <instancedMesh ref={meshRef} args={[sphereGeo, null, count]}>
       <meshStandardMaterial
-        color={isDark ? '#ffffff' : '#050505'}
-        emissive={isDark ? '#ffffff' : '#000000'}
+        color={isDark ? '#F5F1E8' : '#050505'}
+        emissive={isDark ? '#F5F1E8' : '#000000'}
         emissiveIntensity={isDark ? 1.8 : 0.0}
         roughness={isDark ? 0.1 : 0.3}
         metalness={0.0}
