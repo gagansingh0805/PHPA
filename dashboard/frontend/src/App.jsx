@@ -1036,6 +1036,8 @@ export default function App() {
 
   return (
     <div className={`flex h-screen font-sans overflow-hidden relative ${theme === 'light' ? 'bg-[#edf0f5] text-zinc-900' : 'bg-[#09090b] text-zinc-100'}`}>
+    <ErrorBoundary onReset={() => setIsLandingPage(true)}>
+      <div className={`flex h-screen font-sans overflow-hidden relative ${theme === 'light' ? 'bg-[#edf0f5] text-zinc-900' : 'bg-[#09090b] text-zinc-100'}`}>
       {/* 1. Left Sidebar Navigation & Integrated Simulation Controller (Desktop + Mobile Drawer) */}
       <Sidebar
         activeTab={activeTab}
@@ -1902,5 +1904,7 @@ export default function App() {
         />
       )}
     </div>
+      </div>
+    </ErrorBoundary>
   );
 }

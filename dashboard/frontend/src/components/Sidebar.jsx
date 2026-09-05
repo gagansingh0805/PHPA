@@ -15,6 +15,8 @@ import {
   Clock,
   ChevronRight,
   X
+  X,
+  Sparkles
 } from 'lucide-react';
 import Term from './Term';
 import PhpaLogo from './PhpaLogo';
