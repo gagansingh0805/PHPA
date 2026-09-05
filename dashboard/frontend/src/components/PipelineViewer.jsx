@@ -115,8 +115,9 @@ export default function PipelineViewer({
 
   // 4. Step-by-Step Controllable Probe Tracer State
   const [probeHop, setProbeHop] = useState(0); // 0=idle, 1=ingestion, 2=ingress, 3=pod, 4=gatherer, 5=models, 6=actuator
+  const [probeProgress, setProbeProgress] = useState(0); // 0.0 to 1.0 within the active hop
   const [isProbePlaying, setIsProbePlaying] = useState(false);
-  const [probeSpeed, setProbeSpeed] = useState(1); // 0.5, 1, 2
+  const [probeSpeed, setProbeSpeed] = useState(1); // 0.5, 1, 2, 4
   const [activePodTarget, setActivePodTarget] = useState(3);
   const probeTimerRef = useRef(null);
 
@@ -287,7 +288,7 @@ export default function PipelineViewer({
       total: '18.2ms',
       action: `Dispatched to pod-0${activePodTarget}; container CPU increments (+1.2%). HTTP 200 OK returned.`,
       cx: 560,
-      cy: 260,
+      cy: 245,
     },
     {
       id: 4,
@@ -324,25 +325,42 @@ export default function PipelineViewer({
     },
   ];
 
-  // Auto-play probe stepping (duration scales inversely with probeSpeed)
+  // Auto-play probe stepping & continuous progress driven by requestAnimationFrame
   useEffect(() => {
-    if (!isProbePlaying) return;
-    const intervalTime = Math.max(300, 1300 / probeSpeed);
-    probeTimerRef.current = setTimeout(() => {
-      setProbeHop((prev) => {
-        if (prev >= 6) {
-          setIsProbePlaying(false);
-          return 6;
-        }
-        return prev + 1;
-      });
-    }, intervalTime);
+    if (!isProbePlaying || probeHop === 0) return;
 
-    return () => clearTimeout(probeTimerRef.current);
+    let animId;
+    let lastTime = performance.now();
+    const hopDuration = Math.max(350, 1400 / probeSpeed);
+
+    const stepFrame = (now) => {
+      const delta = now - lastTime;
+      lastTime = now;
+
+      setProbeProgress((prev) => {
+        const next = prev + delta / hopDuration;
+        if (next >= 1) {
+          if (probeHop >= 6) {
+            setIsProbePlaying(false);
+            return 1;
+          } else {
+            setProbeHop((h) => h + 1);
+            return 0;
+          }
+        }
+        return next;
+      });
+
+      animId = requestAnimationFrame(stepFrame);
+    };
+
+    animId = requestAnimationFrame(stepFrame);
+    return () => cancelAnimationFrame(animId);
   }, [isProbePlaying, probeHop, probeSpeed]);
 
   const handleStartProbe = () => {
     setProbeHop(1);
+    setProbeProgress(0);
     setIsProbePlaying(true);
     setActivePodTarget(Math.floor(Math.random() * Math.min(6, actualPods)) + 1);
   };
@@ -352,26 +370,76 @@ export default function PipelineViewer({
   };
 
   const handleResumeProbe = () => {
-    if (probeHop >= 6) setProbeHop(1);
+    if (probeHop >= 6) {
+      setProbeHop(1);
+      setProbeProgress(0);
+    }
     setIsProbePlaying(true);
   };
 
   const handleNextStep = () => {
     setIsProbePlaying(false);
     setProbeHop((prev) => Math.min(6, prev + 1));
+    setProbeProgress(0.5);
   };
 
   const handlePrevStep = () => {
     setIsProbePlaying(false);
     setProbeHop((prev) => Math.max(1, prev - 1));
+    setProbeProgress(0.5);
   };
 
   const handleResetProbe = () => {
     setIsProbePlaying(false);
     setProbeHop(0);
+    setProbeProgress(0);
   };
 
   const currentWaypoint = waypoints.find((w) => w.id === probeHop);
+
+  // Precise mathematical interpolation of the 2D probe packet position
+  const probeCoord = useMemo(() => {
+    const t = Math.max(0, Math.min(1, probeProgress));
+    switch (probeHop) {
+      case 1: // Ingestion: (210, 120) -> (240, 120)
+        return { cx: 210 + 30 * t, cy: 120 };
+      case 2: // Ingress: (415, 120) -> (445, 120)
+        return { cx: 415 + 30 * t, cy: 120 };
+      case 3: // Pod Workload: (560, 245) -> (560, 340)
+        return { cx: 560, cy: 245 + 95 * t };
+      case 4: // Telemetry -> Models
+        if (t < 0.35) {
+          const subT = t / 0.35;
+          return { stage: 'trunk', cx: 675 + 35 * subT, cy: 410 };
+        } else {
+          const subT = (t - 0.35) / 0.65;
+          return {
+            stage: 'branches',
+            cx: 710 + 35 * subT,
+            ys: [292.5, 382.5, 472.5, 562.5],
+          };
+        }
+      case 5: // Models -> MAX Arbiter -> Scale Actuator
+        if (t < 0.35) {
+          const subT = t / 0.35;
+          return {
+            stage: 'modelOutputs',
+            cx: 915 + 30 * subT,
+            ys: [292.5, 382.5, 472.5, 562.5],
+          };
+        } else if (t < 0.55) {
+          const subT = (t - 0.35) / 0.2;
+          return { stage: 'arbiterInfeed', cx: 945 + 30 * subT, cy: 427.5 };
+        } else {
+          const subT = (t - 0.55) / 0.45;
+          return { stage: 'actuatorAscend', cx: 1080, cy: 310 - 120 * subT };
+        }
+      case 6: // Scale API: (980, 120) -> (825, 120)
+        return { cx: 980 - 155 * t, cy: 120, atDestination: t > 0.85 };
+      default:
+        return null;
+    }
+  }, [probeHop, probeProgress]);
 
   // Mock Pods List for deep container diagnostics tab
   const containerPods = useMemo(() => {
@@ -541,7 +609,11 @@ export default function PipelineViewer({
                   />
                   {/* Scanning Cursor */}
                   <line x1="250" y1="0" x2="250" y2="100" className="stroke-zinc-900 dark:stroke-zinc-100" strokeWidth="1.5" strokeDasharray="3 3" />
-                  <circle cx="250" cy={isSpiking ? 32 : 55} r="4" className="fill-zinc-900 dark:fill-zinc-100 animate-ping" />
+                  <circle cx="250" cy={isSpiking ? 32 : 55} r="4" className="fill-zinc-900 dark:fill-zinc-100" />
+                  <circle cx="250" cy={isSpiking ? 32 : 55} r="4" fill="none" className="stroke-zinc-900 dark:stroke-zinc-100" strokeWidth="1.5">
+                    <animate attributeName="r" values="4; 10" dur="1.2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.8; 0" dur="1.2s" repeatCount="indefinite" />
+                  </circle>
                 </svg>
                 <div className="absolute top-2 right-2 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 bg-zinc-100/90 dark:bg-zinc-800/90 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
                   {isSpiking ? '💥 Poisson Flash Crowd Surge Active' : '🌊 Diurnal Base Sine Wave + Noise'}
@@ -1229,6 +1301,7 @@ export default function PipelineViewer({
                 onClick={() => {
                   setIsProbePlaying(false);
                   setProbeHop(wp.id);
+                  setProbeProgress(0.5);
                 }}
                 className={`px-2 py-1 rounded-md transition-all flex items-center gap-1 ${
                   isActive
@@ -1484,8 +1557,8 @@ export default function PipelineViewer({
               {/* Wire 2: Ingress to Pod Cluster (415, 120) to (445, 120) */}
               <path d="M 415 120 L 445 120" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
               
-              {/* Wire 3: Pod Cluster bottom (560, 260) down to Telemetry top (560, 340) */}
-              <path d="M 560 260 L 560 340" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="5 3" />
+              {/* Wire 3: Pod Cluster bottom (560, 245) down to Telemetry top (560, 340) */}
+              <path d="M 560 245 L 560 340" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" strokeDasharray="5 3" />
               
               {/* Wire 4: Telemetry (675, 410) into Parallel Model Infeed Bus */}
               <path d="M 675 410 L 710 410" fill="none" className="stroke-zinc-400 dark:stroke-zinc-600" strokeWidth="2" />
@@ -1521,7 +1594,7 @@ export default function PipelineViewer({
                 <path d="M 415 120 L 445 120" fill="none" className="stroke-amber-500 dark:stroke-amber-400" strokeWidth="4" filter="url(#probe-glow)" />
               )}
               {probeHop === 3 && (
-                <path d="M 560 260 L 560 340" fill="none" className="stroke-amber-500 dark:stroke-amber-400" strokeWidth="4" filter="url(#probe-glow)" />
+                <path d="M 560 245 L 560 340" fill="none" className="stroke-amber-500 dark:stroke-amber-400" strokeWidth="4" filter="url(#probe-glow)" />
               )}
               {probeHop === 4 && (
                 <g filter="url(#probe-glow)">
@@ -1548,238 +1621,191 @@ export default function PipelineViewer({
                 <path d="M 980 120 L 825 120" fill="none" className="stroke-emerald-500 dark:stroke-emerald-400" strokeWidth="4.5" filter="url(#probe-glow)" />
               )}
 
-              {/* Animated Continuous Photons (Speed & Frequency Dynamically Scaled by probeSpeed & RPS) */}
-              {/* Photon 1: Edge to Ingress */}
-              <circle key={`p1-${p1Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="210; 240" dur={p1Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="120; 120" dur={p1Dur} repeatCount="indefinite" />
-              </circle>
-              {rps > 200 && (
-                <circle key={`p1b-${p1Dur}`} r="2.5" className="fill-zinc-500 dark:fill-zinc-400" opacity="0.8">
-                  <animate attributeName="cx" values="210; 240" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
-                  <animate attributeName="cy" values="120; 120" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
-                </circle>
-              )}
-
-              {/* Photon 2: Ingress to Pods Cluster */}
-              <circle key={`p2-${p2Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="415; 445" dur={p2Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="120; 120" dur={p2Dur} repeatCount="indefinite" />
-              </circle>
-              {rps > 200 && (
-                <circle key={`p2b-${p2Dur}`} r="2.5" className="fill-zinc-500 dark:fill-zinc-400" opacity="0.8">
-                  <animate attributeName="cx" values="415; 445" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
-                  <animate attributeName="cy" values="120; 120" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
-                </circle>
-              )}
-
-              {/* Photon 3: Pods Cluster down to k8shorizmetrics */}
-              <circle key={`p3-${p3Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="560; 560" dur={p3Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="260; 340" dur={p3Dur} repeatCount="indefinite" />
-              </circle>
-
-              {/* Photon 4 Trunk: k8shorizmetrics to Parallel Bus */}
-              <circle key={`p4t-${p4Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="675; 710" dur={p4Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="410; 410" dur={p4Dur} repeatCount="indefinite" />
-              </circle>
-
-              {/* Photons 4A-4D: Streaming in parallel into ALL 4 Models! */}
-              <circle key={`p4a-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="292.5; 292.5" dur={p4Dur} repeatCount="indefinite" />
-              </circle>
-              <circle key={`p4b-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="382.5; 382.5" dur={p4Dur} repeatCount="indefinite" />
-              </circle>
-              <circle key={`p4c-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="472.5; 472.5" dur={p4Dur} repeatCount="indefinite" />
-              </circle>
-              <circle key={`p4d-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
-                <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="562.5; 562.5" dur={p4Dur} repeatCount="indefinite" />
-              </circle>
-
-              {/* Photons 5A-5D: Streaming from each Model into MAX Arbiter! */}
-              <circle key={`p5a-${p5Dur}`} r="2.5" className={winningModel === 'Reactive HPA' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
-                <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="292.5; 292.5" dur={p5Dur} repeatCount="indefinite" />
-              </circle>
-              <circle key={`p5b-${p5Dur}`} r="2.5" className={winningModel === 'Linear' || winningModel === 'Linear OLS' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
-                <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="382.5; 382.5" dur={p5Dur} repeatCount="indefinite" />
-              </circle>
-              <circle key={`p5c-${p5Dur}`} r="2.5" className={winningModel === 'Holt-Winters' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
-                <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="472.5; 472.5" dur={p5Dur} repeatCount="indefinite" />
-              </circle>
-              <circle key={`p5d-${p5Dur}`} r="2.5" className={winningModel === 'LSTM' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
-                <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="562.5; 562.5" dur={p5Dur} repeatCount="indefinite" />
-              </circle>
-              <circle key={`p5in-${p5Dur}`} r="3" className="fill-emerald-500">
-                <animate attributeName="cx" values="945; 975" dur={p5Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="427.5; 427.5" dur={p5Dur} repeatCount="indefinite" />
-              </circle>
-
-              {/* Photon 6: MAX Arbiter Decision up into Scale Actuator */}
-              <circle key={`p6-${p5Dur}`} r="3" className="fill-emerald-500">
-                <animate attributeName="cx" values="1080; 1080" dur={p5Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="310; 190" dur={p5Dur} repeatCount="indefinite" />
-              </circle>
-
-              {/* Photon 7: Scale Actuator scale patch closing loop into Pod Cluster */}
-              <circle key={`p7-${p6Dur}`} r="3.5" className="fill-zinc-900 dark:fill-zinc-100">
-                <animate attributeName="cx" values="980; 825" dur={p6Dur} repeatCount="indefinite" />
-                <animate attributeName="cy" values="120; 120" dur={p6Dur} repeatCount="indefinite" />
-              </circle>
-
-              {/* Interactive Step-by-Step Trace Probe (High-Luminosity Pulsing Packets) */}
-              {probeHop > 0 && (
+              {/* Animated Continuous Photons (Displayed ONLY when probe is idle, so probe trace is crisp and unobstructed) */}
+              {probeHop === 0 && (
                 <g>
-                  {/* Hop 1: Ingestion (Edge to Ingress) */}
-                  {probeHop === 1 && (
+                  {/* Photon 1: Edge to Ingress */}
+                  <circle key={`p1-${p1Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
+                    <animate attributeName="cx" values="210; 240" dur={p1Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="120; 120" dur={p1Dur} repeatCount="indefinite" />
+                  </circle>
+                  {rps > 200 && (
+                    <circle key={`p1b-${p1Dur}`} r="2.5" className="fill-zinc-500 dark:fill-zinc-400" opacity="0.8">
+                      <animate attributeName="cx" values="210; 240" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="120; 120" dur={p1Dur} begin={`${(parseFloat(p1Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
+                  )}
+
+                  {/* Photon 2: Ingress to Pods Cluster */}
+                  <circle key={`p2-${p2Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
+                    <animate attributeName="cx" values="415; 445" dur={p2Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="120; 120" dur={p2Dur} repeatCount="indefinite" />
+                  </circle>
+                  {rps > 200 && (
+                    <circle key={`p2b-${p2Dur}`} r="2.5" className="fill-zinc-500 dark:fill-zinc-400" opacity="0.8">
+                      <animate attributeName="cx" values="415; 445" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                      <animate attributeName="cy" values="120; 120" dur={p2Dur} begin={`${(parseFloat(p2Dur) * 0.45).toFixed(2)}s`} repeatCount="indefinite" />
+                    </circle>
+                  )}
+
+                  {/* Photon 3: Pods Cluster down to k8shorizmetrics */}
+                  <circle key={`p3-${p3Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
+                    <animate attributeName="cx" values="560; 560" dur={p3Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="245; 340" dur={p3Dur} repeatCount="indefinite" />
+                  </circle>
+
+                  {/* Photon 4 Trunk: k8shorizmetrics to Parallel Bus */}
+                  <circle key={`p4t-${p4Dur}`} r="3" className="fill-zinc-700 dark:fill-zinc-300">
+                    <animate attributeName="cx" values="675; 710" dur={p4Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="410; 410" dur={p4Dur} repeatCount="indefinite" />
+                  </circle>
+
+                  {/* Photons 4A-4D: Streaming in parallel into ALL 4 Models! */}
+                  <circle key={`p4a-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
+                    <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="292.5; 292.5" dur={p4Dur} repeatCount="indefinite" />
+                  </circle>
+                  <circle key={`p4b-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
+                    <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="382.5; 382.5" dur={p4Dur} repeatCount="indefinite" />
+                  </circle>
+                  <circle key={`p4c-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
+                    <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="472.5; 472.5" dur={p4Dur} repeatCount="indefinite" />
+                  </circle>
+                  <circle key={`p4d-${p4Dur}`} r="2.5" className="fill-zinc-700 dark:fill-zinc-300">
+                    <animate attributeName="cx" values="710; 745" dur={p4Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="562.5; 562.5" dur={p4Dur} repeatCount="indefinite" />
+                  </circle>
+
+                  {/* Photons 5A-5D: Streaming from each Model into MAX Arbiter! */}
+                  <circle key={`p5a-${p5Dur}`} r="2.5" className={winningModel === 'Reactive HPA' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
+                    <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="292.5; 292.5" dur={p5Dur} repeatCount="indefinite" />
+                  </circle>
+                  <circle key={`p5b-${p5Dur}`} r="2.5" className={winningModel === 'Linear' || winningModel === 'Linear OLS' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
+                    <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="382.5; 382.5" dur={p5Dur} repeatCount="indefinite" />
+                  </circle>
+                  <circle key={`p5c-${p5Dur}`} r="2.5" className={winningModel === 'Holt-Winters' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
+                    <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="472.5; 472.5" dur={p5Dur} repeatCount="indefinite" />
+                  </circle>
+                  <circle key={`p5d-${p5Dur}`} r="2.5" className={winningModel === 'LSTM' ? 'fill-emerald-500' : 'fill-zinc-500 dark:fill-zinc-400'}>
+                    <animate attributeName="cx" values="915; 945" dur={p5Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="562.5; 562.5" dur={p5Dur} repeatCount="indefinite" />
+                  </circle>
+                  <circle key={`p5in-${p5Dur}`} r="3" className="fill-emerald-500">
+                    <animate attributeName="cx" values="945; 975" dur={p5Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="427.5; 427.5" dur={p5Dur} repeatCount="indefinite" />
+                  </circle>
+
+                  {/* Photon 6: MAX Arbiter Decision up into Scale Actuator */}
+                  <circle key={`p6-${p5Dur}`} r="3" className="fill-emerald-500">
+                    <animate attributeName="cx" values="1080; 1080" dur={p5Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="310; 190" dur={p5Dur} repeatCount="indefinite" />
+                  </circle>
+
+                  {/* Photon 7: Scale Actuator scale patch closing loop into Pod Cluster */}
+                  <circle key={`p7-${p6Dur}`} r="3.5" className="fill-zinc-900 dark:fill-zinc-100">
+                    <animate attributeName="cx" values="980; 825" dur={p6Dur} repeatCount="indefinite" />
+                    <animate attributeName="cy" values="120; 120" dur={p6Dur} repeatCount="indefinite" />
+                  </circle>
+                </g>
+              )}
+
+              {/* Interactive Step-by-Step Trace Probe (Progress-Driven with Native SVG Radial Rings) */}
+              {probeHop > 0 && probeCoord && (
+                <g>
+                  {/* Hop 1, 2, 3: Single Amber Packet */}
+                  {(probeHop === 1 || probeHop === 2 || probeHop === 3) && (
                     <g>
-                      <circle r="7" className="fill-amber-400/40 animate-ping">
-                        <animate attributeName="cx" values="210; 240" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <circle cx={probeCoord.cx} cy={probeCoord.cy} r="6" fill="none" className="stroke-amber-400" strokeWidth="1.5">
+                        <animate attributeName="r" values="6; 15" dur="1s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.8; 0" dur="1s" repeatCount="indefinite" />
                       </circle>
-                      <circle r="5" className="fill-amber-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="210; 240" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="1.8" className="fill-white">
-                        <animate attributeName="cx" values="210; 240" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
+                      <circle cx={probeCoord.cx} cy={probeCoord.cy} r="5" className="fill-amber-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md" filter="url(#probe-glow)" />
+                      <circle cx={probeCoord.cx} cy={probeCoord.cy} r="2" className="fill-white" />
                     </g>
                   )}
 
-                  {/* Hop 2: Ingress (Ingress to Pod Cluster) */}
-                  {probeHop === 2 && (
-                    <g>
-                      <circle r="7" className="fill-amber-400/40 animate-ping">
-                        <animate attributeName="cx" values="415; 445" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="5" className="fill-amber-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="415; 445" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="1.8" className="fill-white">
-                        <animate attributeName="cx" values="415; 445" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                    </g>
-                  )}
-
-                  {/* Hop 3: Pod Workload (Pod Cluster to Telemetry) */}
-                  {probeHop === 3 && (
-                    <g>
-                      <circle r="7" className="fill-amber-400/40 animate-ping">
-                        <animate attributeName="cx" values="560; 560" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="260; 340" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="5" className="fill-amber-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="560; 560" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="260; 340" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="1.8" className="fill-white">
-                        <animate attributeName="cx" values="560; 560" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="260; 340" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                    </g>
-                  )}
-
-                  {/* Hop 4: Telemetry (Scraper to All 4 Parallel Models) */}
+                  {/* Hop 4: Trunk -> 4 Model Infeed Branches */}
                   {probeHop === 4 && (
                     <g>
-                      {/* Trunk telemetry packet */}
-                      <circle r="5" className="fill-amber-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="675; 710" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="410; 410" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      {/* 4 Parallel Branch Pulses streaming into Models */}
-                      <circle r="4.5" className="fill-amber-400 stroke-1.5 stroke-white" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="710; 745" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="292.5; 292.5" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="4.5" className="fill-amber-400 stroke-1.5 stroke-white" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="710; 745" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="382.5; 382.5" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="4.5" className="fill-amber-400 stroke-1.5 stroke-white" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="710; 745" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="472.5; 472.5" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="4.5" className="fill-amber-400 stroke-1.5 stroke-white" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="710; 745" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="562.5; 562.5" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
+                      {probeCoord.stage === 'trunk' ? (
+                        <g>
+                          <circle cx={probeCoord.cx} cy={probeCoord.cy} r="6" fill="none" className="stroke-amber-400" strokeWidth="1.5">
+                            <animate attributeName="r" values="6; 15" dur="1s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0.8; 0" dur="1s" repeatCount="indefinite" />
+                          </circle>
+                          <circle cx={probeCoord.cx} cy={probeCoord.cy} r="5" className="fill-amber-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md" filter="url(#probe-glow)" />
+                          <circle cx={probeCoord.cx} cy={probeCoord.cy} r="2" className="fill-white" />
+                        </g>
+                      ) : (
+                        probeCoord.ys.map((y, idx) => (
+                          <g key={`hop4-br-${idx}`}>
+                            <circle cx={probeCoord.cx} cy={y} r="4.5" className="fill-amber-400 stroke-1.5 stroke-white" filter="url(#probe-glow)" />
+                            <circle cx={probeCoord.cx} cy={y} r="1.5" className="fill-white" />
+                          </g>
+                        ))
+                      )}
                     </g>
                   )}
 
-                  {/* Hop 5: Models Brain (4 Models converging into MAX Arbiter -> Scale Actuator) */}
+                  {/* Hop 5: 4 Model Outfeeds -> Arbiter -> Actuator */}
                   {probeHop === 5 && (
                     <g>
-                      {/* 4 Model Outfeeds */}
-                      <circle r="4" className={winningModel === 'Reactive HPA' ? 'fill-emerald-400' : 'fill-amber-400'}>
-                        <animate attributeName="cx" values="915; 945" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="292.5; 292.5" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="4" className={winningModel === 'Linear' || winningModel === 'Linear OLS' ? 'fill-emerald-400' : 'fill-amber-400'}>
-                        <animate attributeName="cx" values="915; 945" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="382.5; 382.5" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="4" className={winningModel === 'Holt-Winters' ? 'fill-emerald-400' : 'fill-amber-400'}>
-                        <animate attributeName="cx" values="915; 945" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="472.5; 472.5" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="4" className={winningModel === 'LSTM' ? 'fill-emerald-400' : 'fill-amber-400'}>
-                        <animate attributeName="cx" values="915; 945" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="562.5; 562.5" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      {/* Convergence Feeder into Arbiter */}
-                      <circle r="5" className="fill-emerald-400 stroke-2 stroke-white" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="945; 975" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="427.5; 427.5" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      {/* Decision packet ascending from MAX Arbiter to Scale Actuator */}
-                      <circle r="7" className="fill-emerald-400/40 animate-ping">
-                        <animate attributeName="cx" values="1080; 1080" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="310; 190" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="5.5" className="fill-emerald-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-lg" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="1080; 1080" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="310; 190" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="2" className="fill-white">
-                        <animate attributeName="cx" values="1080; 1080" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="310; 190" dur={`${Math.max(0.25, 0.75 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
+                      {probeCoord.stage === 'modelOutputs' ? (
+                        probeCoord.ys.map((y, idx) => {
+                          const isWinner =
+                            (idx === 0 && winningModel === 'Reactive HPA') ||
+                            (idx === 1 && (winningModel === 'Linear' || winningModel === 'Linear OLS')) ||
+                            (idx === 2 && winningModel === 'Holt-Winters') ||
+                            (idx === 3 && winningModel === 'LSTM');
+                          return (
+                            <g key={`hop5-out-${idx}`}>
+                              <circle cx={probeCoord.cx} cy={y} r={isWinner ? 5 : 3.5} className={isWinner ? 'fill-emerald-400 stroke-1.5 stroke-white' : 'fill-amber-400'} filter="url(#probe-glow)" />
+                            </g>
+                          );
+                        })
+                      ) : probeCoord.stage === 'arbiterInfeed' ? (
+                        <g>
+                          <circle cx={probeCoord.cx} cy={probeCoord.cy} r="5" className="fill-emerald-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md" filter="url(#probe-glow)" />
+                          <circle cx={probeCoord.cx} cy={probeCoord.cy} r="2" className="fill-white" />
+                        </g>
+                      ) : (
+                        <g>
+                          <circle cx={probeCoord.cx} cy={probeCoord.cy} r="6" fill="none" className="stroke-emerald-400" strokeWidth="1.5">
+                            <animate attributeName="r" values="6; 16" dur="1s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0.8; 0" dur="1s" repeatCount="indefinite" />
+                          </circle>
+                          <circle cx={probeCoord.cx} cy={probeCoord.cy} r="5.5" className="fill-emerald-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md" filter="url(#probe-glow)" />
+                          <circle cx={probeCoord.cx} cy={probeCoord.cy} r="2" className="fill-white" />
+                        </g>
+                      )}
                     </g>
                   )}
 
-                  {/* Hop 6: Scale API (Scale Actuator closing feedback loop into Pods) */}
+                  {/* Hop 6: Scale API Loop Closed */}
                   {probeHop === 6 && (
                     <g>
-                      <circle r="8" className="fill-emerald-400/40 animate-ping">
-                        <animate attributeName="cx" values="980; 825" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
+                      <circle cx={probeCoord.cx} cy={probeCoord.cy} r="6" fill="none" className="stroke-emerald-400" strokeWidth="1.5">
+                        <animate attributeName="r" values="6; 16" dur="1s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.8; 0" dur="1s" repeatCount="indefinite" />
                       </circle>
-                      <circle r="5.5" className="fill-emerald-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-lg" filter="url(#probe-glow)">
-                        <animate attributeName="cx" values="980; 825" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      <circle r="2" className="fill-white">
-                        <animate attributeName="cx" values="980; 825" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values="120; 120" dur={`${Math.max(0.2, 0.65 / probeSpeed).toFixed(2)}s`} repeatCount="indefinite" />
-                      </circle>
-                      {/* Landing loop closed ripple socket */}
-                      <circle cx="825" cy="120" r="10" fill="none" className="stroke-emerald-400 animate-ping" strokeWidth="2" opacity="0.85" />
+                      <circle cx={probeCoord.cx} cy={probeCoord.cy} r="5.5" className="fill-emerald-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-lg" filter="url(#probe-glow)" />
+                      <circle cx={probeCoord.cx} cy={probeCoord.cy} r="2" className="fill-white" />
+
+                      {/* Landing loop closed ripple socket at (825, 120) */}
+                      {probeCoord.atDestination && (
+                        <g>
+                          <circle cx="825" cy="120" r="8" fill="none" className="stroke-emerald-400" strokeWidth="2">
+                            <animate attributeName="r" values="8; 20" dur="1s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" values="0.9; 0" dur="1s" repeatCount="indefinite" />
+                          </circle>
+                          <circle cx="825" cy="120" r="4" className="fill-emerald-400" />
+                        </g>
+                      )}
                     </g>
                   )}
 
@@ -1790,18 +1816,20 @@ export default function PipelineViewer({
                         cx={currentWaypoint.cx}
                         cy={currentWaypoint.cy}
                         r="6"
-                        className="fill-amber-400 stroke-2 stroke-white dark:stroke-zinc-900 shadow-md"
+                        className={probeHop >= 5 ? 'fill-emerald-400 stroke-2 stroke-white dark:stroke-zinc-900' : 'fill-amber-400 stroke-2 stroke-white dark:stroke-zinc-900'}
                         filter="url(#probe-glow)"
                       />
                       <circle
                         cx={currentWaypoint.cx}
                         cy={currentWaypoint.cy}
-                        r="12"
+                        r="6"
                         fill="none"
-                        className="stroke-amber-400 animate-ping"
+                        className={probeHop >= 5 ? 'stroke-emerald-400' : 'stroke-amber-400'}
                         strokeWidth="2"
-                        opacity="0.75"
-                      />
+                      >
+                        <animate attributeName="r" values="6; 16" dur="1.2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.85; 0" dur="1.2s" repeatCount="indefinite" />
+                      </circle>
                     </g>
                   )}
                 </g>
@@ -1900,7 +1928,7 @@ export default function PipelineViewer({
                 setActiveTab('diagram');
                 setIsDrawerOpen(true);
               }}
-              className="absolute left-[445px] top-[25px] w-[380px] h-[235px] cursor-pointer group z-20"
+              className="absolute left-[445px] top-[25px] w-[380px] h-[220px] cursor-pointer group z-20"
               style={{ transform: viewMode === '3d' ? 'translateZ(45px)' : 'none' }}
             >
               <div
