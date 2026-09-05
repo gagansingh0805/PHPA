@@ -31,10 +31,11 @@ export default function Sidebar({
   simTime,
   isSpiking,
   isMobileOpen = false,
-  onMobileClose
+  onMobileClose,
+  onReturnHome,
 }) {
   const navItems = [
-    { id: 'overview', label: 'Homepage & 3D Hero', desc: 'Interactive cluster & problem thesis', icon: Home },
+    { id: 'overview', label: 'Research Overview', desc: 'Architecture & problem context', icon: Home },
     { id: 'lab', label: 'Telemetry Lab', desc: 'Real-time charts & pod cluster', icon: LayoutDashboard },
     { id: 'benchmark', label: 'Model Benchmarking', desc: 'Side-by-side cost & accuracy', icon: BarChart2 },
     { id: 'guardrails', label: 'Operational Guardrails', desc: 'Safety limits & chaos sandbox', icon: ShieldCheck },
@@ -47,15 +48,19 @@ export default function Sidebar({
     <div className="flex flex-col justify-between h-full">
       {/* Top Branding & Nav */}
       <div>
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <div 
+            onClick={onReturnHome}
+            className={`flex items-center gap-2.5 min-w-0 ${onReturnHome ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+            title={onReturnHome ? "Return to 3D Canvas Homepage" : undefined}
+          >
             <PhpaLogo size="md" />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
                   Predictive <Term id="hpa">HPA</Term>
                 </h1>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-cyan-950/40 text-zinc-600 dark:text-cyan-400 border border-zinc-200 dark:border-cyan-800/60">
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                   v0.13.2
                 </span>
               </div>
@@ -75,6 +80,25 @@ export default function Sidebar({
           )}
         </div>
 
+        {/* Return to 3D Canvas Homepage Button */}
+        {onReturnHome && (
+          <div className="p-2 pb-0">
+            <button
+              onClick={() => {
+                onReturnHome();
+                if (isMobile && onMobileClose) onMobileClose();
+              }}
+              className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-mono font-medium transition-all shadow-2xs group cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
+                <span>3D Homepage</span>
+              </div>
+              <span className="text-[10px] text-zinc-400 font-sans group-hover:translate-x-0.5 transition-transform">↗</span>
+            </button>
+          </div>
+        )}
+
         {/* Navigation Items */}
         <nav className="p-2 space-y-1">
           {navItems.map((item) => {
@@ -89,18 +113,18 @@ export default function Sidebar({
                 }}
                 className={`group relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all duration-150 focus:outline-none focus:ring-0 ${
                   isActive
-                    ? 'bg-zinc-100 dark:bg-zinc-900/90 text-zinc-900 dark:text-cyan-300 border border-zinc-200 dark:border-cyan-500/30 shadow-xs font-medium'
+                    ? 'bg-zinc-100 dark:bg-zinc-850 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-700/70 shadow-xs font-medium'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 border border-transparent'
                 }`}
               >
-                {/* Active Indicator Bar on Left with subtle glow */}
+                {/* Active Indicator Bar on Left */}
                 {isActive && (
-                  <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 bg-zinc-900 dark:bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+                  <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 bg-zinc-900 dark:bg-zinc-100 rounded-full" />
                 )}
                 <Icon
                   className={`w-4 h-4 flex-shrink-0 transition-colors ${
                     isActive
-                      ? 'text-zinc-900 dark:text-cyan-400 ml-1'
+                      ? 'text-zinc-900 dark:text-zinc-100 ml-1'
                       : 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300'
                   }`}
                 />

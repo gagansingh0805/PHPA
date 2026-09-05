@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  const [isLandingPage, setIsLandingPage] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'lab', 'home', 'models', 'pipeline'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [trafficMode, setTrafficMode] = useState('auto'); // 'auto' | 'manual'
@@ -1012,6 +1013,35 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [demoActive, demoStep]);
 
+  if (isLandingPage) {
+    return (
+      <Suspense
+        fallback={
+          <div className="w-screen h-screen bg-black flex items-center justify-center text-white font-mono text-xs">
+            Initializing 3D Cluster Environment...
+          </div>
+        }
+      >
+        <Hero3D
+          theme={theme}
+          onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          onLaunchLab={() => {
+            setIsLandingPage(false);
+            setActiveTab('lab');
+          }}
+          onExplorePipeline={() => {
+            setIsLandingPage(false);
+            setActiveTab('pipeline');
+          }}
+          onOpenOverview={() => {
+            setIsLandingPage(false);
+            setActiveTab('overview');
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   return (
     <div className={`flex h-screen font-sans overflow-hidden relative ${theme === 'light' ? 'bg-[#edf0f5] text-zinc-900' : 'bg-[#09090b] text-zinc-100'}`}>
       {/* 1. Left Sidebar Navigation & Integrated Simulation Controller (Desktop + Mobile Drawer) */}
@@ -1028,6 +1058,7 @@ export default function App() {
         isSpiking={latest.is_spiking}
         isMobileOpen={isMobileMenuOpen}
         onMobileClose={() => setIsMobileMenuOpen(false)}
+        onReturnHome={() => setIsLandingPage(true)}
       />
 
       {/* 2. Main Content Workspace */}
@@ -1044,10 +1075,16 @@ export default function App() {
               <Menu className="w-4 h-4" />
             </button>
 
-            <PhpaLogo size="sm" className="hidden sm:flex" />
+            <button
+              onClick={() => setIsLandingPage(true)}
+              title="Return to 3D Canvas Homepage"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer focus:outline-none"
+            >
+              <PhpaLogo size="sm" className="hidden sm:flex" />
+            </button>
 
             <h2 className="text-xs sm:text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
-              {activeTab === 'overview' && <>Homepage &amp; 3D Hero</>}
+              {activeTab === 'overview' && <>Research Overview</>}
               {activeTab === 'lab' && <><span className="hidden sm:inline">Autoscaling </span>Telemetry Lab</>}
               {activeTab === 'benchmark' && <><span className="hidden sm:inline">Multi-Model </span>Benchmarks</>}
               {activeTab === 'logs' && <><span className="hidden sm:inline">Autoscaling </span>Decision Stream</>}
@@ -1138,23 +1175,8 @@ export default function App() {
           <ErrorBoundary key={activeTab} onReset={() => setActiveTab('overview')}>
             {/* TAB 0: RESEARCH OVERVIEW */}
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <Suspense
-                fallback={
-                  <div className="w-full h-[600px] rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 font-mono text-xs shadow-2xl">
-                    Initializing 3D Kubernetes Cluster Environment...
-                  </div>
-                }
-              >
-                <Hero3D
-                  onCtaClick={() => setActiveTab('lab')}
-                  onPipelineClick={() => setActiveTab('pipeline')}
-                />
-              </Suspense>
-
-              <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
-                <HomeOverview onLaunchLab={() => setActiveTab('lab')} onNavigateTab={setActiveTab} />
-              </div>
+            <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
+              <HomeOverview onLaunchLab={() => setActiveTab('lab')} onNavigateTab={setActiveTab} />
             </div>
           )}
 
