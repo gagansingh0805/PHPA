@@ -2,6 +2,7 @@ import React, { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { Play, Layers, ArrowUpRight, BookOpen, Sun, Moon, Sparkles } from 'lucide-react';
 import PhpaLogo from './PhpaLogo';
 
@@ -180,8 +181,8 @@ function PodField({ count = 200, isDark }) {
       <meshStandardMaterial
         color={isDark ? '#ffffff' : '#050505'}
         emissive={isDark ? '#ffffff' : '#000000'}
-        emissiveIntensity={isDark ? 0.95 : 0.0}
-        roughness={0.15}
+        emissiveIntensity={isDark ? 1.8 : 0.0}
+        roughness={isDark ? 0.1 : 0.3}
         metalness={0.0}
       />
     </instancedMesh>
@@ -294,6 +295,18 @@ export default function Hero3D({
             isDark={isDark}
             mousePosRef={mousePosRef}
           />
+
+          {/* Post-Processing: Ethereal Bloom for glowing balls in dark theme */}
+          {!isMobile && isDark && (
+            <EffectComposer multisampling={0}>
+              <Bloom
+                intensity={1.25}
+                luminanceThreshold={0.22}
+                luminanceSmoothing={0.88}
+                mipmapBlur
+              />
+            </EffectComposer>
+          )}
         </Canvas>
       </div>
 
