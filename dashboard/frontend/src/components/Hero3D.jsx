@@ -2,7 +2,6 @@ import React, { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { Play, Layers, ArrowUpRight, BookOpen, Sun, Moon, Sparkles } from 'lucide-react';
 import PhpaLogo from './PhpaLogo';
 
@@ -10,101 +9,81 @@ import PhpaLogo from './PhpaLogo';
    1. Central "Electron Cluster" Mesh (Declarative R3F Materials)
    ========================================================================= */
 function ClusterCore({ isMobile, isDark }) {
-  const coreRef = useRef();
   const wireframeRef = useRef();
   const ring1Ref = useRef();
   const ring2Ref = useRef();
   const ring3Ref = useRef();
 
   // Geometries are created ONCE and never re-allocated
-  const { coreGeo, wireGeo, ringGeo } = useMemo(() => {
+  const { wireGeo, ringGeo } = useMemo(() => {
     return {
-      coreGeo: new THREE.IcosahedronGeometry(1.35, 0),
-      wireGeo: new THREE.IcosahedronGeometry(1.95, 1),
-      ringGeo: new THREE.TorusGeometry(2.6, 0.012, 16, 100),
+      wireGeo: new THREE.IcosahedronGeometry(2.1, 1),
+      ringGeo: new THREE.TorusGeometry(2.8, 0.01, 16, 120),
     };
   }, []);
 
   useEffect(() => {
     return () => {
-      coreGeo.dispose();
       wireGeo.dispose();
       ringGeo.dispose();
     };
-  }, [coreGeo, wireGeo, ringGeo]);
+  }, [wireGeo, ringGeo]);
 
   useFrame((_, delta) => {
-    if (coreRef.current) {
-      coreRef.current.rotation.x += delta * 0.2;
-      coreRef.current.rotation.y += delta * 0.28;
-    }
     if (wireframeRef.current) {
-      wireframeRef.current.rotation.x -= delta * 0.15;
-      wireframeRef.current.rotation.y -= delta * 0.2;
+      wireframeRef.current.rotation.x -= delta * 0.12;
+      wireframeRef.current.rotation.y -= delta * 0.18;
     }
     if (ring1Ref.current) {
-      ring1Ref.current.rotation.x += delta * 0.1;
-      ring1Ref.current.rotation.z += delta * 0.14;
+      ring1Ref.current.rotation.x += delta * 0.08;
+      ring1Ref.current.rotation.z += delta * 0.12;
     }
     if (ring2Ref.current) {
-      ring2Ref.current.rotation.y += delta * 0.12;
-      ring2Ref.current.rotation.x -= delta * 0.08;
+      ring2Ref.current.rotation.y += delta * 0.1;
+      ring2Ref.current.rotation.x -= delta * 0.06;
     }
     if (ring3Ref.current) {
-      ring3Ref.current.rotation.z += delta * 0.09;
-      ring3Ref.current.rotation.y -= delta * 0.11;
+      ring3Ref.current.rotation.z += delta * 0.07;
+      ring3Ref.current.rotation.y -= delta * 0.09;
     }
   });
 
   return (
     <group>
-      {/* Solid nucleus */}
-      <mesh ref={coreRef} geometry={coreGeo}>
-        <meshStandardMaterial
-          color={isDark ? '#111217' : '#e4e4e7'}
-          emissive={isDark ? '#ffffff' : '#09090b'}
-          emissiveIntensity={isDark ? 0.08 : 0.02}
-          roughness={isDark ? 0.2 : 0.35}
-          metalness={isDark ? 0.9 : 0.2}
-        />
-      </mesh>
-
-      {/* Wireframe lattice */}
+      {/* Delicate Wireframe lattice (no solid nucleus blocking text) */}
       <mesh ref={wireframeRef} geometry={wireGeo}>
-        <meshStandardMaterial
-          color={isDark ? '#ffffff' : '#09090b'}
-          emissive={isDark ? '#ffffff' : '#18181b'}
-          emissiveIntensity={isDark ? 0.9 : 0.05}
+        <meshBasicMaterial
+          color={isDark ? '#ffffff' : '#000000'}
           wireframe
           transparent
-          opacity={isDark ? 0.9 : 0.85}
+          opacity={isDark ? 0.22 : 0.18}
         />
       </mesh>
 
       {/* Latitudinal electron orbital coordinate rings */}
       <mesh ref={ring1Ref} geometry={ringGeo} rotation={[Math.PI / 4, 0, 0]}>
         <meshBasicMaterial
-          color={isDark ? '#ffffff' : '#09090b'}
+          color={isDark ? '#ffffff' : '#000000'}
           wireframe
           transparent
-          opacity={isDark ? 0.35 : 0.25}
+          opacity={isDark ? 0.28 : 0.22}
         />
       </mesh>
       <mesh ref={ring2Ref} geometry={ringGeo} rotation={[-Math.PI / 3, Math.PI / 6, 0]}>
         <meshBasicMaterial
-          color={isDark ? '#ffffff' : '#09090b'}
+          color={isDark ? '#ffffff' : '#000000'}
           wireframe
           transparent
-          opacity={isDark ? 0.35 : 0.25}
+          opacity={isDark ? 0.28 : 0.22}
         />
       </mesh>
       {!isMobile && (
         <mesh ref={ring3Ref} geometry={ringGeo} rotation={[0, Math.PI / 3, Math.PI / 4]}>
           <meshBasicMaterial
-            color={isDark ? '#ffffff' : '#09090b'}
+            color={isDark ? '#ffffff' : '#000000'}
             wireframe
             transparent
-            opacity={isDark ? 0.35 : 0.25}
+            opacity={isDark ? 0.28 : 0.22}
           />
         </mesh>
       )}
@@ -122,23 +101,25 @@ function PodField({ count = 200, isDark }) {
   // Electron orbital metadata
   const pods = useMemo(() => {
     const data = [];
-    const darkPalette = ['#ffffff', '#f4f4f5', '#e4e4e7', '#d4d4d8', '#a1a1aa', '#71717a'];
-    const lightPalette = ['#09090b', '#18181b', '#27272a', '#3f3f46', '#52525b', '#71717a'];
+    // Whole black background -> Crisp, glistening white dots
+    const darkPalette = ['#ffffff', '#ffffff', '#ffffff', '#f8fafc', '#f1f5f9'];
+    // Whole white background -> Crisp, jet black dots
+    const lightPalette = ['#000000', '#000000', '#09090b', '#18181b', '#27272a'];
     const palette = isDark ? darkPalette : lightPalette;
 
     for (let i = 0; i < count; i++) {
-      const radius = THREE.MathUtils.randFloat(2.6, 6.4);
+      const radius = THREE.MathUtils.randFloat(2.4, 6.8);
       const theta = THREE.MathUtils.randFloat(0, Math.PI * 2);
-      const speed = THREE.MathUtils.randFloat(0.18, 0.5) * (Math.random() > 0.5 ? 1 : -1);
-      const yOffset = THREE.MathUtils.randFloat(-2.0, 2.0);
-      const scale = THREE.MathUtils.randFloat(0.035, 0.085);
+      const speed = THREE.MathUtils.randFloat(0.15, 0.45) * (Math.random() > 0.5 ? 1 : -1);
+      const yOffset = THREE.MathUtils.randFloat(-2.2, 2.2);
+      const scale = THREE.MathUtils.randFloat(0.04, 0.095);
       const color = palette[Math.floor(Math.random() * palette.length)];
       data.push({ radius, theta, speed, yOffset, scale, color });
     }
     return data;
   }, [count, isDark]);
 
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 10, 10), []);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(1, 14, 14), []);
 
   useEffect(() => {
     return () => sphereGeo.dispose();
@@ -161,11 +142,11 @@ function PodField({ count = 200, isDark }) {
 
     for (let i = 0; i < count; i++) {
       const p = pods[i];
-      p.theta += p.speed * delta * 0.75;
+      p.theta += p.speed * delta * 0.7;
 
       const x = Math.cos(p.theta) * p.radius;
       const z = Math.sin(p.theta) * p.radius;
-      const y = p.yOffset + Math.sin(time * 0.9 + i * 1.5) * 0.22;
+      const y = p.yOffset + Math.sin(time * 0.8 + i * 1.3) * 0.25;
 
       dummy.position.set(x, y, z);
       dummy.scale.setScalar(p.scale);
@@ -179,11 +160,9 @@ function PodField({ count = 200, isDark }) {
   return (
     <instancedMesh ref={meshRef} args={[sphereGeo, null, count]}>
       <meshStandardMaterial
-        color={isDark ? '#ffffff' : '#09090b'}
-        emissive={isDark ? '#ffffff' : '#18181b'}
-        emissiveIntensity={isDark ? 1.8 : 0.05}
-        roughness={isDark ? 0.15 : 0.4}
-        metalness={isDark ? 0.95 : 0.1}
+        color={isDark ? '#ffffff' : '#050505'}
+        roughness={isDark ? 0.2 : 0.3}
+        metalness={isDark ? 0.8 : 0.15}
       />
     </instancedMesh>
   );
@@ -264,12 +243,10 @@ export default function Hero3D({
   return (
     <div
       className={`relative w-screen h-screen min-h-screen overflow-hidden flex flex-col justify-between transition-colors duration-300 ${
-        isDark ? 'bg-[#000000] text-white' : 'bg-[#fafafa] text-zinc-950'
+        isDark ? 'bg-black text-white' : 'bg-white text-zinc-950'
       }`}
       style={{
-        background: isDark
-          ? 'radial-gradient(circle at 50% 50%, #0c0c0e 0%, #030304 65%, #000000 100%)'
-          : 'radial-gradient(circle at 50% 50%, #ffffff 0%, #f4f4f6 70%, #e9e9ee 100%)',
+        backgroundColor: isDark ? '#000000' : '#ffffff',
       }}
     >
       {/* 3D WebGL Canvas Viewport filling 100% of the screen (pointer-events: none so it never steals clicks) */}
@@ -285,11 +262,11 @@ export default function Hero3D({
         >
           <PerspectiveCamera makeDefault position={[0, 0, 6.2]} fov={48} />
 
-          {/* Neutral Clean Lighting */}
-          <ambientLight intensity={isDark ? 0.35 : 0.75} />
-          <pointLight position={[10, 10, 10]} intensity={isDark ? 1.4 : 1.2} color="#ffffff" />
-          <pointLight position={[-10, -10, -10]} intensity={isDark ? 0.9 : 0.8} color={isDark ? '#e4e4e7' : '#d4d4d8'} />
-          <pointLight position={[0, 0, 4]} intensity={isDark ? 1.1 : 0.6} color="#ffffff" />
+          {/* Clean Three-Point Lighting for 3D sphere specular highlights */}
+          <ambientLight intensity={isDark ? 0.5 : 0.8} />
+          <pointLight position={[10, 10, 10]} intensity={isDark ? 2.6 : 1.5} color="#ffffff" />
+          <pointLight position={[-10, -10, -10]} intensity={isDark ? 1.6 : 0.9} color="#ffffff" />
+          <pointLight position={[0, 0, 5]} intensity={isDark ? 1.9 : 0.9} color="#ffffff" />
 
           {/* Procedural 3D Scene */}
           <SceneContent
@@ -297,18 +274,6 @@ export default function Hero3D({
             isDark={isDark}
             mousePosRef={mousePosRef}
           />
-
-          {/* Subtle White Ethereal Bloom (Always mounted, modulated by intensity) */}
-          {!isMobile && (
-            <EffectComposer multisampling={0}>
-              <Bloom
-                intensity={isDark ? 0.65 : 0}
-                luminanceThreshold={0.4}
-                luminanceSmoothing={0.8}
-                mipmapBlur
-              />
-            </EffectComposer>
-          )}
         </Canvas>
       </div>
 
@@ -408,8 +373,8 @@ export default function Hero3D({
         <h1
           className={`text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] ${
             isDark
-              ? 'text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-200 to-zinc-500'
-              : 'text-transparent bg-clip-text bg-gradient-to-b from-zinc-950 via-zinc-850 to-zinc-600'
+              ? 'text-white'
+              : 'text-zinc-950'
           }`}
         >
           Predictive Horizontal Pod Autoscaler
@@ -418,7 +383,7 @@ export default function Hero3D({
         {/* Subtitle */}
         <p
           className={`max-w-2xl mx-auto text-sm sm:text-base md:text-lg leading-relaxed font-normal ${
-            isDark ? 'text-zinc-400' : 'text-zinc-600'
+            isDark ? 'text-zinc-300' : 'text-zinc-600'
           }`}
         >
           Zero-deficit proactive Kubernetes autoscaling combining 2-Layer Stacked LSTM neural lookahead, Holt-Winters seasonality, and ordinary least squares trend projection.
