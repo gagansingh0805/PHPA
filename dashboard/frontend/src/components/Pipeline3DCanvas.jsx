@@ -14,7 +14,7 @@ import {
 /* =========================================================================
    1. Theme Detection Hook (Syncs with prop or document.documentElement)
    ========================================================================= */
-export function useAppTheme(propTheme) {
+function useAppTheme(propTheme) {
   const [isDark, setIsDark] = useState(() => {
     if (propTheme) return propTheme === 'dark';
     if (typeof document !== 'undefined') {
@@ -46,7 +46,7 @@ export function useAppTheme(propTheme) {
 /* =========================================================================
    2. Symmetrical 3D Pipeline Coordinates (Centered around [0, 0, 0])
    ========================================================================= */
-export const PIPELINE_NODES = [
+const PIPELINE_NODES = [
   {
     id: 0,
     title: 'Edge Ingestion',
@@ -104,7 +104,7 @@ export const PIPELINE_NODES = [
 ];
 
 /* Prominent Highway Connections matching 2D sequence (Centered & Symmetrical) */
-export const PIPELINE_CONNECTIONS = [
+const PIPELINE_CONNECTIONS = [
   // Hop 1: Ingestion -> Ingress
   { id: 1, from: 0, to: 1, start: [-3.65, 1.4, 0], end: [-2.95, 1.4, 0] },
   // Hop 2: Ingress -> Pods
