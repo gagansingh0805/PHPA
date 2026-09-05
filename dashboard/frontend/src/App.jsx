@@ -1022,7 +1022,7 @@ export default function App() {
       />
 
       {/* 2. Main Content Workspace */}
-      <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0">
+      <div id="main-scroll-container" className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0">
         {/* Top Header Bar */}
         <header className="h-14 border-b border-zinc-200 dark:border-zinc-800/80 px-3 sm:px-6 flex items-center justify-between bg-white/95 dark:bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40 flex-shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">

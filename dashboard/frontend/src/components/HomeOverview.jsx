@@ -1,13 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ShieldAlert, Cpu, Sparkles, Server, CheckCircle2, TrendingUp, Layers, ChevronDown } from 'lucide-react';
+import { ArrowRight, ShieldAlert, Cpu, Sparkles, Server, CheckCircle2, TrendingUp, Layers, ChevronDown, GitBranch } from 'lucide-react';
 
 export default function HomeOverview({ onLaunchLab, onNavigateTab }) {
-  const handleScrollToHowItWorks = (e) => {
+  const [highlightProblem, setHighlightProblem] = useState(false);
+
+  const handleScrollToProblem = (e) => {
     if (e) e.preventDefault();
-    const el = document.getElementById('problem-comparison');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setHighlightProblem(true);
+    setTimeout(() => setHighlightProblem(false), 2400);
+
+    const container = document.getElementById('main-scroll-container');
+    const target = document.getElementById('problem-comparison');
+    if (container && target) {
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const scrollOffset = targetRect.top - containerRect.top + container.scrollTop - 70;
+      container.scrollTo({ top: Math.max(0, scrollOffset), behavior: 'smooth' });
+    } else if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleHowItWorksClick = () => {
+    if (onNavigateTab) {
+      onNavigateTab('pipeline');
+    } else {
+      handleScrollToProblem();
     }
   };
 
@@ -35,7 +54,7 @@ export default function HomeOverview({ onLaunchLab, onNavigateTab }) {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               onClick={onLaunchLab}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 font-semibold text-xs transition-all shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 font-semibold text-xs transition-all shadow-sm cursor-pointer"
             >
               <span>Launch Live Simulation Lab</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -44,19 +63,43 @@ export default function HomeOverview({ onLaunchLab, onNavigateTab }) {
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
-              onClick={handleScrollToHowItWorks}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors"
+              onClick={handleHowItWorksClick}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors shadow-sm cursor-pointer"
+              title="Inspect the 3D Autoscaler Architecture Pipeline"
             >
-              <span>How It Works</span>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+              <GitBranch className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+              <span>How It Works (3D Pipeline)</span>
+              <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
             </motion.button>
+
+            <button
+              type="button"
+              onClick={handleScrollToProblem}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+            >
+              <span>Compare Reactive vs Proactive</span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+            </button>
           </div>
         </div>
       </section>
 
       {/* The Core Problem: Reactive Lag vs. Proactive Scaling */}
-      <section id="problem-comparison" className="scroll-mt-16 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Card 1: The Reactive Problem */}
+      <section
+        id="problem-comparison"
+        className={`scroll-mt-16 rounded-xl transition-all duration-300 p-4 sm:p-5 border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 ${
+          highlightProblem
+            ? 'ring-2 ring-emerald-500/80 shadow-lg shadow-emerald-500/10 bg-emerald-500/5'
+            : ''
+        }`}
+      >
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">How It Works: Reactive Lag vs. Proactive Scaling</h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">Comparing standard threshold-based horizontal autoscaling against predictive lookahead</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card 1: The Reactive Problem */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 raised-card">
           <div className="flex items-center gap-2 text-zinc-800 dark:text-zinc-200 font-semibold text-xs uppercase tracking-wider mb-2">
             <ShieldAlert className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
@@ -117,7 +160,8 @@ export default function HomeOverview({ onLaunchLab, onNavigateTab }) {
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
       {/* Model Roster: 4 Models Compared */}
       <section>
