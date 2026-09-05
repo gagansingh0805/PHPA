@@ -402,10 +402,12 @@ function CircularTargetPodsCluster({
   cpu = 72,
   isSelected = false,
   isDark = true,
+  probeHop = 0,
   onSelect,
 }) {
   const ringRadius = 3.2;
   const totalPodsCount = Math.max(actualPods, 6);
+  const isActiveProbe = probeHop === 3 || probeHop === 6;
 
   // Generate pod positions in a 3D circle around center
   const podNodes = useMemo(() => {
@@ -433,9 +435,9 @@ function CircularTargetPodsCluster({
       <mesh position={[center[0], center[1] - 0.2, center[2]]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[ringRadius - 0.08, ringRadius + 0.08, 64]} />
         <meshBasicMaterial
-          color={isSelected ? '#10b981' : isDark ? '#334155' : '#94a3b8'}
+          color={isActiveProbe ? '#f59e0b' : isSelected ? '#10b981' : isDark ? '#334155' : '#94a3b8'}
           transparent
-          opacity={isDark ? 0.6 : 0.8}
+          opacity={isActiveProbe ? 0.9 : isDark ? 0.6 : 0.8}
         />
       </mesh>
 
@@ -455,8 +457,8 @@ function CircularTargetPodsCluster({
             roughness={0.2}
           />
           <Edges
-            color={isSelected ? '#10b981' : isDark ? '#3b82f6' : '#94a3b8'}
-            lineWidth={isSelected ? 3 : 1.5}
+            color={isActiveProbe ? '#f59e0b' : isSelected ? '#10b981' : isDark ? '#3b82f6' : '#94a3b8'}
+            lineWidth={isActiveProbe || isSelected ? 3.5 : 1.5}
           />
         </RoundedBox>
 
@@ -469,16 +471,27 @@ function CircularTargetPodsCluster({
         >
           <div
             className={`p-2 rounded-xl border text-center font-mono select-none ${
-              isDark
+              isActiveProbe
+                ? 'bg-zinc-950/95 border-amber-500 text-zinc-100 shadow-2xl ring-2 ring-amber-500/30'
+                : isDark
                 ? 'bg-zinc-950/90 border-emerald-500/50 text-zinc-200 shadow-2xl'
                 : 'bg-white/95 border-emerald-500/60 text-zinc-800 shadow-xl'
             } backdrop-blur-md`}
-            style={{ width: '170px' }}
+            style={{ width: '180px' }}
           >
             <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-500">
               <Server className="w-3.5 h-3.5" />
               <span>Target Pods Cluster</span>
             </div>
+            {isActiveProbe && (
+              <div className="my-1 flex items-center justify-between text-[10px] bg-amber-500/20 border border-amber-500/40 text-amber-500 dark:text-amber-400 px-2 py-0.5 rounded font-bold animate-pulse">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  {probeHop === 3 ? 'WORKLOAD INGESTION' : 'CONTROL LOOP CLOSED ✓'}
+                </span>
+                <span>HOP {probeHop}</span>
+              </div>
+            )}
             <div className="mt-1 flex items-center justify-center gap-2.5 text-xs">
               <div>
                 <span className="text-[9px] block text-zinc-400">Avg CPU</span>
@@ -602,9 +615,19 @@ function CircularTargetPodsCluster({
 /* =========================================================================
    5. Architecture Node Component (Solid 3D Hardware Pedestal + Billboard HUD)
    ========================================================================= */
-function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
+function ArchitectureNode({ node, isSelected, isDark, latest, probeHop = 0, onSelect }) {
   const Icon = node.icon;
   const [hovered, setHovered] = useState(false);
+
+  // Check if this node is active during the current probe hop
+  const isActiveProbe = (
+    (probeHop === 1 && (node.id === 'traffic-ingestion' || node.layer === 1)) ||
+    (probeHop === 2 && node.id === 'ingress-router') ||
+    (probeHop === 3 && node.id === 'backend-workload') ||
+    (probeHop === 4 && node.id === 'k8s-metrics') ||
+    (probeHop === 5 && (node.isModel || node.id === 'max-arbiter')) ||
+    (probeHop === 6 && node.id === 'scale-actuator')
+  );
 
   // Dynamic telemetry values
   const rps = latest?.rps ?? 1840;
@@ -637,7 +660,11 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
   }
 
   // Node background styling
-  const nodeBgColor = isSelected
+  const nodeBgColor = isActiveProbe
+    ? isDark
+      ? '#271f0c'
+      : '#fffbeb'
+    : isSelected
     ? isDark
       ? '#064e3b'
       : '#ecfdf5'
@@ -649,7 +676,9 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
     ? '#0f172a'
     : '#ffffff';
 
-  const borderColor = isSelected
+  const borderColor = isActiveProbe
+    ? '#f59e0b'
+    : isSelected
     ? '#10b981'
     : isWinning
     ? '#10b981'
@@ -673,19 +702,26 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
       {/* Solid 3D Hardware Pedestal Chassis */}
       <RoundedBox args={node.size} radius={0.08} smoothness={4}>
         <meshStandardMaterial color={nodeBgColor} metalness={0.25} roughness={0.25} />
-        <Edges color={borderColor} lineWidth={isSelected || isWinning ? 3 : hovered ? 2 : 1.2} />
+        <Edges
+          color={borderColor}
+          lineWidth={isActiveProbe ? 3.5 : isSelected || isWinning ? 3 : hovered ? 2 : 1.2}
+        />
       </RoundedBox>
 
       {/* Top Accent Light Disc */}
       <mesh position={[0, node.size[1] / 2 + 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[node.size[0] * 0.85, node.size[2] * 0.85]} />
-        <meshBasicMaterial color={node.color} transparent opacity={0.12} />
+        <meshBasicMaterial
+          color={isActiveProbe ? '#f59e0b' : node.color}
+          transparent
+          opacity={isActiveProbe ? 0.35 : 0.12}
+        />
       </mesh>
 
       {/* Pulsing Status LED Beacon */}
       <mesh position={[node.size[0] / 2 - 0.35, node.size[1] / 2 + 0.08, -node.size[2] / 2 + 0.35]}>
         <sphereGeometry args={[0.1, 16, 16]} />
-        <meshBasicMaterial color={node.color} />
+        <meshBasicMaterial color={isActiveProbe ? '#f59e0b' : node.color} />
       </mesh>
 
       {/* Winning Model Halo Ring on Platform */}
@@ -705,29 +741,45 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
       >
         <div
           className={`p-2 rounded-xl font-mono select-none transition-all duration-200 ${
-            isDark
+            isActiveProbe
+              ? 'bg-zinc-950/95 text-zinc-100 border border-amber-500 shadow-2xl ring-2 ring-amber-500/30'
+              : isDark
               ? 'bg-zinc-950/90 text-zinc-100 border border-zinc-750/80 shadow-2xl'
               : 'bg-white/95 text-zinc-900 border border-zinc-300 shadow-xl'
           } backdrop-blur-md`}
-          style={{ minWidth: '185px', maxWidth: '230px' }}
+          style={{ minWidth: '185px', maxWidth: '235px' }}
         >
           <div className="flex items-center justify-between gap-1 mb-1">
             <div className="flex items-center gap-1.5 overflow-hidden">
-              <span style={{ color: node.color }} className="flex-shrink-0">
+              <span style={{ color: isActiveProbe ? '#f59e0b' : node.color }} className="flex-shrink-0">
                 <Icon className="w-3.5 h-3.5" />
               </span>
               <span className="text-[11px] font-bold truncate">{node.title}</span>
             </div>
-            {isWinning && (
+            {isWinning ? (
               <span className="text-[8px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-500 font-bold border border-emerald-500/40 animate-pulse">
                 WINNER
               </span>
-            )}
+            ) : isActiveProbe ? (
+              <span className="text-[8px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 animate-pulse">
+                HOP {probeHop}
+              </span>
+            ) : null}
           </div>
 
           <div className="text-[9px] text-zinc-400 dark:text-zinc-500 truncate mb-1">
             {node.subtitle}
           </div>
+
+          {isActiveProbe && (
+            <div className="my-1 flex items-center justify-between text-[10px] bg-amber-500/15 border border-amber-500/30 text-amber-500 dark:text-amber-400 px-2 py-0.5 rounded font-bold animate-pulse">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                PROBE ACTIVE
+              </span>
+              <span>HOP {probeHop}</span>
+            </div>
+          )}
 
           {/* Node-specific dynamic telemetry widgets */}
           {node.id === 'traffic-ingestion' && (
@@ -800,7 +852,7 @@ function ArchitectureNode({ node, isSelected, isDark, latest, onSelect }) {
 /* =========================================================================
    6. Closed Feedback Loop Conduit with Traveling Photons
    ========================================================================= */
-function ClosedFeedbackLoopPipe({ isDark }) {
+function ClosedFeedbackLoopPipe({ isDark, isActiveProbe = false }) {
   const curve = useMemo(() => {
     // Arching 3D bezier from Scale Actuator [12.5, -3.0, -0.5] high through [0.0, 2.5, -1.0] down to Pod Cluster [-12.0, -3.5, -2.0]
     return new THREE.QuadraticBezierCurve3(
@@ -815,7 +867,7 @@ function ClosedFeedbackLoopPipe({ isDark }) {
 
   useFrame(({ clock }) => {
     if (!photonRef.current) return;
-    const t = (clock.getElapsedTime() * 0.4) % 1;
+    const t = (clock.getElapsedTime() * (isActiveProbe ? 0.85 : 0.4)) % 1;
     const pos = curve.getPoint(t);
     photonRef.current.position.set(pos.x, pos.y, pos.z);
   });
@@ -824,9 +876,9 @@ function ClosedFeedbackLoopPipe({ isDark }) {
     <group>
       <Line
         points={points}
-        color="#10b981"
-        lineWidth={3.6}
-        dashed
+        color={isActiveProbe ? '#34d399' : '#10b981'}
+        lineWidth={isActiveProbe ? 5.5 : 3.6}
+        dashed={!isActiveProbe}
         dashScale={2.5}
         dashSize={0.45}
         gapSize={0.25}
@@ -836,9 +888,324 @@ function ClosedFeedbackLoopPipe({ isDark }) {
 
       {/* Traveling Feedback Actuation Photon */}
       <mesh ref={photonRef}>
-        <sphereGeometry args={[0.22, 16, 16]} />
-        <meshBasicMaterial color="#34d399" />
+        <sphereGeometry args={[isActiveProbe ? 0.32 : 0.22, 16, 16]} />
+        <meshBasicMaterial color={isActiveProbe ? '#6ee7b7' : '#34d399'} />
       </mesh>
+    </group>
+  );
+}
+
+/* =========================================================================
+   6B. 3D Step-by-Step Probe Tracer & Docking Beacons
+   ========================================================================= */
+const PROBE_WAYPOINTS_3D = [
+  { id: 1, name: 'Traffic Ingestion', position: [0.0, 3.0, 2.0], color: '#38bdf8' },
+  { id: 2, name: 'Ingress Router', position: [12.0, 3.0, 2.0], color: '#3b82f6' },
+  { id: 3, name: 'Target Pods Cluster', position: [-12.0, -4.5, -2.0], color: '#10b981' },
+  { id: 4, name: 'k8shorizmetrics Harvester', position: [-4.5, -4.5, -2.0], color: '#10b981' },
+  { id: 5, name: 'MAX Decision Arbiter', position: [12.5, -4.5, -2.8], color: '#10b981' },
+  { id: 6, name: 'Scale Actuator', position: [12.5, -3.0, -0.5], color: '#10b981' },
+];
+
+function DockingBeacon3D({ position, color = '#f59e0b' }) {
+  const ringRef = useRef();
+  const markerRef = useRef();
+
+  useFrame(({ clock }) => {
+    const elapsed = clock.getElapsedTime();
+    if (ringRef.current) {
+      const scale = 1 + (elapsed * 2.2) % 1.4;
+      ringRef.current.scale.set(scale, scale, 1);
+      ringRef.current.material.opacity = Math.max(0, 1 - (scale - 1) / 1.4);
+    }
+    if (markerRef.current) {
+      markerRef.current.position.y = position[1] + 1.2 + Math.sin(elapsed * 4.5) * 0.12;
+      markerRef.current.rotation.y = elapsed * 2.0;
+    }
+  });
+
+  return (
+    <group position={position}>
+      {/* Expanding ground ripple ring */}
+      <mesh ref={ringRef} position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.7, 0.95, 32]} />
+        <meshBasicMaterial color={color} transparent opacity={0.8} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Floating Diamond / Beacon Marker */}
+      <mesh ref={markerRef} position={[0, 1.2, 0]} rotation={[0, 0, Math.PI / 4]}>
+        <octahedronGeometry args={[0.3, 0]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={2.5}
+          metalness={0.8}
+          roughness={0.2}
+        />
+      </mesh>
+
+      {/* Vertical light beam / column */}
+      <mesh position={[0, 0.6, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 1.2, 16]} />
+        <meshBasicMaterial color={color} transparent opacity={0.55} />
+      </mesh>
+    </group>
+  );
+}
+
+function ProbeTracer3D({
+  probeHop = 0,
+  probeSpeed = 1,
+  isProbePlaying = false,
+  winningModel = 'LSTM',
+  isDark = true,
+}) {
+  const mainParticleRef = useRef();
+  const branchRefs = useRef([]);
+  const convergenceRefs = useRef([]);
+  const decisionRef = useRef();
+  const feedbackRef = useRef();
+
+  // Closed feedback loop curve
+  const feedbackCurve = useMemo(() => {
+    return new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(12.5, -3.0, -0.5),
+      new THREE.Vector3(0.0, 2.5, -1.0),
+      new THREE.Vector3(-12.0, -3.5, -2.0)
+    );
+  }, []);
+
+  // Frame loop for traveling particles
+  useFrame(({ clock }) => {
+    if (probeHop === 0) return;
+    const speed = Math.max(0.4, 0.8 * (probeSpeed || 1));
+    const t = (clock.getElapsedTime() * speed) % 1;
+
+    // Hop 1: Skydeck -> Traffic Ingestion
+    if (probeHop === 1 && mainParticleRef.current) {
+      const p0 = new THREE.Vector3(0.0, 6.8, 4.0);
+      const p1 = new THREE.Vector3(0.0, 3.0, 2.0);
+      mainParticleRef.current.position.lerpVectors(p0, p1, t);
+    }
+
+    // Hop 2: Traffic Ingestion -> Ingress Router -> Backend Workload
+    if (probeHop === 2 && mainParticleRef.current) {
+      if (t < 0.5) {
+        const subT = t * 2;
+        const p0 = new THREE.Vector3(0.0, 3.0, 2.0);
+        const p1 = new THREE.Vector3(12.0, 3.0, 2.0);
+        mainParticleRef.current.position.lerpVectors(p0, p1, subT);
+      } else {
+        const subT = (t - 0.5) * 2;
+        const p0 = new THREE.Vector3(12.0, 2.5, 2.0);
+        const p1 = new THREE.Vector3(0.0, -0.5, 0.0);
+        mainParticleRef.current.position.lerpVectors(p0, p1, subT);
+      }
+    }
+
+    // Hop 3: Backend Workload -> Target Pods Cluster
+    if (probeHop === 3 && mainParticleRef.current) {
+      const p0 = new THREE.Vector3(0.0, -0.5, 0.0);
+      const p1 = new THREE.Vector3(-12.0, -4.5, -2.0);
+      mainParticleRef.current.position.lerpVectors(p0, p1, t);
+    }
+
+    // Hop 4: Target Pods -> k8shorizmetrics -> 4 Parallel Models
+    if (probeHop === 4) {
+      if (mainParticleRef.current) {
+        const p0 = new THREE.Vector3(-12.0, -4.5, -2.0);
+        const p1 = new THREE.Vector3(-4.5, -4.5, -2.0);
+        mainParticleRef.current.position.lerpVectors(p0, p1, t);
+      }
+      // 4 branch streams into models
+      const modelTargets = [
+        new THREE.Vector3(2.0, -4.5, -3.5), // HPA
+        new THREE.Vector3(2.0, -4.5, -0.5), // OLS
+        new THREE.Vector3(7.0, -4.5, -3.5), // HW
+        new THREE.Vector3(7.0, -4.5, -0.5), // LSTM
+      ];
+      const startP = new THREE.Vector3(-4.5, -4.5, -2.0);
+      modelTargets.forEach((tgt, i) => {
+        const ref = branchRefs.current[i];
+        if (ref) {
+          ref.position.lerpVectors(startP, tgt, t);
+        }
+      });
+    }
+
+    // Hop 5: 4 Models -> MAX Arbiter -> Scale Actuator
+    if (probeHop === 5) {
+      const modelStarts = [
+        new THREE.Vector3(2.0, -4.5, -3.5), // HPA
+        new THREE.Vector3(2.0, -4.5, -0.5), // OLS
+        new THREE.Vector3(7.0, -4.5, -3.5), // HW
+        new THREE.Vector3(7.0, -4.5, -0.5), // LSTM
+      ];
+      const arbiterPos = new THREE.Vector3(12.5, -4.5, -2.8);
+      modelStarts.forEach((start, i) => {
+        const ref = convergenceRefs.current[i];
+        if (ref) {
+          ref.position.lerpVectors(start, arbiterPos, t);
+        }
+      });
+      if (decisionRef.current) {
+        const p0 = new THREE.Vector3(12.5, -4.0, -2.8);
+        const p1 = new THREE.Vector3(12.5, -3.0, -0.5);
+        decisionRef.current.position.lerpVectors(p0, p1, t);
+      }
+    }
+
+    // Hop 6: Scale Actuator -> Closed Feedback Loop -> Target Pods
+    if (probeHop === 6 && feedbackRef.current) {
+      const pos = feedbackCurve.getPoint(t);
+      feedbackRef.current.position.set(pos.x, pos.y, pos.z);
+    }
+  });
+
+  if (probeHop === 0) return null;
+
+  const currentWp = PROBE_WAYPOINTS_3D.find((w) => w.id === probeHop);
+
+  return (
+    <group>
+      {/* 1. Docking Beacon at Current Active Waypoint */}
+      {currentWp && <DockingBeacon3D position={currentWp.position} color="#f59e0b" />}
+
+      {/* 2. Active Illuminated Conduits for the Current Hop */}
+      {probeHop === 1 && (
+        <Line
+          points={[[0.0, 6.8, 4.0], [0.0, 3.0, 2.0]]}
+          color="#f59e0b"
+          lineWidth={5.0}
+        />
+      )}
+      {probeHop === 2 && (
+        <>
+          <Line
+            points={[[0.0, 3.0, 2.0], [12.0, 3.0, 2.0]]}
+            color="#f59e0b"
+            lineWidth={5.0}
+          />
+          <Line
+            points={[[12.0, 2.5, 2.0], [0.0, -0.5, 0.0]]}
+            color="#f59e0b"
+            lineWidth={5.0}
+          />
+        </>
+      )}
+      {probeHop === 3 && (
+        <Line
+          points={[[0.0, -0.5, 0.0], [-12.0, -4.5, -2.0]]}
+          color="#f59e0b"
+          lineWidth={5.0}
+        />
+      )}
+      {probeHop === 4 && (
+        <>
+          <Line
+            points={[[-12.0, -4.5, -2.0], [-4.5, -4.5, -2.0]]}
+            color="#f59e0b"
+            lineWidth={5.0}
+          />
+          {/* Branch lines into 4 models */}
+          <Line points={[[-4.5, -4.5, -2.0], [2.0, -4.5, -3.5]]} color="#f59e0b" lineWidth={3.5} />
+          <Line points={[[-4.5, -4.5, -2.0], [2.0, -4.5, -0.5]]} color="#f59e0b" lineWidth={3.5} />
+          <Line points={[[-4.5, -4.5, -2.0], [7.0, -4.5, -3.5]]} color="#f59e0b" lineWidth={3.5} />
+          <Line points={[[-4.5, -4.5, -2.0], [7.0, -4.5, -0.5]]} color="#f59e0b" lineWidth={3.5} />
+        </>
+      )}
+      {probeHop === 5 && (
+        <>
+          <Line points={[[2.0, -4.5, -3.5], [12.5, -4.5, -2.8]]} color="#10b981" lineWidth={3.5} />
+          <Line points={[[2.0, -4.5, -0.5], [12.5, -4.5, -2.8]]} color="#10b981" lineWidth={3.5} />
+          <Line points={[[7.0, -4.5, -3.5], [12.5, -4.5, -2.8]]} color="#10b981" lineWidth={3.5} />
+          <Line points={[[7.0, -4.5, -0.5], [12.5, -4.5, -2.8]]} color="#10b981" lineWidth={3.5} />
+          <Line points={[[12.5, -4.0, -2.8], [12.5, -3.0, -0.5]]} color="#10b981" lineWidth={5.0} />
+        </>
+      )}
+      {probeHop === 6 && (
+        <Line
+          points={feedbackCurve.getPoints(50)}
+          color="#10b981"
+          lineWidth={6.0}
+        />
+      )}
+
+      {/* 3. Primary Luminous Traveling Probe Particle (Hops 1, 2, 3, 4) */}
+      {(probeHop === 1 || probeHop === 2 || probeHop === 3 || probeHop === 4) && (
+        <mesh ref={mainParticleRef}>
+          <sphereGeometry args={[0.36, 24, 24]} />
+          <meshStandardMaterial
+            color="#f59e0b"
+            emissive="#f59e0b"
+            emissiveIntensity={3.0}
+            roughness={0.1}
+          />
+        </mesh>
+      )}
+
+      {/* 4. Parallel Branch Particles for Hop 4 (Streaming into 4 Models) */}
+      {probeHop === 4 &&
+        [0, 1, 2, 3].map((idx) => (
+          <mesh
+            key={`b-${idx}`}
+            ref={(r) => {
+              branchRefs.current[idx] = r;
+            }}
+          >
+            <sphereGeometry args={[0.26, 16, 16]} />
+            <meshStandardMaterial
+              color="#fbbf24"
+              emissive="#fbbf24"
+              emissiveIntensity={2.5}
+              roughness={0.1}
+            />
+          </mesh>
+        ))}
+
+      {/* 5. Parallel Convergence Particles for Hop 5 (Streaming from 4 Models into Arbiter) */}
+      {probeHop === 5 && (
+        <>
+          {[0, 1, 2, 3].map((idx) => (
+            <mesh
+              key={`c-${idx}`}
+              ref={(r) => {
+                convergenceRefs.current[idx] = r;
+              }}
+            >
+              <sphereGeometry args={[0.26, 16, 16]} />
+              <meshStandardMaterial
+                color="#34d399"
+                emissive="#34d399"
+                emissiveIntensity={2.5}
+                roughness={0.1}
+              />
+            </mesh>
+          ))}
+          <mesh ref={decisionRef}>
+            <sphereGeometry args={[0.38, 24, 24]} />
+            <meshStandardMaterial
+              color="#10b981"
+              emissive="#10b981"
+              emissiveIntensity={3.5}
+              roughness={0.1}
+            />
+          </mesh>
+        </>
+      )}
+
+      {/* 6. Actuation Loop Closed Particle for Hop 6 */}
+      {probeHop === 6 && (
+        <mesh ref={feedbackRef}>
+          <sphereGeometry args={[0.42, 24, 24]} />
+          <meshStandardMaterial
+            color="#34d399"
+            emissive="#34d399"
+            emissiveIntensity={4.0}
+            roughness={0.1}
+          />
+        </mesh>
+      )}
     </group>
   );
 }
@@ -960,9 +1327,14 @@ export default function Pipeline3DCanvas({
   theme,
   viewPreset = 'isometric',
   isOrbiting = false,
+  isProbePlaying = false,
+  probeHop = 0,
+  probeSpeed = 1,
+  onProbeHopChange,
   selectedStage = 0,
   onSelectStage,
   latest = {},
+  isSpiking = false,
 }) {
   const isDark = useAppTheme(theme);
 
@@ -983,6 +1355,18 @@ export default function Pipeline3DCanvas({
     lstmPred: latest.lstmPred ?? 7,
     hpaPred: latest.hpaPred ?? Math.ceil((latest.actualPods ?? 4) * ((latest.currentCPU ?? 68) / 60)),
   };
+
+  const maxVal = Math.max(
+    dynamicLatest.hpaPred,
+    dynamicLatest.linearPred,
+    dynamicLatest.hwPred,
+    dynamicLatest.lstmPred
+  );
+  let winningModel = 'LSTM';
+  if (maxVal === dynamicLatest.lstmPred) winningModel = 'LSTM';
+  else if (maxVal === dynamicLatest.hwPred) winningModel = 'Holt-Winters';
+  else if (maxVal === dynamicLatest.linearPred) winningModel = 'Linear';
+  else winningModel = 'Reactive HPA';
 
   return (
     <div
@@ -1047,8 +1431,17 @@ export default function Pipeline3DCanvas({
         {/* Continuous 3D Traveling Photons */}
         <ArchitecturePhotons pipes={ARCH_PIPES} isDark={isDark} />
 
+        {/* Step-by-Step Active 3D Probe Tracer & Docking Beacons */}
+        <ProbeTracer3D
+          probeHop={probeHop}
+          probeSpeed={probeSpeed}
+          isProbePlaying={isProbePlaying}
+          winningModel={winningModel}
+          isDark={isDark}
+        />
+
         {/* Closed Feedback Loop Pipe (Scale Actuator -> Target Pods Cluster) */}
-        <ClosedFeedbackLoopPipe isDark={isDark} />
+        <ClosedFeedbackLoopPipe isDark={isDark} isActiveProbe={probeHop === 6} />
 
         {/* Centerpiece: Grand Circular Target Pods Cluster */}
         <CircularTargetPodsCluster
@@ -1058,6 +1451,7 @@ export default function Pipeline3DCanvas({
           cpu={dynamicLatest.cpu}
           isSelected={selectedStage === 2}
           isDark={isDark}
+          probeHop={probeHop}
           onSelect={onSelectStage}
         />
 
@@ -1069,6 +1463,7 @@ export default function Pipeline3DCanvas({
             isSelected={selectedStage === node.stageId}
             isDark={isDark}
             latest={dynamicLatest}
+            probeHop={probeHop}
             onSelect={onSelectStage}
           />
         ))}
