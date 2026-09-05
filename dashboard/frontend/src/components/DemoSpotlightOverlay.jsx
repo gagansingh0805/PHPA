@@ -42,13 +42,19 @@ export default function DemoSpotlightOverlay({ active, step = 0, targetId, stage
     const t2 = setTimeout(updateRect, 250);
     const t3 = setTimeout(updateRect, 500);
 
-    // Smoothly scroll target element into viewport center
+    // Smoothly scroll target element into visible viewport
     const el = document.getElementById(targetId);
     if (el) {
-      const b = el.getBoundingClientRect();
-      const inView = b.top >= 60 && b.bottom <= window.innerHeight - 60;
-      if (!inView) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const isMobile = window.innerWidth < 640;
+      const container = document.getElementById('main-scroll-container');
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
+        const targetRect = el.getBoundingClientRect();
+        // On mobile, scroll so element is comfortably visible in upper viewport (above bottom presenter drawer)
+        const targetOffset = targetRect.top - containerRect.top + container.scrollTop - (isMobile ? 64 : 100);
+        container.scrollTo({ top: Math.max(0, targetOffset), behavior: 'smooth' });
+      } else {
+        el.scrollIntoView({ behavior: 'smooth', block: isMobile ? 'start' : 'center' });
       }
     }
 
@@ -133,7 +139,7 @@ export default function DemoSpotlightOverlay({ active, step = 0, targetId, stage
           >
             {/* Top Indicator Badge */}
             <div
-              className={`absolute -top-3 left-4 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 shadow-lg ${color.badge}`}
+              className={`absolute ${ry < 64 ? 'top-2' : '-top-3'} left-3 sm:left-4 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 shadow-lg ${color.badge}`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
               <span>{stageName || 'Demo Focus'}</span>
