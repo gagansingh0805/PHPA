@@ -1812,6 +1812,7 @@ export default function App() {
           {activeTab === 'pipeline' && (
             <div className="surface-deck p-2 sm:p-5 rounded-xl">
               <PipelineViewer
+                theme={theme}
                 latest={latest}
                 isPlaying={isPlaying}
                 speedFactor={speedFactor}

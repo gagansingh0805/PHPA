@@ -40,6 +40,7 @@ import {
 const Pipeline3DCanvas = React.lazy(() => import('./Pipeline3DCanvas'));
 
 export default function PipelineViewer({
+  theme = 'dark',
   latest = {},
   isPlaying = true,
   speedFactor = 10,
@@ -1369,16 +1370,17 @@ export default function PipelineViewer({
 
         {/* Main Viewport: Real WebGL 3D Canvas OR 2D Crisp Schematic */}
         {viewMode === '3d' ? (
-          <div className="relative w-full h-[400px] sm:h-[500px] md:h-[640px] rounded-xl overflow-hidden bg-zinc-950">
+          <div className="relative w-full h-[400px] sm:h-[500px] md:h-[640px] rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-950 transition-colors duration-200">
             <React.Suspense
               fallback={
-                <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950 text-zinc-400 font-mono text-xs gap-3">
-                  <div className="w-6 h-6 border-2 border-zinc-700 border-t-zinc-200 rounded-full animate-spin" />
+                <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-100 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400 font-mono text-xs gap-3">
+                  <div className="w-6 h-6 border-2 border-zinc-400 dark:border-zinc-700 border-t-zinc-900 dark:border-t-zinc-200 rounded-full animate-spin" />
                   <span>Loading WebGL 3D Pipeline Scene...</span>
                 </div>
               }
             >
               <Pipeline3DCanvas
+                theme={theme}
                 viewPreset={viewPreset}
                 isOrbiting={isOrbiting}
                 isProbePlaying={isProbePlaying}

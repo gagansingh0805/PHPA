@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, RoundedBox, Edges, Line, Html } from '@react-three/drei';
+import { OrbitControls, RoundedBox, Edges, Line, Html, ContactShadows } from '@react-three/drei';
 import {
   Activity,
   Network,
@@ -12,14 +12,46 @@ import {
 } from 'lucide-react';
 
 /* =========================================================================
-   1. Pipeline Node Configurations & 3D Coordinates
+   1. Theme Detection Hook (Syncs with prop or document.documentElement)
+   ========================================================================= */
+export function useAppTheme(propTheme) {
+  const [isDark, setIsDark] = useState(() => {
+    if (propTheme) return propTheme === 'dark';
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (propTheme) {
+      setIsDark(propTheme === 'dark');
+      return;
+    }
+    const updateTheme = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    return () => observer.disconnect();
+  }, [propTheme]);
+
+  return isDark;
+}
+
+/* =========================================================================
+   2. Symmetrical 3D Pipeline Coordinates (Centered around [0, 0, 0])
    ========================================================================= */
 export const PIPELINE_NODES = [
   {
     id: 0,
     title: 'Edge Ingestion',
     subtitle: 'HTTP/gRPC Stream',
-    position: [-5.2, 1.4, 0],
+    position: [-4.8, 1.4, 0],
     icon: Activity,
     color: '#38bdf8', // Cyan
     getStat: (latest) => `${latest?.rps || 125} RPS`,
@@ -28,7 +60,7 @@ export const PIPELINE_NODES = [
     id: 1,
     title: 'Ingress Router',
     subtitle: 'Envoy Service Mesh',
-    position: [-2.1, 1.4, 0],
+    position: [-1.8, 1.4, 0],
     icon: Network,
     color: '#60a5fa', // Blue
     getStat: (latest) => `${latest?.p95 || 35.4}ms P95`,
@@ -55,7 +87,7 @@ export const PIPELINE_NODES = [
     id: 4,
     title: 'PHPA Models Brain',
     subtitle: 'Multi-Model Core',
-    position: [4.9, -1.5, 0],
+    position: [4.8, -1.5, 0],
     icon: Cpu,
     color: '#818cf8', // Indigo
     getStat: (latest) => `MAX: ${latest?.predicted_pods || latest?.actual_pods || 6} Pods`,
@@ -64,55 +96,99 @@ export const PIPELINE_NODES = [
     id: 5,
     title: 'Scale Actuator',
     subtitle: 'Kube-API Patch',
-    position: [4.9, 1.4, 0],
+    position: [4.8, 1.4, 0],
     icon: Zap,
     color: '#f59e0b', // Amber
     getStat: () => 'k8s REST Patch',
   },
 ];
 
-/* Highway Connections matching 2D sequence */
+/* Prominent Highway Connections matching 2D sequence (Centered & Symmetrical) */
 export const PIPELINE_CONNECTIONS = [
   // Hop 1: Ingestion -> Ingress
-  { id: 1, from: 0, to: 1, start: [-4.05, 1.4, 0], end: [-3.25, 1.4, 0] },
+  { id: 1, from: 0, to: 1, start: [-3.65, 1.4, 0], end: [-2.95, 1.4, 0] },
   // Hop 2: Ingress -> Pods
-  { id: 2, from: 1, to: 2, start: [-0.95, 1.4, 0], end: [0.15, 1.4, 0] },
+  { id: 2, from: 1, to: 2, start: [-0.65, 1.4, 0], end: [0.15, 1.4, 0] },
   // Hop 3: Pods -> Telemetry (downward)
   { id: 3, from: 2, to: 3, start: [1.3, 0.75, 0], end: [1.3, -0.85, 0] },
   // Hop 4: Telemetry -> Models Brain (rightward)
-  { id: 4, from: 3, to: 4, start: [2.45, -1.5, 0], end: [3.75, -1.5, 0] },
+  { id: 4, from: 3, to: 4, start: [2.45, -1.5, 0], end: [3.65, -1.5, 0] },
   // Hop 5: Models Brain -> Scale Actuator (upward)
-  { id: 5, from: 4, to: 5, start: [4.9, -0.85, 0], end: [4.9, 0.75, 0] },
-  // Hop 6: Scale Actuator -> Pods (leftward closing the loop)
-  { id: 6, from: 5, to: 2, start: [3.75, 1.4, 0], end: [2.45, 1.4, 0] },
+  { id: 5, from: 4, to: 5, start: [4.8, -0.85, 0], end: [4.8, 0.75, 0] },
+  // Hop 6: Scale Actuator -> Pods (closing loop into cluster)
+  { id: 6, from: 5, to: 2, start: [3.65, 1.4, 0], end: [2.45, 1.4, 0] },
 ];
 
 /* =========================================================================
-   2. Individual 3D Pipeline Stage Node Mesh
+   3. Individual 3D Stage Node Mesh with Theme-Aware Styling & Active Pulse
    ========================================================================= */
 function StageNode({
   node,
   isSelected,
   isActiveHop,
+  isDark,
   latest,
   onSelect,
 }) {
   const [hovered, setHovered] = useState(false);
   const meshRef = useRef();
+  const ringRef = useRef();
 
-  // Subtle floating idle motion
+  // Subtle floating idle motion + dynamic pulse when active
   useFrame((state) => {
+    const t = state.clock.getElapsedTime();
     if (meshRef.current) {
-      const t = state.clock.getElapsedTime();
-      meshRef.current.position.y =
-        node.position[1] + Math.sin(t * 1.5 + node.id * 1.1) * 0.04;
+      const floatY = Math.sin(t * 1.5 + node.id * 1.1) * 0.035;
+      meshRef.current.position.y = node.position[1] + floatY;
+
+      // Scale pulse when active during trace
+      const baseScale = isActiveHop ? 1.05 + Math.sin(t * 6) * 0.025 : hovered ? 1.03 : 1.0;
+      meshRef.current.scale.set(baseScale, baseScale, baseScale);
+    }
+
+    if (ringRef.current && isActiveHop) {
+      ringRef.current.rotation.z += 0.03;
+      const s = 1.0 + Math.sin(t * 7) * 0.08;
+      ringRef.current.scale.set(s, s, 1);
     }
   });
 
   const statText = node.getStat(latest);
 
+  // Theme-Aware Materials
+  const cardColor = isDark
+    ? isSelected
+      ? '#222329'
+      : '#131418'
+    : isSelected
+    ? '#ffffff'
+    : '#f8fafc';
+
+  const edgeColor = isActiveHop
+    ? node.color
+    : hovered
+    ? isDark
+      ? '#71717a'
+      : '#94a3b8'
+    : isDark
+    ? '#2f3139'
+    : '#cbd5e1';
+
   return (
-    <group ref={meshRef} position={node.position}>
+    <group ref={meshRef} position={node.position} rotation={[0, 0, 0]}>
+      {/* Active Aura / Glowing Ring Mesh (rendered when node is active) */}
+      {isActiveHop && (
+        <mesh ref={ringRef} position={[0, 0, -0.05]}>
+          <ringGeometry args={[1.38, 1.52, 36]} />
+          <meshBasicMaterial
+            color={node.color}
+            transparent
+            opacity={isDark ? 0.75 : 0.55}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
+
       {/* 3D Rounded Box Mesh */}
       <RoundedBox
         args={[2.3, 1.25, 0.35]}
@@ -129,21 +205,31 @@ function StageNode({
         onPointerOut={() => setHovered(false)}
       >
         <meshStandardMaterial
-          color={isSelected ? '#1c1d22' : '#121316'}
-          roughness={0.25}
-          metalness={0.3}
-          emissive={isActiveHop ? node.color : isSelected ? '#27272a' : '#000000'}
-          emissiveIntensity={isActiveHop ? 0.45 : isSelected ? 0.15 : 0}
+          color={cardColor}
+          roughness={isDark ? 0.25 : 0.2}
+          metalness={isDark ? 0.25 : 0.1}
+          emissive={isActiveHop ? node.color : isSelected ? (isDark ? '#27272a' : '#e2e8f0') : '#000000'}
+          emissiveIntensity={isActiveHop ? (isDark ? 0.65 : 0.45) : isSelected ? 0.15 : 0}
         />
-        {/* Subtle geometric wireframe edges */}
+        {/* Crisp wireframe border edge */}
         <Edges
-          linewidth={1}
+          linewidth={isActiveHop ? 2.5 : 1.5}
           scale={1.002}
-          color={isActiveHop ? node.color : hovered ? '#71717a' : '#27272a'}
+          color={edgeColor}
         />
       </RoundedBox>
 
-      {/* HTML Overlay Label (Billboarded, always crisp & readable at any camera angle) */}
+      {/* Ground Anchor Pedestal / Drop Shadow Disc */}
+      <mesh position={[0, -2.62 - node.position[1], 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[1.2, 32]} />
+        <meshBasicMaterial
+          color={isDark ? '#000000' : '#475569'}
+          transparent
+          opacity={isDark ? (isActiveHop ? 0.65 : 0.4) : (isActiveHop ? 0.35 : 0.18)}
+        />
+      </mesh>
+
+      {/* HTML Overlay Label (Billboarded, always crisp & readable in both themes) */}
       <Html
         position={[0, 0, 0.22]}
         center
@@ -157,35 +243,63 @@ function StageNode({
           }}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all duration-200 cursor-pointer min-w-[125px] ${
+          className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all duration-200 cursor-pointer min-w-[126px] ${
             isActiveHop
-              ? 'bg-zinc-950/95 border-zinc-500 shadow-[0_0_15px_rgba(255,255,255,0.12)]'
+              ? isDark
+                ? 'bg-zinc-950/95 border-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.25)] ring-1 ring-sky-400/50'
+                : 'bg-white/95 border-sky-500 shadow-[0_4px_16px_rgba(2,132,199,0.25)] ring-1 ring-sky-500/60'
               : isSelected
-              ? 'bg-zinc-900/90 border-zinc-600 shadow-md'
-              : 'bg-zinc-950/80 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/90'
+              ? isDark
+                ? 'bg-zinc-900/90 border-zinc-600 shadow-md'
+                : 'bg-white/95 border-zinc-400 shadow-md ring-1 ring-zinc-300'
+              : isDark
+              ? 'bg-zinc-950/85 border-zinc-800/90 hover:border-zinc-700 hover:bg-zinc-900/90'
+              : 'bg-white/90 border-zinc-200/90 hover:border-zinc-300 hover:bg-zinc-50/95 shadow-sm'
           }`}
         >
           {/* Header Row */}
           <div className="flex items-center gap-1.5 mb-1 w-full justify-between">
             <div className="flex items-center gap-1">
               <span
-                className="w-1.5 h-1.5 rounded-full"
+                className={`w-2 h-2 rounded-full ${isActiveHop ? 'animate-ping' : ''}`}
                 style={{ backgroundColor: node.color }}
               />
-              <span className="text-[9px] font-mono text-zinc-400 font-bold uppercase tracking-wider">
+              <span
+                className={`text-[9px] font-mono font-bold uppercase tracking-wider ${
+                  isDark ? 'text-zinc-400' : 'text-zinc-500'
+                }`}
+              >
                 0{node.id + 1}
               </span>
             </div>
-            <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-zinc-800/90 text-zinc-200 border border-zinc-700/60">
+            <span
+              className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border ${
+                isActiveHop
+                  ? isDark
+                    ? 'bg-sky-950/80 text-sky-200 border-sky-700/80'
+                    : 'bg-sky-50 text-sky-700 border-sky-300'
+                  : isDark
+                  ? 'bg-zinc-800/90 text-zinc-200 border-zinc-700/60'
+                  : 'bg-zinc-100 text-zinc-800 border-zinc-200'
+              }`}
+            >
               {statText}
             </span>
           </div>
 
-          {/* Node Title */}
-          <span className="text-[11px] font-semibold text-zinc-100 font-mono tracking-tight text-center truncate w-full">
+          {/* Node Title & Subtitle */}
+          <span
+            className={`text-[11px] font-semibold font-mono tracking-tight text-center truncate w-full ${
+              isDark ? 'text-zinc-100' : 'text-zinc-900'
+            }`}
+          >
             {node.title}
           </span>
-          <span className="text-[8.5px] text-zinc-500 font-mono tracking-tight text-center truncate w-full">
+          <span
+            className={`text-[8.5px] font-mono tracking-tight text-center truncate w-full ${
+              isDark ? 'text-zinc-500' : 'text-zinc-500'
+            }`}
+          >
             {node.subtitle}
           </span>
         </div>
@@ -195,12 +309,13 @@ function StageNode({
 }
 
 /* =========================================================================
-   3. Animated Trace Particle Traveling Along Connection Highways
+   4. Animated Trace Particle Traveling Along Connection Highways
    ========================================================================= */
 function TraceParticleSystem({
   isProbePlaying,
   probeHop,
   probeSpeed = 1,
+  isDark = true,
   onProbeHopChange,
 }) {
   const particleRef = useRef();
@@ -208,7 +323,6 @@ function TraceParticleSystem({
   const progressRef = useRef(0);
   const currentHopRef = useRef(probeHop > 0 ? probeHop : 1);
 
-  // Sync ref with prop
   useEffect(() => {
     if (probeHop > 0) {
       currentHopRef.current = probeHop;
@@ -220,7 +334,7 @@ function TraceParticleSystem({
     if (!particleRef.current) return;
 
     if (isProbePlaying) {
-      // 1.2s base segment duration scaled by probeSpeed (0.5x, 1x, 2x, 4x)
+      // 1.2s base segment duration dynamically scaled by probeSpeed (0.5x, 1x, 2x, 4x)
       const baseDuration = 1.2;
       const segmentDuration = baseDuration / Math.max(0.25, probeSpeed);
 
@@ -243,7 +357,7 @@ function TraceParticleSystem({
 
       particleRef.current.position.set(x, y, z);
       if (lightRef.current) {
-        lightRef.current.position.set(x, y, z + 0.2);
+        lightRef.current.position.set(x, y, z + 0.25);
       }
     }
   });
@@ -254,27 +368,27 @@ function TraceParticleSystem({
   return (
     <>
       <mesh ref={particleRef}>
-        <sphereGeometry args={[0.13, 16, 16]} />
-        <meshBasicMaterial color="#ffffff" />
+        <sphereGeometry args={[0.16, 20, 20]} />
+        <meshBasicMaterial color={isDark ? '#ffffff' : '#0284c7'} />
       </mesh>
       <pointLight
         ref={lightRef}
-        color="#38bdf8"
-        intensity={2.2}
-        distance={2.5}
+        color={isDark ? '#38bdf8' : '#0284c7'}
+        intensity={isDark ? 3.5 : 2.5}
+        distance={3.2}
       />
     </>
   );
 }
 
 /* =========================================================================
-   4. Ambient Micro-Photons (Continuous Highway Traffic)
+   5. Ambient Micro-Photons (Continuous Pipeline Traffic)
    ========================================================================= */
-function AmbientPhotons({ isSpiking }) {
+function AmbientPhotons({ isSpiking, isDark }) {
   const meshRefs = useRef([]);
 
   useFrame((state) => {
-    const t = state.clock.getElapsedTime() * (isSpiking ? 1.8 : 0.8);
+    const t = state.clock.getElapsedTime() * (isSpiking ? 1.8 : 0.85);
 
     PIPELINE_CONNECTIONS.forEach((conn, idx) => {
       const mesh = meshRefs.current[idx];
@@ -291,12 +405,13 @@ function AmbientPhotons({ isSpiking }) {
   return (
     <group>
       {PIPELINE_CONNECTIONS.map((_, idx) => (
-        <mesh
-          key={idx}
-          ref={(el) => (meshRefs.current[idx] = el)}
-        >
-          <sphereGeometry args={[0.045, 10, 10]} />
-          <meshBasicMaterial color="#a1a1aa" transparent opacity={0.65} />
+        <mesh key={idx} ref={(el) => (meshRefs.current[idx] = el)}>
+          <sphereGeometry args={[0.065, 12, 12]} />
+          <meshBasicMaterial
+            color={isDark ? '#e4e4e7' : '#334155'}
+            transparent
+            opacity={0.8}
+          />
         </mesh>
       ))}
     </group>
@@ -304,29 +419,29 @@ function AmbientPhotons({ isSpiking }) {
 }
 
 /* =========================================================================
-   5. Camera Controller with Smooth Lerp Presets & Auto-Orbit
+   6. Camera Controller with Smooth Lerp Presets & Uninterrupted OrbitControls
    ========================================================================= */
 function CameraController({ preset = 'isometric', isOrbiting = false }) {
   const controlsRef = useRef();
-  const targetPos = useRef(new THREE.Vector3(0.8, 6.8, 8.8));
-  const targetLook = useRef(new THREE.Vector3(0.8, 0, 0));
+  const targetPos = useRef(new THREE.Vector3(0, 8.2, 11.5));
+  const targetLook = useRef(new THREE.Vector3(0, 0, 0));
   const isTransitioning = useRef(true);
 
   useEffect(() => {
     if (preset === 'isometric') {
-      // ~44° elevation angle
-      targetPos.current.set(0.8, 6.8, 8.8);
-      targetLook.current.set(0.8, 0, 0);
+      // Symmetrical ~44° elevation angle looking at true center [0, 0, 0]
+      targetPos.current.set(0, 8.2, 11.5);
+      targetLook.current.set(0, 0, 0);
       isTransitioning.current = true;
     } else if (preset === 'front') {
-      // ~12° elevation angle
-      targetPos.current.set(0.8, 1.6, 9.8);
-      targetLook.current.set(0.8, 0, 0);
+      // Symmetrical ~12° elevation angle
+      targetPos.current.set(0, 2.2, 13.5);
+      targetLook.current.set(0, 0, 0);
       isTransitioning.current = true;
     } else if (preset === 'top') {
-      // ~68° top-down elevation angle
-      targetPos.current.set(0.8, 11.2, 4.4);
-      targetLook.current.set(0.8, 0, 0);
+      // Symmetrical ~68° top-down elevation angle
+      targetPos.current.set(0, 14.0, 5.5);
+      targetLook.current.set(0, 0, 0);
       isTransitioning.current = true;
     } else if (preset === 'free') {
       isTransitioning.current = false;
@@ -335,9 +450,9 @@ function CameraController({ preset = 'isometric', isOrbiting = false }) {
 
   useFrame((state, delta) => {
     if (isTransitioning.current && preset !== 'free') {
-      state.camera.position.lerp(targetPos.current, Math.min(1, delta * 3.6));
+      state.camera.position.lerp(targetPos.current, Math.min(1, delta * 3.8));
       if (controlsRef.current) {
-        controlsRef.current.target.lerp(targetLook.current, Math.min(1, delta * 3.6));
+        controlsRef.current.target.lerp(targetLook.current, Math.min(1, delta * 3.8));
         controlsRef.current.update();
       }
       if (state.camera.position.distanceTo(targetPos.current) < 0.05) {
@@ -355,16 +470,17 @@ function CameraController({ preset = 'isometric', isOrbiting = false }) {
       enableDamping
       dampingFactor={0.06}
       minDistance={3.5}
-      maxDistance={22}
-      maxPolarAngle={Math.PI / 2 + 0.05}
+      maxDistance={24}
+      maxPolarAngle={Math.PI / 2 + 0.02}
     />
   );
 }
 
 /* =========================================================================
-   6. Main 3D Pipeline Canvas Component
+   7. Main 3D Pipeline Canvas Component (Full Theme Adaptation)
    ========================================================================= */
 export default function Pipeline3DCanvas({
+  theme,
   viewPreset = 'isometric',
   isOrbiting = false,
   isProbePlaying = false,
@@ -376,8 +492,21 @@ export default function Pipeline3DCanvas({
   latest = {},
   isSpiking = false,
 }) {
+  const isDark = useAppTheme(theme);
+
+  // Palette definitions
+  const bgColor = isDark ? '#09090b' : '#f4f4f5';
+  const gridPrimary = isDark ? '#27272a' : '#cbd5e1';
+  const gridSecondary = isDark ? '#18181b' : '#e2e8f0';
+  const lineBaseColor = isDark ? '#71717a' : '#475569';
+  const lineActiveColor = isDark ? '#38bdf8' : '#0284c7';
+
   return (
-    <div className="w-full h-full min-h-[440px] sm:min-h-[540px] md:min-h-[660px] relative bg-zinc-950 select-none overflow-hidden rounded-2xl">
+    <div
+      className={`w-full h-full min-h-[440px] sm:min-h-[540px] md:min-h-[660px] relative select-none overflow-hidden rounded-2xl transition-colors duration-200 ${
+        isDark ? 'bg-zinc-950' : 'bg-zinc-100'
+      }`}
+    >
       <Canvas
         dpr={[1, 2]}
         gl={{
@@ -385,36 +514,54 @@ export default function Pipeline3DCanvas({
           powerPreference: 'high-performance',
           alpha: false,
         }}
-        camera={{ position: [0.8, 6.8, 8.8], fov: 46 }}
+        camera={{ position: [0, 8.2, 11.5], fov: 36 }}
       >
-        {/* Dark theme background color */}
-        <color attach="background" args={['#09090b']} />
+        {/* Dynamic theme background color */}
+        <color attach="background" args={[bgColor]} />
 
         {/* Studio Lighting */}
-        <ambientLight intensity={0.55} />
-        <directionalLight position={[6, 12, 8]} intensity={1.1} color="#ffffff" />
-        <directionalLight position={[-6, -8, -6]} intensity={0.3} color="#ffffff" />
-
-        {/* Camera and Orbit Controls */}
-        <CameraController preset={viewPreset} isOrbiting={isOrbiting} />
-
-        {/* Subtle Dark Ground Grid */}
-        <gridHelper
-          args={[26, 26, '#27272a', '#18181b']}
-          position={[0.8, -2.8, 0]}
+        <ambientLight intensity={isDark ? 0.6 : 0.95} />
+        <directionalLight
+          position={[6, 14, 8]}
+          intensity={isDark ? 1.3 : 1.5}
+          color="#ffffff"
+        />
+        <directionalLight
+          position={[-6, -8, -6]}
+          intensity={isDark ? 0.3 : 0.5}
+          color="#ffffff"
         />
 
-        {/* Connecting Lines between Nodes */}
+        {/* Camera and Uninterrupted Orbit Controls */}
+        <CameraController preset={viewPreset} isOrbiting={isOrbiting} />
+
+        {/* Symmetrical Ground Grid */}
+        <gridHelper
+          args={[26, 26, gridPrimary, gridSecondary]}
+          position={[0, -2.65, 0]}
+        />
+
+        {/* Soft Ground Contact Shadows */}
+        <ContactShadows
+          position={[0, -2.64, 0]}
+          opacity={isDark ? 0.7 : 0.38}
+          scale={22}
+          blur={1.8}
+          far={6}
+          color={isDark ? '#000000' : '#334155'}
+        />
+
+        {/* Prominent Highway Connection Lines between Nodes */}
         {PIPELINE_CONNECTIONS.map((conn) => {
-          const isActive = probeHop === conn.id || (isProbePlaying && probeHop === conn.id);
+          const isActive = probeHop === conn.id;
           return (
             <Line
               key={conn.id}
               points={[conn.start, conn.end]}
-              color={isActive ? '#ffffff' : '#3f3f46'}
-              lineWidth={isActive ? 2.5 : 1.5}
+              color={isActive ? lineActiveColor : lineBaseColor}
+              lineWidth={isActive ? 5.5 : 3.5}
               transparent
-              opacity={isActive ? 1 : 0.65}
+              opacity={isActive ? 1.0 : 0.85}
             />
           );
         })}
@@ -422,13 +569,18 @@ export default function Pipeline3DCanvas({
         {/* Pipeline Stage Nodes */}
         {PIPELINE_NODES.map((node) => {
           const isSelected = selectedStage === node.id;
-          const isActiveHop = probeHop === node.id + 1;
+          // Node is active if it's currently transmitting/processing the hop
+          const isActiveHop =
+            probeHop > 0 &&
+            (node.id === probeHop - 1 || (probeHop === 6 && node.id === 5));
+
           return (
             <StageNode
               key={node.id}
               node={node}
               isSelected={isSelected}
               isActiveHop={isActiveHop}
+              isDark={isDark}
               latest={latest}
               onSelect={onSelectStage}
             />
@@ -436,17 +588,17 @@ export default function Pipeline3DCanvas({
         })}
 
         {/* Continuous Highway Photons */}
-        <AmbientPhotons isSpiking={isSpiking} />
+        <AmbientPhotons isSpiking={isSpiking} isDark={isDark} />
 
         {/* Active Step-by-Step Probe Particle */}
         <TraceParticleSystem
           isProbePlaying={isProbePlaying}
           probeHop={probeHop}
           probeSpeed={probeSpeed}
+          isDark={isDark}
           onProbeHopChange={onProbeHopChange}
         />
       </Canvas>
     </div>
   );
 }
-
