@@ -56,18 +56,18 @@ export default function PipelineViewer({
   const getResponsiveZoom = (base = 1, mode = viewMode) => {
     if (typeof window !== 'undefined') {
       const w = window.innerWidth;
-      // In 3D isometric view (44deg pitch, -18deg yaw), the rotated bounding box is ~1440px wide.
+      // In 3D isometric view (44deg pitch, -18deg yaw), the rotated bounding box is ~1300px wide.
       // In 2D crisp schematic mode, the flat bounding box is ~1180px wide.
-      const effectiveW = mode === '3d' ? 1440 : 1180;
-      const gutter = w < 640 ? 28 : 64;
+      const effectiveW = mode === '3d' ? 1300 : 1180;
+      const gutter = w < 640 ? 24 : 64;
       const availableW = Math.max(240, w - gutter);
       const fitScale = availableW / effectiveW;
 
-      if (w < 400) return parseFloat((Math.min(mode === '3d' ? 0.22 : 0.26, fitScale) * base).toFixed(3));
-      if (w < 480) return parseFloat((Math.min(mode === '3d' ? 0.26 : 0.31, fitScale) * base).toFixed(3));
-      if (w < 640) return parseFloat((Math.min(mode === '3d' ? 0.36 : 0.42, fitScale) * base).toFixed(3));
-      if (w < 768) return parseFloat((Math.min(mode === '3d' ? 0.46 : 0.54, fitScale) * base).toFixed(3));
-      if (w < 1024) return parseFloat((Math.min(mode === '3d' ? 0.65 : 0.74, fitScale) * base).toFixed(3));
+      if (w < 400) return parseFloat((Math.min(mode === '3d' ? 0.25 : 0.28, fitScale) * base).toFixed(3));
+      if (w < 480) return parseFloat((Math.min(mode === '3d' ? 0.30 : 0.34, fitScale) * base).toFixed(3));
+      if (w < 640) return parseFloat((Math.min(mode === '3d' ? 0.40 : 0.45, fitScale) * base).toFixed(3));
+      if (w < 768) return parseFloat((Math.min(mode === '3d' ? 0.50 : 0.56, fitScale) * base).toFixed(3));
+      if (w < 1024) return parseFloat((Math.min(mode === '3d' ? 0.68 : 0.76, fitScale) * base).toFixed(3));
       if (w < 1280) return parseFloat((Math.min(0.85, fitScale) * base).toFixed(3));
     }
     return base;
@@ -1165,8 +1165,8 @@ export default function PipelineViewer({
       </div>
 
       {/* 2. STEP-BY-STEP CONTROLLABLE PROBE TRACER BAR */}
-      <div className="raised-card rounded-lg p-3 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-        <div className="flex items-center gap-2">
+      <div className="raised-card rounded-lg p-3 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 max-w-full">
           <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 flex-shrink-0">
             <Zap className="w-3 h-3 text-zinc-700 dark:text-zinc-300" />
             <span>STEP-BY-STEP PROBE</span>
@@ -1410,7 +1410,7 @@ export default function PipelineViewer({
 
         {/* Main Diagram Canvas: 3D Transform vs 2D Flat */}
         <div
-          className="w-full h-[400px] sm:h-[500px] md:h-[640px] flex items-center justify-center transition-transform duration-100 ease-out"
+          className="relative w-full h-[400px] sm:h-[500px] md:h-[640px] flex items-center justify-center overflow-hidden transition-transform duration-100 ease-out"
           style={
             viewMode === '3d'
               ? {
@@ -1421,18 +1421,28 @@ export default function PipelineViewer({
           }
         >
           <div
-            className="relative w-[1160px] h-[600px] transition-transform duration-150 ease-out"
-            style={
-              viewMode === '3d'
+            className="absolute transition-transform duration-150 ease-out flex-shrink-0"
+            style={{
+              width: '1160px',
+              minWidth: '1160px',
+              maxWidth: '1160px',
+              height: '600px',
+              minHeight: '600px',
+              maxHeight: '600px',
+              left: '50%',
+              top: '50%',
+              marginLeft: '-580px',
+              marginTop: '-300px',
+              transformOrigin: '50% 50%',
+              ...(viewMode === '3d'
                 ? {
                     transformStyle: 'preserve-3d',
                     transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) rotateX(${pitch}deg) rotateY(${roll}deg) rotateZ(${yaw}deg) scale(${zoom})`,
                   }
                 : {
                     transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) scale(${zoom})`,
-                    transformOrigin: '50% 50%',
-                  }
-            }
+                  }),
+            }}
           >
             {/* Grid Floor */}
             <div
