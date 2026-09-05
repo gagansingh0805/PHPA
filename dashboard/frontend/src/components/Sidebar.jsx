@@ -49,56 +49,48 @@ export default function Sidebar({
     <div className="flex flex-col justify-between h-full">
       {/* Top Branding & Nav */}
       <div>
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-          <div 
-            onClick={onReturnHome}
-            className={`flex items-center gap-2.5 min-w-0 ${onReturnHome ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
-            title={onReturnHome ? "Return to 3D Canvas Homepage" : undefined}
+        <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <button 
+            type="button"
+            onClick={() => {
+              if (onReturnHome) onReturnHome();
+              if (isMobile && onMobileClose) onMobileClose();
+            }}
+            className="flex items-center gap-2.5 min-w-0 text-left p-2 -m-0.5 rounded-lg hover:bg-zinc-100/80 dark:hover:bg-zinc-850/80 transition-all group w-full cursor-pointer focus:outline-none border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700/60"
+            title="Return to 3D Homepage"
           >
-            <PhpaLogo size="md" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
+            <PhpaLogo size="md" className="group-hover:scale-105 transition-transform flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1.5">
+                <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate flex items-center gap-1.5">
                   Predictive <Term id="hpa">HPA</Term>
                 </h1>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
-                  v0.13.2
-                </span>
+                {onReturnHome && (
+                  <span className="text-[9.5px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 group-hover:border-zinc-400 dark:group-hover:border-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors flex-shrink-0">
+                    <Sparkles className="w-2.5 h-2.5 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
+                    <span>3D Home</span>
+                    <span className="text-[9px] group-hover:translate-x-0.5 transition-transform">↗</span>
+                  </span>
+                )}
               </div>
-              <p className="text-[11px] text-zinc-500 truncate">Telemetry &amp; Research</p>
+              <div className="flex items-center justify-between text-[11px] text-zinc-500 mt-0.5">
+                <p className="truncate">Telemetry &amp; Research</p>
+                <span className="text-[10px] font-mono opacity-60">v0.13.2</span>
+              </div>
             </div>
-          </div>
+          </button>
 
           {/* Close button for mobile drawer */}
           {isMobile && (
             <button
               onClick={onMobileClose}
-              className="p-1.5 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+              className="p-1.5 ml-1 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors flex-shrink-0"
               aria-label="Close navigation"
             >
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
-
-        {/* Return to 3D Canvas Homepage Button */}
-        {onReturnHome && (
-          <div className="p-2 pb-0">
-            <button
-              onClick={() => {
-                onReturnHome();
-                if (isMobile && onMobileClose) onMobileClose();
-              }}
-              className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-mono font-medium transition-all shadow-2xs group cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
-                <span>3D Homepage</span>
-              </div>
-              <span className="text-[10px] text-zinc-400 font-sans group-hover:translate-x-0.5 transition-transform">↗</span>
-            </button>
-          </div>
-        )}
 
         {/* Navigation Items */}
         <nav className="p-2 space-y-1">
