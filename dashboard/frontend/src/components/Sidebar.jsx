@@ -14,8 +14,7 @@ import {
   Flame, 
   Clock,
   ChevronRight,
-  X,
-  Sparkles
+  X
 } from 'lucide-react';
 import Term from './Term';
 import PhpaLogo from './PhpaLogo';
@@ -49,34 +48,27 @@ export default function Sidebar({
     <div className="flex flex-col justify-between h-full">
       {/* Top Branding & Nav */}
       <div>
-        <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
           <button 
             type="button"
             onClick={() => {
               if (onReturnHome) onReturnHome();
               if (isMobile && onMobileClose) onMobileClose();
             }}
-            className="flex items-center gap-2.5 min-w-0 text-left p-2 -m-0.5 rounded-lg hover:bg-zinc-100/80 dark:hover:bg-zinc-850/80 transition-all group w-full cursor-pointer focus:outline-none border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700/60"
+            className="flex items-center gap-2.5 min-w-0 text-left p-1 -m-1 rounded-md hover:opacity-85 transition-opacity group cursor-pointer focus:outline-none"
             title="Return to 3D Homepage"
           >
             <PhpaLogo size="md" className="group-hover:scale-105 transition-transform flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-1.5">
-                <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
                   Predictive <Term id="hpa">HPA</Term>
                 </h1>
-                {onReturnHome && (
-                  <span className="text-[9.5px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 group-hover:border-zinc-400 dark:group-hover:border-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors flex-shrink-0">
-                    <Sparkles className="w-2.5 h-2.5 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
-                    <span>3D Home</span>
-                    <span className="text-[9px] group-hover:translate-x-0.5 transition-transform">↗</span>
-                  </span>
-                )}
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                  v0.13.2
+                </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-zinc-500 mt-0.5">
-                <p className="truncate">Telemetry &amp; Research</p>
-                <span className="text-[10px] font-mono opacity-60">v0.13.2</span>
-              </div>
+              <p className="text-[11px] text-zinc-500 truncate">Telemetry &amp; Research</p>
             </div>
           </button>
 
