@@ -16,9 +16,12 @@ function ClusterCore({ isMobile, isDark }) {
   const ring3Ref = useRef();
 
   // Geometries are created ONCE and never re-allocated
-  const { coreGeo, wireGeo, ringGeo } = useMemo(() => {
+  const { coreGeo, coreEdgesGeo, wireGeo, ringGeo } = useMemo(() => {
+    const core = new THREE.IcosahedronGeometry(1.35, 0);
+    const edges = new THREE.EdgesGeometry(core);
     return {
-      coreGeo: new THREE.IcosahedronGeometry(1.35, 0),
+      coreGeo: core,
+      coreEdgesGeo: edges,
       wireGeo: new THREE.IcosahedronGeometry(1.95, 1),
       ringGeo: new THREE.TorusGeometry(2.6, 0.012, 16, 120),
     };
@@ -27,10 +30,11 @@ function ClusterCore({ isMobile, isDark }) {
   useEffect(() => {
     return () => {
       coreGeo.dispose();
+      coreEdgesGeo.dispose();
       wireGeo.dispose();
       ringGeo.dispose();
     };
-  }, [coreGeo, wireGeo, ringGeo]);
+  }, [coreGeo, coreEdgesGeo, wireGeo, ringGeo]);
 
   useFrame((_, delta) => {
     if (coreRef.current) {
@@ -57,18 +61,26 @@ function ClusterCore({ isMobile, isDark }) {
 
   return (
     <group>
-      {/* Solid central nucleus core (rendered in light mode, omitted in dark mode) */}
-      {!isDark && (
-        <mesh ref={coreRef} geometry={coreGeo}>
+      {/* Solid central nucleus core with distinct faceted shading and white edge definition */}
+      <group ref={coreRef}>
+        <mesh geometry={coreGeo}>
           <meshStandardMaterial
-            color="#e4e4e7"
-            emissive="#09090b"
-            emissiveIntensity={0.02}
-            roughness={0.35}
-            metalness={0.2}
+            color={isDark ? '#2e3340' : '#e4e4e7'}
+            emissive={isDark ? '#1a1d26' : '#09090b'}
+            emissiveIntensity={isDark ? 0.35 : 0.02}
+            roughness={0.2}
+            metalness={0.3}
+            flatShading
           />
         </mesh>
-      )}
+        <lineSegments geometry={coreEdgesGeo}>
+          <lineBasicMaterial
+            color={isDark ? '#ffffff' : '#18181b'}
+            transparent
+            opacity={isDark ? 0.65 : 0.35}
+          />
+        </lineSegments>
+      </group>
 
       {/* Wireframe lattice */}
       <mesh ref={wireframeRef} geometry={wireGeo}>
