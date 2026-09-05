@@ -276,20 +276,23 @@ export default function Hero3D({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Animate 3D group over the full height of the hero section
+    const scrollContainer = document.getElementById('main-scroll-container') || window;
+
+    // Animate 3D group over the height of the hero section
     const st = ScrollTrigger.create({
       trigger: containerRef.current,
+      scroller: scrollContainer,
       start: 'top top',
       end: 'bottom top',
       scrub: 1.2, // Smooth scrubbing
       onUpdate: (self) => {
         const p = self.progress; // 0 to 1
         // Rotation: rotates by Math.PI (180 deg) as user scrolls down
-        // Scale: gently scales down from 1 to 0.7
+        // Scale: gently scales down from 1 to 0.72
         // Position Y: moves down subtly from 0 to -1.2
         scrollProgressRef.current = {
           scrollRotation: p * Math.PI,
-          scrollScale: 1 - p * 0.3,
+          scrollScale: 1 - p * 0.28,
           scrollPosY: -p * 1.2,
         };
       },
@@ -304,7 +307,7 @@ export default function Hero3D({
     <section
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative w-full h-screen min-h-[640px] max-h-[1000px] overflow-hidden bg-zinc-950 text-white flex items-center justify-center select-none"
+      className="relative w-full h-[600px] sm:h-[700px] md:h-[780px] rounded-2xl border border-zinc-300 dark:border-zinc-800 overflow-hidden bg-zinc-950 text-white flex items-center justify-center select-none shadow-2xl"
       style={{
         background: 'radial-gradient(ellipse at 50% 45%, #0c1527 0%, #09090b 70%, #030712 100%)',
       }}
@@ -395,3 +398,4 @@ export default function Hero3D({
     </section>
   );
 }
+

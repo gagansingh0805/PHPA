@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import HomeOverview from './components/HomeOverview';
+const Hero3D = lazy(() => import('./components/Hero3D'));
 import LSTMAttribution from './components/LSTMAttribution';
 import ModelDeepDive from './components/ModelDeepDive';
 import PipelineViewer from './components/PipelineViewer';
@@ -1129,8 +1130,20 @@ export default function App() {
           <ErrorBoundary key={activeTab} onReset={() => setActiveTab('overview')}>
             {/* TAB 0: RESEARCH OVERVIEW */}
           {activeTab === 'overview' && (
-            <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
-              <HomeOverview onLaunchLab={() => setActiveTab('lab')} onNavigateTab={setActiveTab} />
+            <div className="space-y-6">
+              <Suspense
+                fallback={
+                  <div className="w-full h-[600px] rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500 font-mono text-xs shadow-2xl">
+                    Initializing 3D Kubernetes Cluster Environment...
+                  </div>
+                }
+              >
+                <Hero3D onCtaClick={() => setActiveTab('lab')} />
+              </Suspense>
+
+              <div className="surface-deck p-3.5 sm:p-5 rounded-xl">
+                <HomeOverview onLaunchLab={() => setActiveTab('lab')} onNavigateTab={setActiveTab} />
+              </div>
             </div>
           )}
 
