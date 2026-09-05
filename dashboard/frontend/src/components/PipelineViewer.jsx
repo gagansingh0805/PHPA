@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Activity,
@@ -120,6 +121,17 @@ export default function PipelineViewer({
   const [probeSpeed, setProbeSpeed] = useState(1); // 0.5, 1, 2, 4
   const [activePodTarget, setActivePodTarget] = useState(3);
   const probeTimerRef = useRef(null);
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isDrawerOpen) {
+        setIsDrawerOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDrawerOpen]);
 
   // Dynamic simulation values with fallbacks
   const rps = latest.rps || 125;
@@ -1372,7 +1384,7 @@ export default function PipelineViewer({
         )}
 
         {/* Top-Center Active Stage Announcement Pill */}
-        {probeHop > 0 && currentWaypoint && (
+        {probeHop > 0 && currentWaypoint && !isDrawerOpen && (
           <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-zinc-900/90 text-white dark:bg-zinc-900/95 dark:text-zinc-100 border border-amber-500/50 dark:border-amber-400/40 px-3 py-1 rounded-full text-[11px] font-mono shadow-lg backdrop-blur-md">
             <span className={`w-2 h-2 rounded-full ${probeHop >= 5 ? 'bg-emerald-400' : 'bg-amber-400'} animate-ping`} />
             <span className={`font-bold ${probeHop >= 5 ? 'text-emerald-400' : 'text-amber-400'}`}>
@@ -1456,7 +1468,7 @@ export default function PipelineViewer({
 
         {/* Live Trace Packet Details Toast */}
         <AnimatePresence>
-          {currentWaypoint && (
+          {currentWaypoint && !isDrawerOpen && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1510,6 +1522,7 @@ export default function PipelineViewer({
                 }}
                 latest={latest}
                 isSpiking={isSpiking}
+                isModalOpen={isDrawerOpen}
               />
             </React.Suspense>
           </div>
@@ -2563,13 +2576,18 @@ export default function PipelineViewer({
 
       {/* 6. DEEP STAGE DIAGNOSTICS & ARCHITECTURE DIAGRAM MODAL */}
       <AnimatePresence>
-        {isDrawerOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+        {isDrawerOpen && typeof document !== 'undefined' && createPortal(
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsDrawerOpen(false);
+            }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
+          >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden pointer-events-auto"
             >
               {/* Modal Header */}
               <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-950/80">
@@ -2953,7 +2971,8 @@ export default function PipelineViewer({
                 )}
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
       </AnimatePresence>
     </div>

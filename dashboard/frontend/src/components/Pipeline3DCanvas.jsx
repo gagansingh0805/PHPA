@@ -403,6 +403,7 @@ function CircularTargetPodsCluster({
   isSelected = false,
   isDark = true,
   probeHop = 0,
+  isModalOpen = false,
   onSelect,
 }) {
   const ringRadius = 3.2;
@@ -462,13 +463,15 @@ function CircularTargetPodsCluster({
           />
         </RoundedBox>
 
-        {/* Billboard HUD Screen: ALWAYS faces the camera, 0 razor-blade effect */}
-        <Html
-          position={[0, 1.0, 0]}
-          center
-          distanceFactor={13.5}
-          style={{ pointerEvents: 'none' }}
-        >
+        {/* Billboard HUD Screen: ALWAYS faces the camera, hidden when modal is open */}
+        {!isModalOpen && (
+          <Html
+            position={[0, 1.0, 0]}
+            center
+            distanceFactor={13.5}
+            zIndexRange={[50, 0]}
+            style={{ pointerEvents: 'none' }}
+          >
           <div
             className={`p-2 rounded-xl border text-center font-mono select-none ${
               isActiveProbe
@@ -506,6 +509,7 @@ function CircularTargetPodsCluster({
             <div className="text-[9px] text-zinc-400 mt-0.5">Target: 60% • Ideal: {idealDemand}</div>
           </div>
         </Html>
+      )}
       </group>
 
       {/* Individual Radial Pod Blades */}
@@ -566,46 +570,49 @@ function CircularTargetPodsCluster({
             />
           </mesh>
 
-          {/* Billboard Pod Micro-Badge */}
-          <Html
-            position={[0, 0.75, 0]}
-            center
-            distanceFactor={13.5}
-            style={{ pointerEvents: 'none' }}
-          >
-            <div
-              className={`px-1.5 py-0.5 rounded-lg text-center font-mono select-none text-[9px] ${
-                pod.isActive
-                  ? isDark
-                    ? 'bg-zinc-900/90 text-zinc-100 border border-emerald-500/50'
-                    : 'bg-white/95 text-zinc-800 border border-emerald-500/60'
-                  : isDark
-                  ? 'bg-zinc-900/60 text-zinc-500 border border-zinc-700/30'
-                  : 'bg-zinc-100 text-zinc-400 border border-zinc-300'
-              } backdrop-blur-md shadow-md`}
-              style={{ minWidth: '60px' }}
+          {/* Billboard Pod Micro-Badge: render ONLY when modal is closed */}
+          {!isModalOpen && (
+            <Html
+              position={[0, 0.75, 0]}
+              center
+              distanceFactor={13.5}
+              zIndexRange={[50, 0]}
+              style={{ pointerEvents: 'none' }}
             >
-              <div className="flex items-center justify-center gap-1 font-bold">
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    pod.isActive
-                      ? pod.cpu > 70
-                        ? 'bg-amber-400 animate-ping'
-                        : 'bg-emerald-400'
-                      : 'bg-zinc-400'
-                  }`}
-                />
-                <span>pod-{pod.index}</span>
-              </div>
               <div
-                className={`font-semibold text-[8px] ${
-                  pod.cpu > 70 ? 'text-amber-500' : 'text-emerald-500'
-                }`}
+                className={`px-1.5 py-0.5 rounded-lg text-center font-mono select-none text-[9px] ${
+                  pod.isActive
+                    ? isDark
+                      ? 'bg-zinc-900/90 text-zinc-100 border border-emerald-500/50'
+                      : 'bg-white/95 text-zinc-800 border border-emerald-500/60'
+                    : isDark
+                    ? 'bg-zinc-900/60 text-zinc-500 border border-zinc-700/30'
+                    : 'bg-zinc-100 text-zinc-400 border border-zinc-300'
+                } backdrop-blur-md shadow-md`}
+                style={{ minWidth: '60px' }}
               >
-                {pod.cpu}% CPU
+                <div className="flex items-center justify-center gap-1 font-bold">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      pod.isActive
+                        ? pod.cpu > 70
+                          ? 'bg-amber-400 animate-ping'
+                          : 'bg-emerald-400'
+                        : 'bg-zinc-400'
+                    }`}
+                  />
+                  <span>pod-{pod.index}</span>
+                </div>
+                <div
+                  className={`font-semibold text-[8px] ${
+                    pod.cpu > 70 ? 'text-amber-500' : 'text-emerald-500'
+                  }`}
+                >
+                  {pod.cpu}% CPU
+                </div>
               </div>
-            </div>
-          </Html>
+            </Html>
+          )}
         </group>
       ))}
     </group>
@@ -615,7 +622,7 @@ function CircularTargetPodsCluster({
 /* =========================================================================
    5. Architecture Node Component (Solid 3D Hardware Pedestal + Billboard HUD)
    ========================================================================= */
-function ArchitectureNode({ node, isSelected, isDark, latest, probeHop = 0, onSelect }) {
+function ArchitectureNode({ node, isSelected, isDark, latest, probeHop = 0, isModalOpen = false, onSelect }) {
   const Icon = node.icon;
   const [hovered, setHovered] = useState(false);
 
@@ -732,119 +739,122 @@ function ArchitectureNode({ node, isSelected, isDark, latest, probeHop = 0, onSe
         </mesh>
       )}
 
-      {/* Billboard HUD Panel: ALWAYS faces the camera, 100% readable from all angles */}
-      <Html
-        position={[0, node.size[1] / 2 + 0.9, 0]}
-        center
-        distanceFactor={13.5}
-        style={{ pointerEvents: 'none' }}
-      >
-        <div
-          className={`p-2 rounded-xl font-mono select-none transition-all duration-200 ${
-            isActiveProbe
-              ? 'bg-zinc-950/95 text-zinc-100 border border-amber-500 shadow-2xl ring-2 ring-amber-500/30'
-              : isDark
-              ? 'bg-zinc-950/90 text-zinc-100 border border-zinc-750/80 shadow-2xl'
-              : 'bg-white/95 text-zinc-900 border border-zinc-300 shadow-xl'
-          } backdrop-blur-md`}
-          style={{ minWidth: node.isModel ? '150px' : '175px', maxWidth: node.isModel ? '180px' : '210px' }}
+      {/* Billboard HUD Panel: render ONLY when modal is closed */}
+      {!isModalOpen && (
+        <Html
+          position={[0, node.size[1] / 2 + 0.9, 0]}
+          center
+          distanceFactor={13.5}
+          zIndexRange={[50, 0]}
+          style={{ pointerEvents: 'none' }}
         >
-          <div className="flex items-center justify-between gap-1 mb-1">
-            <div className="flex items-center gap-1.5 overflow-hidden">
-              <span style={{ color: isActiveProbe ? '#f59e0b' : node.color }} className="flex-shrink-0">
-                <Icon className="w-3.5 h-3.5" />
-              </span>
-              <span className="text-[11px] font-bold truncate">{node.title}</span>
+          <div
+            className={`p-2 rounded-xl font-mono select-none transition-all duration-200 ${
+              isActiveProbe
+                ? 'bg-zinc-950/95 text-zinc-100 border border-amber-500 shadow-2xl ring-2 ring-amber-500/30'
+                : isDark
+                ? 'bg-zinc-950/90 text-zinc-100 border border-zinc-750/80 shadow-2xl'
+                : 'bg-white/95 text-zinc-900 border border-zinc-300 shadow-xl'
+            } backdrop-blur-md`}
+            style={{ minWidth: node.isModel ? '150px' : '175px', maxWidth: node.isModel ? '180px' : '210px' }}
+          >
+            <div className="flex items-center justify-between gap-1 mb-1">
+              <div className="flex items-center gap-1.5 overflow-hidden">
+                <span style={{ color: isActiveProbe ? '#f59e0b' : node.color }} className="flex-shrink-0">
+                  <Icon className="w-3.5 h-3.5" />
+                </span>
+                <span className="text-[11px] font-bold truncate">{node.title}</span>
+              </div>
+              {isWinning ? (
+                <span className="text-[8px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-500 font-bold border border-emerald-500/40 animate-pulse">
+                  WINNER
+                </span>
+              ) : isActiveProbe ? (
+                <span className="text-[8px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 animate-pulse">
+                  HOP {probeHop}
+                </span>
+              ) : null}
             </div>
-            {isWinning ? (
-              <span className="text-[8px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-500 font-bold border border-emerald-500/40 animate-pulse">
-                WINNER
-              </span>
-            ) : isActiveProbe ? (
-              <span className="text-[8px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 animate-pulse">
-                HOP {probeHop}
-              </span>
-            ) : null}
+
+            <div className="text-[9px] text-zinc-400 dark:text-zinc-500 truncate mb-1">
+              {node.subtitle}
+            </div>
+
+            {isActiveProbe && (
+              <div className="my-1 flex items-center justify-between text-[10px] bg-amber-500/15 border border-amber-500/30 text-amber-500 dark:text-amber-400 px-2 py-0.5 rounded font-bold animate-pulse">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  PROBE ACTIVE
+                </span>
+                <span>HOP {probeHop}</span>
+              </div>
+            )}
+
+            {/* Node-specific dynamic telemetry widgets */}
+            {node.id === 'traffic-ingestion' && (
+              <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
+                <span className="text-zinc-500">Rate:</span>
+                <span className="font-bold text-sky-500">{rps} RPS</span>
+              </div>
+            )}
+
+            {node.id === 'ingress-router' && (
+              <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
+                <span className="text-zinc-500">P95 Lat:</span>
+                <span className="font-bold text-blue-500">{p95}ms</span>
+              </div>
+            )}
+
+            {node.id === 'backend-workload' && (
+              <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
+                <span className="text-zinc-500">Active Workload:</span>
+                <span className="font-bold text-purple-500">{actualPods} active pods</span>
+              </div>
+            )}
+
+            {node.id === 'k8s-metrics' && (
+              <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
+                <span className="text-zinc-500">Cadence:</span>
+                <span className="font-bold text-emerald-500">15s cAdvisor</span>
+              </div>
+            )}
+
+            {node.isModel && (
+              <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
+                <span className="text-zinc-500">Predicted:</span>
+                <span
+                  className={`font-bold ${
+                    isWinning ? 'text-emerald-500 underline' : 'text-zinc-300 dark:text-zinc-400'
+                  }`}
+                >
+                  {modelVal} pods
+                </span>
+              </div>
+            )}
+
+            {node.isArbiter && (
+              <div className="flex items-center justify-between text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold">Winning MAX:</span>
+                <span className="font-extrabold text-emerald-500 text-xs">{maxVal} pods</span>
+              </div>
+            )}
+
+            {node.isActuator && (
+              <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
+                <span className="text-zinc-500">Actuation:</span>
+                <span className="font-bold text-emerald-500">PATCH → {maxVal}</span>
+              </div>
+            )}
+
+            {(node.id === 'tsdb-store' || node.id === 'etcd-store') && (
+              <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded text-rose-500">
+                <span>Status:</span>
+                <span className="font-bold">SYNCED</span>
+              </div>
+            )}
           </div>
-
-          <div className="text-[9px] text-zinc-400 dark:text-zinc-500 truncate mb-1">
-            {node.subtitle}
-          </div>
-
-          {isActiveProbe && (
-            <div className="my-1 flex items-center justify-between text-[10px] bg-amber-500/15 border border-amber-500/30 text-amber-500 dark:text-amber-400 px-2 py-0.5 rounded font-bold animate-pulse">
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                PROBE ACTIVE
-              </span>
-              <span>HOP {probeHop}</span>
-            </div>
-          )}
-
-          {/* Node-specific dynamic telemetry widgets */}
-          {node.id === 'traffic-ingestion' && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
-              <span className="text-zinc-500">Rate:</span>
-              <span className="font-bold text-sky-500">{rps} RPS</span>
-            </div>
-          )}
-
-          {node.id === 'ingress-router' && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
-              <span className="text-zinc-500">P95 Lat:</span>
-              <span className="font-bold text-blue-500">{p95}ms</span>
-            </div>
-          )}
-
-          {node.id === 'backend-workload' && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
-              <span className="text-zinc-500">Active Workload:</span>
-              <span className="font-bold text-purple-500">{actualPods} active pods</span>
-            </div>
-          )}
-
-          {node.id === 'k8s-metrics' && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
-              <span className="text-zinc-500">Cadence:</span>
-              <span className="font-bold text-emerald-500">15s cAdvisor</span>
-            </div>
-          )}
-
-          {node.isModel && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
-              <span className="text-zinc-500">Predicted:</span>
-              <span
-                className={`font-bold ${
-                  isWinning ? 'text-emerald-500 underline' : 'text-zinc-300 dark:text-zinc-400'
-                }`}
-              >
-                {modelVal} pods
-              </span>
-            </div>
-          )}
-
-          {node.isArbiter && (
-            <div className="flex items-center justify-between text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold">Winning MAX:</span>
-              <span className="font-extrabold text-emerald-500 text-xs">{maxVal} pods</span>
-            </div>
-          )}
-
-          {node.isActuator && (
-            <div className="flex items-center justify-between text-[10px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded">
-              <span className="text-zinc-500">Actuation:</span>
-              <span className="font-bold text-emerald-500">PATCH → {maxVal}</span>
-            </div>
-          )}
-
-          {(node.id === 'tsdb-store' || node.id === 'etcd-store') && (
-            <div className="flex items-center justify-between text-[9px] bg-zinc-100 dark:bg-zinc-900/80 px-2 py-0.5 rounded text-rose-500">
-              <span>Status:</span>
-              <span className="font-bold">SYNCED</span>
-            </div>
-          )}
-        </div>
-      </Html>
+        </Html>
+      )}
     </group>
   );
 }
@@ -1294,7 +1304,8 @@ function CameraController({ viewPreset = 'isometric', isOrbiting = false }) {
 /* =========================================================================
    9. Floating 3D Legend HUD (5 Tiers)
    ========================================================================= */
-function LayerLegendHUD({ isDark }) {
+function LayerLegendHUD({ isDark, isModalOpen = false }) {
+  if (isModalOpen) return null;
   return (
     <div
       className={`absolute bottom-3 left-3 z-20 pointer-events-none p-2.5 rounded-lg border font-mono text-[10px] select-none ${
@@ -1333,6 +1344,7 @@ export default function Pipeline3DCanvas({
   onProbeHopChange,
   selectedStage = 0,
   onSelectStage,
+  isModalOpen = false,
   latest = {},
   isSpiking = false,
 }) {
@@ -1375,7 +1387,7 @@ export default function Pipeline3DCanvas({
       }`}
     >
       {/* Floating 5-Layer Color Legend HUD */}
-      <LayerLegendHUD isDark={isDark} />
+      <LayerLegendHUD isDark={isDark} isModalOpen={isModalOpen} />
 
       <Canvas
         dpr={[1, 2]}
@@ -1452,6 +1464,7 @@ export default function Pipeline3DCanvas({
           isSelected={selectedStage === 2}
           isDark={isDark}
           probeHop={probeHop}
+          isModalOpen={isModalOpen}
           onSelect={onSelectStage}
         />
 
@@ -1464,6 +1477,7 @@ export default function Pipeline3DCanvas({
             isDark={isDark}
             latest={dynamicLatest}
             probeHop={probeHop}
+            isModalOpen={isModalOpen}
             onSelect={onSelectStage}
           />
         ))}
