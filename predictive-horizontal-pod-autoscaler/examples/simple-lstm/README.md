@@ -20,3 +20,4 @@ The LSTM model evaluates historical replica counts and projects future demand wi
    ```bash
    kubectl get phpa simple-lstm -w
    ```
+

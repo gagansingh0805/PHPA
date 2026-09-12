@@ -98,21 +98,45 @@ spec:
 This PHPA acts like a Horizontal Pod Autoscaler and autoscales to try and keep the target resource's CPU utilization at
 50%, but with the extra predictive layer of a linear regression model applied to the results.
 
-## Installation
+## 📦 Universal Kubernetes Installation
 
-The operator for managing Predictive Horizontal Pod Autoscalers can be installed using Helm:
+### Option 1: 1-Command Kubectl Install (Fastest, Zero Helm Required)
+Install the complete operator, CRDs, and RBAC on any Kubernetes cluster (EKS, GKE, AKS, Minikube, Kind, k3s):
 
 ```bash
-VERSION=v0.13.2
-HELM_CHART=predictive-horizontal-pod-autoscaler-operator
-helm install ${HELM_CHART} https://github.com/gagansingh0805/PHPA/releases/download/${VERSION}/predictive-horizontal-pod-autoscaler-${VERSION}.tgz
+kubectl apply -f https://raw.githubusercontent.com/gagansingh0805/PHPA/main/deploy/phpa-operator.yaml
 ```
 
-## Quick start
+Verify the operator pod is running:
+```bash
+kubectl get pods -n phpa-system
+```
 
-Check out the [getting started
-guide](https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/getting-started/) and the
-[examples](./examples/) for ways to use Predictive Horizontal Pod Autoscalers.
+### Option 2: Install with Helm
+```bash
+helm install phpa ./helm
+```
+Or override image parameters:
+```bash
+helm install phpa ./helm \
+  --set image.repository=ghcr.io/gagansingh0805/phpa \
+  --set image.tag=latest
+```
+
+## 🚀 Quickstart: Proactive Autoscaling with 2-Layer LSTM
+
+Deploy the bundled LSTM example to eliminate scaling lag:
+
+```bash
+# 1. Deploy test application
+kubectl apply -f https://raw.githubusercontent.com/gagansingh0805/PHPA/main/predictive-horizontal-pod-autoscaler/examples/simple-lstm/deployment.yaml
+
+# 2. Deploy PHPA with 45s LSTM lookahead
+kubectl apply -f https://raw.githubusercontent.com/gagansingh0805/PHPA/main/predictive-horizontal-pod-autoscaler/examples/simple-lstm/phpa.yaml
+
+# 3. Watch proactive scaling in real time
+kubectl get phpa simple-lstm -w
+```
 
 ## More information
 

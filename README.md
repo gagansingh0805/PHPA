@@ -109,7 +109,24 @@ PHPA/
 
 ## 🚀 Getting Started
 
-### Launch the Interactive Dashboard
+### 📦 Install on Any Kubernetes Cluster (1 Command)
+
+Deploy the PHPA Operator with LSTM on any Kubernetes cluster (EKS, GKE, AKS, Minikube, Kind, k3s):
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/gagansingh0805/PHPA/main/deploy/phpa-operator.yaml
+```
+
+Deploy the sample workload and 45-second lookahead LSTM autoscaler:
+```bash
+# Deploy target application
+kubectl apply -f https://raw.githubusercontent.com/gagansingh0805/PHPA/main/predictive-horizontal-pod-autoscaler/examples/simple-lstm/deployment.yaml
+
+# Deploy LSTM Autoscaler
+kubectl apply -f https://raw.githubusercontent.com/gagansingh0805/PHPA/main/predictive-horizontal-pod-autoscaler/examples/simple-lstm/phpa.yaml
+```
+
+### 🖥️ Launch the Interactive Dashboard (Local Simulation)
 
 ```bash
 cd dashboard/frontend
