@@ -87,6 +87,21 @@ func validateModels(models []phpav1alpha1.Model) error {
 			return fmt.Errorf("invalid model '%s', type is '%s' but no Linear Regression configuration provided",
 				model.Name, model.Type)
 		}
+
+		if model.Type == phpav1alpha1.TypeLSTM {
+			if model.LSTM == nil {
+				return fmt.Errorf("invalid model '%s', type is '%s' but no LSTM configuration provided",
+					model.Name, model.Type)
+			}
+			if model.LSTM.HistorySize < 2 {
+				return fmt.Errorf("invalid model '%s', historySize must be at least 2 for LSTM sequence input",
+					model.Name)
+			}
+			if model.LSTM.LookAhead < 1 {
+				return fmt.Errorf("invalid model '%s', lookAhead must be at least 1",
+					model.Name)
+			}
+		}
 	}
 	return nil
 }

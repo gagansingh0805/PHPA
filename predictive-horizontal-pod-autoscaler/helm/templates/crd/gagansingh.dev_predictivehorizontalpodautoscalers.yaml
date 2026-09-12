@@ -842,6 +842,28 @@ spec:
                       - historySize
                       - lookAhead
                       type: object
+                    lstm:
+                      description: lstm is the configuration to use for the 2-layer
+                        stacked LSTM model, it will only be used if the type is set
+                        to 'LSTM'.
+                      properties:
+                        historySize:
+                          description: historySize is how many timestamped replica
+                            counts should be stored for this LSTM model.
+                          minimum: 2
+                          type: integer
+                        lookAhead:
+                          description: lookAhead is how far in the future should the
+                            LSTM predict in milliseconds.
+                          minimum: 1
+                          type: integer
+                        modelPath:
+                          description: modelPath is an optional custom path to model weights.
+                          type: string
+                      required:
+                      - historySize
+                      - lookAhead
+                      type: object
                     name:
                       description: name is the name of the model, this can be any
                         arbitrary name and is just used to distinguish between models
@@ -882,6 +904,7 @@ spec:
                       enum:
                       - Linear
                       - HoltWinters
+                      - LSTM
                       type: string
                   required:
                   - name

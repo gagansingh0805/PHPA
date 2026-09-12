@@ -35,6 +35,7 @@ const (
 const (
 	TypeHoltWinters = "HoltWinters"
 	TypeLinear      = "Linear"
+	TypeLSTM        = "LSTM"
 )
 
 const (
@@ -73,6 +74,20 @@ type Linear struct {
 	// will predict 10 seconds into the future
 	// +kubebuilder:validation:Minimum=1
 	LookAhead int `json:"lookAhead"`
+}
+
+// LSTM represents a 2-Layer Stacked LSTM neural network prediction model configuration
+type LSTM struct {
+	// historySize is how many timestamped replica counts should be stored for this LSTM model, with older
+	// timestamped replica counts being removed from the data as new ones are added.
+	// +kubebuilder:validation:Minimum=2
+	HistorySize int `json:"historySize"`
+	// lookAhead is how far in the future should the LSTM predict in milliseconds (e.g. 45000 for 45s lookahead).
+	// +kubebuilder:validation:Minimum=1
+	LookAhead int `json:"lookAhead"`
+	// modelPath is an optional custom path to model weights (.onnx or .pt).
+	// +optional
+	ModelPath *string `json:"modelPath,omitempty"`
 }
 
 // HoltWinters represents a holt-winters exponential smoothing prediction model configuration
@@ -125,7 +140,7 @@ type HoltWinters struct {
 type Model struct {
 	// type is the type of the model, for example 'Linear'. To see a full list of supported model types visit
 	// https://predictive-horizontal-pod-autoscaler.readthedocs.io/en/latest/user-guide/models/.
-	// +kubebuilder:validation:Enum=Linear;HoltWinters
+	// +kubebuilder:validation:Enum=Linear;HoltWinters;LSTM
 	Type string `json:"type"`
 
 	// name is the name of the model, this can be any arbitrary name and is just used to distinguish between models if
@@ -173,6 +188,11 @@ type Model struct {
 	// 'HoltWinters'
 	// +optional
 	HoltWinters *HoltWinters `json:"holtWinters"`
+
+	// lstm is the configuration to use for the LSTM model, it will only be used if the type is set to
+	// 'LSTM'
+	// +optional
+	LSTM *LSTM `json:"lstm,omitempty"`
 }
 
 // TimestampedReplicas is a replica count paired with the time that the replica count was created at.
