@@ -53,10 +53,10 @@ t = 0s                  t = 15s                 t = 30s                 t = 50s
 ```
 
 ### Breakdown of the 50-Second Deficit:
-1. **Scrape & Smoothing Delay ($\sim 15\text{s}$)**: Prometheus / Metrics-Server scrape interval and averaging window delay breach detection.
-2. **Reconciliation Latency ($\sim 5\text{s}$)**: HPA controller sync loop delay before updating the target `spec.replicas`.
-3. **Pod Scheduling & Image Pull ($\sim 10\text{s}$)**: Kube-scheduler binds pods to nodes; container images are pulled.
-4. **Application Runtime Warmup ($\sim 20\text{s}$)**: JVM/Node.js/Go runtime initialization, database connection pooling, and readiness probe completion.
+1. **Scrape & Smoothing Delay (~15s)**: Prometheus / Metrics-Server scrape interval and averaging window delay breach detection.
+2. **Reconciliation Latency (~5s)**: HPA controller sync loop delay before updating the target `spec.replicas`.
+3. **Pod Scheduling & Image Pull (~10s)**: Kube-scheduler binds pods to nodes; container images are pulled.
+4. **Application Runtime Warmup (~20s)**: JVM/Node.js/Go runtime initialization, database connection pooling, and readiness probe completion.
 
 **The Consequence**: For 50 seconds, a fixed number of existing pods absorb a 5x traffic spike. Connection queues overflow, HTTP 504 timeouts cascade through upstream gateways, and P95 latency escalates from 35ms to **over 1,400ms**, causing broken service level agreements (SLAs) and lost revenue.
 
@@ -64,7 +64,7 @@ t = 0s                  t = 15s                 t = 30s                 t = 50s
 
 ## 🧠 The Solution: Proactive Surge Preemption with 2-Layer LSTM
 
-The **Predictive Horizontal Pod Autoscaler (PHPA)** transforms autoscaling from reactive recovery into **proactive preemption**. By integrating a **2-Layer Stacked Long Short-Term Memory (LSTM) Neural Network** alongside statistical time-series models, PHPA continuously analyzes the *rate of change* and *acceleration curvature* ($\frac{\Delta^2 y}{\Delta t^2}$) of incoming workload demand:
+The **Predictive Horizontal Pod Autoscaler (PHPA)** transforms autoscaling from reactive recovery into **proactive preemption**. By integrating a **2-Layer Stacked Long Short-Term Memory (LSTM) Neural Network** alongside statistical time-series models, PHPA continuously analyzes the *rate of change* and *acceleration curvature* (d²y/dt²) of incoming workload demand:
 
 ```
 PHPA PROACTIVE PREEMPTION TIMELINE:
@@ -76,7 +76,7 @@ t = -20s                t = -15s                t = 0s                  t = +15s
 
 ### The Proactive Advantage:
 - **Zero Cold-Start Lag**: Pod provisioning and runtime initialization complete *before* traffic arrives at the cluster.
-- **100% SLA Compliance**: P95 latency remains flat ($< 40\text{ms}$) even during violent 5x traffic surges.
+- **100% SLA Compliance**: P95 latency remains flat (< 40ms) even during violent 5x traffic surges.
 - **Zero Under-Provisioning**: The Asymmetric Arbiter enforces an upper-bound safety envelope.
 - **FinOps Optimization**: As demand recedes, PHPA proactively schedules controlled scale-down, eliminating 23–50% of idle compute waste compared to linear over-allocation.
 
@@ -91,9 +91,9 @@ The following empirical benchmarks were recorded during continuous 5-day simulat
 | **Peak P95 Latency during Surges** | `1,400 ms` | `280 ms` | `750 ms` | **`< 40 ms` (97.1% reduction)** |
 | **SLA Deficit Periods (per surge)** | `6+ periods` | `1 period` | `4 periods` | **`0` (100% eliminated)** |
 | **Scaling Lead Time Buffer** | `-50s` (lagging) | `+5s` | `+10s` (seasonal only) | **`+15s to +45s` (proactive preemption)** |
-| **Compute Cost ($/pod-hr waste)** | `$0.00` (starves) | `+$18.40` (severe overshoot) | `+$6.20` | **Optimized (Zero idle waste)** |
+| **Compute Cost (USD/pod-hr waste)** | `\$0.00` (starves) | `+\$18.40` (severe overshoot) | `+\$6.20` | **Optimized (Zero idle waste)** |
 | **Non-Linear Surge Handling** | ❌ Fails | ❌ Severe overshoot | ❌ Ignores non-diurnal bursts | **✅ Preempts via inflection detection** |
-| **Diurnal Seasonality Tracking** | ❌ None | ❌ Slope-only | ✅ Excellent ($m=24\text{h}$) | **✅ Multi-scale temporal context** |
+| **Diurnal Seasonality Tracking** | ❌ None | ❌ Slope-only | ✅ Excellent (m = 24h) | **✅ Multi-scale temporal context** |
 | **Inference Time** | `< 0.5 ms` | `~1.8 ms` | `~2.4 ms` | **`~11.5 ms` (deterministic)** |
 
 ---
@@ -159,9 +159,9 @@ The 6 sequential stages governing every 15-second PHPA reconciliation cycle:
 
 | Stage | Name | Component | Core Responsibility & Mechanics |
 |---|---|---|---|
-| **0** | **Client Edge Ingestion** | External Ingress / Edge Gateway | Users generate continuous requests modeled by diurnal sine functions combined with stochastic Poisson arrival bursts: $\lambda(t) = \bar{\lambda} + A \sin\left(\frac{2\pi t}{T}\right) + \xi(t)$. |
+| **0** | **Client Edge Ingestion** | External Ingress / Edge Gateway | Users generate continuous requests modeled by diurnal sine functions combined with stochastic Poisson arrival bursts: `λ(t) = λ̄ + A · sin(2πt / T) + ξ(t)`. |
 | **1** | **Ingress Router & Mesh** | Envoy / Service Proxy | Terminates TLS, measures endpoint response latencies, and routes traffic uniformly to active pods using weighted least-request. Tracks real-time P95 latency. |
-| **2** | **Workload Data Plane** | Pod Replicas | Active pods process traffic. CPU utilization follows: $U_{cpu}(t) = \min\left(100\%, \frac{\lambda(t)}{N(t) \cdot C_{pod}} \times 60\%\right)$. |
+| **2** | **Workload Data Plane** | Pod Replicas | Active pods process traffic. CPU utilization follows: `U_cpu(t) = min(100%, (λ(t) / (N(t) · C_pod)) · 60%)`. |
 | **3** | **Telemetry Harvester** | `k8shorizmetrics` & cAdvisor | Scrapes pod CPU/memory via kubelet `/metrics/cadvisor`, filters out initializing or unready pods, and calculates raw instant replica requirements. |
 | **4** | **PHPA Multi-Model Brain** | Go Operator + Python Algorithms | Dispatches historical metrics concurrently to all 4 models. The Asymmetric Arbiter evaluates recommendations and selects the governing replica count via `DecisionType: Maximum`. |
 | **5** | **Scale Actuator** | Scale Subresource Client | Enforces min/max boundaries, checks scale-down stabilization cooldown timers, and issues an atomic `PATCH /scale` to the Kubernetes API Server. |
@@ -200,7 +200,7 @@ PHPA leverages a hybrid architecture combining the **high-performance concurrenc
  └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Why Go for the Control Plane?** Low memory footprint ($< 30\text{MB}$), sub-millisecond Kubernetes event handling, and native compatibility with `controller-runtime` and Kubernetes client-go libraries.
+- **Why Go for the Control Plane?** Low memory footprint (< 30MB), sub-millisecond Kubernetes event handling, and native compatibility with `controller-runtime` and Kubernetes client-go libraries.
 - **Why Isolated Python Subprocesses?** Statistical and deep-learning packages (PyTorch, Statsmodels, NumPy) run in dedicated subprocess environments with strict execution timeouts (5s) and automatic cleanup, preventing Python memory leaks or GIL stalls from disrupting the Kubernetes control loop.
 
 ---
@@ -209,11 +209,19 @@ PHPA leverages a hybrid architecture combining the **high-performance concurrenc
 
 ### 1. Asymmetric Upper-Bound Arbiter: Zero-Deficit Enforcement
 
-In production cloud infrastructure, the cost of **under-provisioning** (queue saturation, 504 gateway timeouts, SLA penalties) dwarfs the marginal cost of **transient over-provisioning** ($\sim \$0.040/\text{pod-hr}$).
+In production cloud infrastructure, the cost of **under-provisioning** (queue saturation, 504 gateway timeouts, SLA penalties) dwarfs the marginal cost of **transient over-provisioning** (~ \$0.040 / pod-hr).
 
 PHPA codifies this asymmetric cloud penalty model into an upper-bound governing arbiter:
 
-$$\text{TargetReplicas}(t) = \operatorname{clamp}\left( \max\left( R_{\text{HPA}}(t), \; \hat{y}_{\text{OLS}}(t), \; \hat{y}_{\text{HW}}(t), \; \hat{y}_{\text{LSTM}}(t) \right), \; \text{MinPods}, \; \text{MaxPods} \right)$$
+```math
+\text{TargetReplicas}(t) = \operatorname{clamp}\left( \max\left( R_{\text{HPA}}(t), \; R_{\text{Linear}}(t), \; R_{\text{HW}}(t), \; R_{\text{LSTM}}(t) \right), \; \text{MinReplicas}, \; \text{MaxReplicas} \right)
+```
+
+where the clamping function guarantees bounded capacity between cluster constraints:
+
+```math
+\operatorname{clamp}(x, \; \text{min}, \; \text{max}) = \min\left(\text{max}, \; \max(\text{min}, \; x)\right)
+```
 
 During stable periods, Holt-Winters and HPA govern to avoid unnecessary spend. When a surge occurs, the Stacked LSTM detects non-linear acceleration curvature, and its prediction instantly dominates the `MAX()` function to scale pods **ahead of time**.
 
@@ -223,39 +231,91 @@ During stable periods, Holt-Winters and HPA govern to avoid unnecessary spend. W
 
 #### Model 1: Vanilla Reactive HPA (Native Baseline)
 Calculates proportional replica requirements based on moving-average resource utilization:
-$$R_{\text{target}}(t) = \left\lceil R_{\text{current}} \times \frac{\text{CurrentMetric}}{\text{TargetMetric (60\%)}} \right\rceil$$
+
+```math
+R_{\text{HPA}}(t) = \left\lceil R_{\text{current}}(t) \times \frac{M_{\text{current}}(t)}{M_{\text{target}}} \right\rceil
+```
+
+- **`R_current(t)`**: Current active running pod count.
+- **`M_current(t)`**: Current observed resource utilization metric (e.g. average pod CPU).
+- **`M_target`**: Desired target metric threshold (e.g. 60% CPU utilization).
+- **`⌈ · ⌉`**: Mathematical ceiling integer function.
 - **Strengths**: Deterministic safety floor; zero training overhead.
 - **Weaknesses**: 45s+ cold-start lag; blind to future trends.
 
 #### Model 2: Linear Regression (Ordinary Least Squares)
-Fits a first-order closed-form linear slope over the sliding evaluation window:
-$$\hat{y}(t + \tau) = \beta_1 \cdot (t + \tau) + \beta_0, \quad \text{where} \quad \beta_1 = \frac{\sum_{i=1}^n (t_i - \bar{t})(y_i - \bar{y})}{\sum_{i=1}^n (t_i - \bar{t})^2}, \quad \beta_0 = \bar{y} - \beta_1 \bar{t}$$
-- **Strengths**: Ultra-fast closed-form calculation ($\sim 1.8\text{ms}$); tracks continuous monotonic ramps.
+Projects workload demand using closed-form first-order linear trend regression:
+
+```math
+\hat{y}(t + \Delta t) = \bar{y} + \beta_1 \cdot (t + \Delta t - \bar{t})
+```
+
+where the velocity slope `β₁` is calculated via Ordinary Least Squares (OLS) over historical evaluations:
+
+```math
+\beta_1 = \frac{\sum_{i=1}^n (t_i - \bar{t})(y_i - \bar{y})}{\sum_{i=1}^n (t_i - \bar{t})^2}, \quad \beta_0 = \bar{y} - \beta_1 \bar{t}
+```
+
+```math
+R_{\text{Linear}}(t) = \left\lceil \hat{y}(t + \Delta t) \right\rceil
+```
+
+- **Strengths**: Ultra-fast closed-form calculation (~1.8ms); tracks continuous monotonic ramps.
 - **Weaknesses**: Prone to overshooting transient spikes; cannot model cyclical curves.
 
 #### Model 3: Holt-Winters Triple Exponential Smoothing
-Decomposes the time-series into level ($L_t$), trend ($b_t$), and diurnal seasonality ($S_t$) with period $m = 24\text{h}$:
-$$\begin{aligned}
-L_t &= \alpha (Y_t - S_{t-m}) + (1 - \alpha)(L_{t-1} + b_{t-1}) \\
-b_t &= \beta (L_t - L_{t-1}) + (1 - \beta) b_{t-1} \\
-S_t &= \gamma (Y_t - L_t) + (1 - \gamma) S_{t-m} \\
-\hat{y}_{t+h} &= L_t + h b_t + S_{t+h-m}
-\end{aligned}$$
+Decomposes the time-series into level (`ℓₜ`), trend (`bₜ`), and diurnal seasonality (`sₜ`) with period `m = 24h`:
+
+```math
+\begin{aligned}
+\ell_t &= \alpha (y_t - s_{t-m}) + (1 - \alpha)(\ell_{t-1} + b_{t-1}) \\
+b_t &= \beta (\ell_t - \ell_{t-1}) + (1 - \beta) b_{t-1} \\
+s_t &= \gamma (y_t - \ell_{t-1} - b_{t-1}) + (1 - \gamma) s_{t-m} \\
+\hat{y}_{t+h} &= \ell_t + h b_t + s_{t+h-m}
+\end{aligned}
+```
+
+```math
+R_{\text{HW}}(t) = \left\lceil \hat{y}_{t+h} \right\rceil
+```
+
+- **`α, β, γ ∈ [0, 1]`**: Data smoothing (`α`), trend smoothing (`β`), and seasonal smoothing (`γ`) factors.
+- **`m = 24h`**: Seasonal cycle duration (24 hourly intervals).
+- **`h`**: Forecast horizon steps ahead.
 - **Strengths**: Excels at predictable 24-hour day/night cycles; minimizes steady-state cloud spend.
-- **Weaknesses**: Fixed seasonality parameter $m$; unresponsive to sudden unexpected flash crowds.
+- **Weaknesses**: Fixed seasonality parameter `m`; unresponsive to sudden unexpected flash crowds.
 
 #### Model 4: 2-Layer Stacked LSTM Neural Network
-Gated recurrent neural network with Constant Error Carousels (CECs) to capture long-term context and detect higher-order surge curvature ($\frac{\Delta^2 y}{\Delta t^2}$):
-$$\begin{aligned}
-\mathbf{f}_t &= \sigma\left(\mathbf{W}_f \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f\right) && \text{(Forget Gate: discards stale history)} \\
-\mathbf{i}_t &= \sigma\left(\mathbf{W}_i \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i\right) && \text{(Input Gate: selects new information)} \\
-\mathbf{\tilde{C}}_t &= \tanh\left(\mathbf{W}_c \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_c\right) && \text{(Candidate Cell State)} \\
-\mathbf{C}_t &= \mathbf{f}_t \odot \mathbf{C}_{t-1} + \mathbf{i}_t \odot \mathbf{\tilde{C}}_t && \text{(Updated Cell State Matrix)} \\
-\mathbf{o}_t &= \sigma\left(\mathbf{W}_o \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o\right) && \text{(Output Gate)} \\
-\mathbf{h}_t &= \mathbf{o}_t \odot \tanh(\mathbf{C}_t) && \text{(Hidden Output Vector)}
-\end{aligned}$$
+Gated recurrent neural network with Constant Error Carousels (CECs) to capture multi-hour temporal context and detect higher-order surge curvature (d²y/dt²):
+
+**1. Recurrent Cell Gating Formulations:**
+```math
+\begin{aligned}
+\mathbf{f}_t &= \sigma\left(\mathbf{W}_f \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f\right) \\
+\mathbf{i}_t &= \sigma\left(\mathbf{W}_i \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i\right) \\
+\mathbf{\tilde{C}}_t &= \tanh\left(\mathbf{W}_c \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_c\right) \\
+\mathbf{C}_t &= \mathbf{f}_t \odot \mathbf{C}_{t-1} + \mathbf{i}_t \odot \mathbf{\tilde{C}}_t \\
+\mathbf{o}_t &= \sigma\left(\mathbf{W}_o \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o\right) \\
+\mathbf{h}_t &= \mathbf{o}_t \odot \tanh(\mathbf{C}_t)
+\end{aligned}
+```
+
+**2. Discrete Kinematics Acceleration Curvature Algorithm (`algorithms/lstm/lstm.py`):**
+```math
+\begin{aligned}
+v_t &= y_t - y_{t-1} && \text{(1st-order velocity)} \\
+a_t &= y_t - 2y_{t-1} + y_{t-2} && \text{(2nd-order surge acceleration)} \\
+\tilde{a}_t &= \frac{a_t}{1 + 0.1 k}, \quad k = \frac{\Delta t_{\text{lookahead}}}{\Delta t_{\text{step}}} && \text{(Dampened lookahead acceleration)} \\
+\hat{y}(t + \Delta t) &= y_t + v_t \cdot k + \frac{1}{2} \tilde{a}_t \cdot k^2 && \text{(Kinematic Taylor preemption)}
+\end{aligned}
+```
+
+```math
+R_{\text{LSTM}}(t) = \max\left(1, \; \left\lceil \hat{y}(t + \Delta t) \right\rceil\right)
+```
+
 - **Strengths**: Detects non-linear surge inflection points; provides 15–45s proactive lead time; completely eliminates cold-start SLA degradation.
-- **Complexity**: $O(T \cdot d^2)$ where $T$ is sequence length and $d=64$ hidden units.
+- **Complexity**: `O(T · d²)` where `T` is sequence length and `d = 64` hidden units.
 
 ---
 
@@ -263,10 +323,10 @@ $$\begin{aligned}
 
 | Model | Technique | Inference Latency | Time Complexity | Memory Footprint | Cold-Start Mitigation | Seasonality Support | Scrape Horizon |
 |---|---|---|---|---|---|---|---|
-| **Reactive HPA** | Proportional Ratio | `< 0.5 ms` | $\mathcal{O}(1)$ | `< 10 KB` | ❌ None (45s+ lag) | None (Instantaneous) | Instant scrape |
-| **Linear Regression** | Ordinary Least Squares | `~1.8 ms` | $\mathcal{O}(N)$ | `~50 KB` | ⚠️ Partial (Linear Ramps) | None (Slope only) | 60s (4 samples) |
-| **Holt-Winters** | Triple Exp. Smoothing | `~2.4 ms` | $\mathcal{O}(N)$ | `~120 KB` | ⚠️ Seasonal Only | Strong Diurnal (24h) | 24h Buffer |
-| **Stacked LSTM** | 2-Layer Recurrent Net | `~11.5 ms` | $\mathcal{O}(T \cdot d^2)$ | `~4.2 MB` | **✅ Complete (Preemptive)** | Deep Multi-Scale | 45s Lookahead |
+| **Reactive HPA** | Proportional Ratio | `< 0.5 ms` | `O(1)` | `< 10 KB` | ❌ None (45s+ lag) | None (Instantaneous) | Instant scrape |
+| **Linear Regression** | Ordinary Least Squares | `~1.8 ms` | `O(N)` | `~50 KB` | ⚠️ Partial (Linear Ramps) | None (Slope only) | 60s (4 samples) |
+| **Holt-Winters** | Triple Exp. Smoothing | `~2.4 ms` | `O(N)` | `~120 KB` | ⚠️ Seasonal Only | Strong Diurnal (24h) | 24h Buffer |
+| **Stacked LSTM** | 2-Layer Recurrent Net | `~11.5 ms` | `O(T · d²)` | `~4.2 MB` | **✅ Complete (Preemptive)** | Deep Multi-Scale | 45s Lookahead |
 
 ---
 
@@ -464,7 +524,7 @@ npm run dev
 |---|---|---|---|
 | **1** | **Research Overview** | Executive Summary | Problem definition, solution walkthrough, model roster, and quick-start actions. |
 | **2** | **Telemetry Lab** | Real-Time Operations | 5-model synchronized forecast chart, live RPS/CPU gauges, 3D pod grid, and manual traffic throttle. |
-| **3** | **Model Benchmarking** | Scientific Evaluation | Side-by-side cost ($/pod-hr), latency distributions, and deficit comparisons across 3 view modes. |
+| **3** | **Model Benchmarking** | Scientific Evaluation | Side-by-side cost (USD/pod-hr), latency distributions, and deficit comparisons across 3 view modes. |
 | **4** | **Operational Guardrails**| SRE Safety & FinOps | Configurable min/max limits, scale-down stabilization sliders, and annual FinOps ROI calculator. |
 | **5** | **Pipeline Architecture**| System Engineering | Interactive 2D schematic diagram + full Three.js 3D spatial node visualization. |
 | **6** | **Decision Log Feed** | Audit Trail | Real-time event stream of governing decisions with search filter and JSON export. |
