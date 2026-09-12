@@ -1,1 +1,14 @@
 mode: cluster
+
+image:
+  repository: ghcr.io/gagansingh0805/phpa
+  tag: latest
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

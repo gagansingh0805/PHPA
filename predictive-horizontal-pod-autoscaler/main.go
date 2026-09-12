@@ -48,6 +48,7 @@ import (
 	"github.com/gagansingh0805/predictive-horizontal-pod-autoscaler/internal/prediction"
 	"github.com/gagansingh0805/predictive-horizontal-pod-autoscaler/internal/prediction/holtwinters"
 	"github.com/gagansingh0805/predictive-horizontal-pod-autoscaler/internal/prediction/linear"
+	"github.com/gagansingh0805/predictive-horizontal-pod-autoscaler/internal/prediction/lstm"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -141,6 +142,9 @@ func main() {
 				&holtwinters.Predict{
 					HookExecute: httpExec,
 					Runner:      pyRunner,
+				},
+				&lstm.Predict{
+					Runner: pyRunner,
 				},
 			},
 		},

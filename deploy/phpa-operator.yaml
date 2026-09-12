@@ -1,3 +1,17 @@
+# ==============================================================================
+# Predictive Horizontal Pod Autoscaler (PHPA) with 2-Layer Stacked LSTM
+# Author: Gagan Singh (https://github.com/gagansingh0805)
+# All-In-One Kubernetes Production Manifest Bundle
+# ==============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: phpa-system
+  labels:
+    app.kubernetes.io/name: predictive-horizontal-pod-autoscaler
+    app.kubernetes.io/part-of: predictive-horizontal-pod-autoscaler
+---
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -1503,3 +1517,171 @@ spec:
     storage: true
     subresources:
       status: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phpa-controller-manager
+  namespace: phpa-system
+  labels:
+    app.kubernetes.io/name: phpa-controller-manager
+    app.kubernetes.io/part-of: predictive-horizontal-pod-autoscaler
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: phpa-controller-manager-role
+  labels:
+    app.kubernetes.io/name: phpa-controller-manager
+    app.kubernetes.io/part-of: predictive-horizontal-pod-autoscaler
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments/scale
+  - replicaset/scale
+  - statefulset/scale
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - replicationcontrollers/scale
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - custom.metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - external.metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - gagansingh.dev
+  resources:
+  - predictivehorizontalpodautoscalers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gagansingh.dev
+  resources:
+  - predictivehorizontalpodautoscalers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - gagansingh.dev
+  resources:
+  - predictivehorizontalpodautoscalers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: phpa-controller-manager-rolebinding
+  labels:
+    app.kubernetes.io/name: phpa-controller-manager
+    app.kubernetes.io/part-of: predictive-horizontal-pod-autoscaler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: phpa-controller-manager-role
+subjects:
+- kind: ServiceAccount
+  name: phpa-controller-manager
+  namespace: phpa-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpa-controller-manager
+  namespace: phpa-system
+  labels:
+    app.kubernetes.io/name: phpa-controller-manager
+    app.kubernetes.io/part-of: predictive-horizontal-pod-autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: phpa-controller-manager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: phpa-controller-manager
+    spec:
+      serviceAccountName: phpa-controller-manager
+      containers:
+      - name: manager
+        image: ghcr.io/gagansingh0805/phpa:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: metrics
+          containerPort: 8080
+          protocol: TCP
+        - name: health
+          containerPort: 8081
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
